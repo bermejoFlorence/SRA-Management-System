@@ -1,3 +1,4 @@
+
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_role('student', '../login.php#login');
@@ -46,45 +47,31 @@ $levelId      = isset($level['level_id']) ? (int)$level['level_id'] : null;
 $levelName    = $level['name']  ?? null;
 $isFirstTimer = empty($levelName);
 
-/* ----- Totals per level (published only) ----- */
+/* ----- Helpers to clamp and scalar already defined above ----- */
+
+/* ----- PB total stories (published only for the student's current level) ----- */
 $pbPublishedTotal = 0;
-$rbPublishedTotal = 0;
-
 if ($levelId) {
-  // PB total
   if ($stmt = $conn->prepare("
       SELECT COUNT(*) AS c
       FROM stories s
       JOIN story_sets ss ON ss.set_id = s.set_id
-      WHERE ss.set_type='PB' AND ss.level_id=? AND s.status='published'
+      WHERE ss.set_type = 'PB'
+        AND ss.level_id  = ?
+        AND s.status     = 'published'
+        /* optional: if you also gate by set status, keep this guard */
         AND (ss.status IS NULL OR ss.status IN ('published','draft'))
   ")) {
     $stmt->bind_param('i', $levelId);
     $stmt->execute();
-    $r = $stmt->get_result();
-    $pbPublishedTotal = (int)($r->fetch_assoc()['c'] ?? 0);
-    $stmt->close();
-  }
-
-  // RB total
-  if ($stmt = $conn->prepare("
-      SELECT COUNT(*) AS c
-      FROM stories s
-      JOIN story_sets ss ON ss.set_id = s.set_id
-      WHERE ss.set_type='RB' AND ss.level_id=? AND s.status='published'
-        AND (ss.status IS NULL OR ss.status IN ('published','draft'))
-  ")) {
-    $stmt->bind_param('i', $levelId);
-    $stmt->execute();
-    $r = $stmt->get_result();
-    $rbPublishedTotal = (int)($r->fetch_assoc()['c'] ?? 0);
+    $res = $stmt->get_result();
+    $pbPublishedTotal = (int)($res->fetch_assoc()['c'] ?? 0);
     $stmt->close();
   }
 }
-
-$pbDen = max(1, $pbPublishedTotal);  // iwas divide-by-zero
-$rbDen = max(1, $rbPublishedTotal);
-
+/* ----- Totals per level (published only) ----- */
+$pbPublishedTotal = 0;
+$rbPublishedTotal = 0;
 /* ----- Dynamic attempt-based progress: PB & RB ----- */
 
 /** Find in-progress attempt IDs (PB/RB) */
@@ -231,67 +218,50 @@ $rbCompleted = (int)(scalar(
     WHERE a.student_id = ? AND a.set_type = 'RB' AND a.status = 'submitted'",
   [$studentId],'i'
 ) ?? 0);
-/* ----- Thresholds / gates (match stories_rb.php) ----- */
-$PB_OVERALL_PASS = 75.0;  // unlock RB if PB overall >= 75
-$RB_OVERALL_PASS = 85.0;  // unlock Certificate if RB overall >= 85 (as per announcement)
 
-/* per-story thresholds (default 75 if not set) */
+/* ----- Pass thresholds for gating (optional but nice) ----- */
 $pbPassThreshold = (float)(scalar(
-  $conn, "SELECT min_percent FROM level_thresholds WHERE applies_to='PB' AND level_id=? LIMIT 1",
+  $conn,
+  "SELECT min_percent FROM level_thresholds
+    WHERE applies_to='PB' AND level_id = ? LIMIT 1",
   [$levelId],'i'
-) ?? 75.0);
+) ?? 0);
+
 $rbPassThreshold = (float)(scalar(
-  $conn, "SELECT min_percent FROM level_thresholds WHERE applies_to='RB' AND level_id=? LIMIT 1",
+  $conn,
+  "SELECT min_percent FROM level_thresholds
+    WHERE applies_to='RB' AND level_id = ? LIMIT 1",
   [$levelId],'i'
-) ?? 75.0);
+) ?? 0);
 
-/* scaled required passes (8/15 of what’s actually published) */
-$requiredPBPass = $pbPublishedTotal ? max(1, (int)ceil($pbPublishedTotal * (8/15))) : 8;
-$requiredRBPass = $rbPublishedTotal ? max(1, (int)ceil($rbPublishedTotal * (8/15))) : 8;
-
-/* latest overall % per test */
-$pbOverallPercent = (float)(scalar($conn, "
-  SELECT percent FROM assessment_attempts
-  WHERE student_id=? AND set_type='PB' AND status='submitted'
-  ORDER BY submitted_at DESC, attempt_id DESC LIMIT 1",
-  [$studentId],'i'
-) ?? 0.0);
-
-$rbOverallPercent = (float)(scalar($conn, "
-  SELECT percent FROM assessment_attempts
-  WHERE student_id=? AND set_type='RB' AND status='submitted'
-  ORDER BY submitted_at DESC, attempt_id DESC LIMIT 1",
-  [$studentId],'i'
-) ?? 0.0);
-
-/* passed story counts */
-$pbPassed = (int)(scalar($conn, "
-  SELECT COUNT(DISTINCT s.story_id)
-  FROM attempt_stories s
-  JOIN assessment_attempts a ON a.attempt_id=s.attempt_id
-  WHERE a.student_id=? AND a.set_type='PB' AND a.status='submitted'
-    AND s.percent >= ?",
+/* ----- PB/RB: how many PASSED stories (for unlock rules) ----- */
+$pbPassed = (int)(scalar(
+  $conn,
+  "SELECT COUNT(DISTINCT s.story_id)
+     FROM attempt_stories s
+     JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
+    WHERE a.student_id = ? AND a.set_type = 'PB' AND a.status = 'submitted'
+      AND s.percent >= ?",
   [$studentId, $pbPassThreshold], 'id'
 ) ?? 0);
 
-$rbPassed = (int)(scalar($conn, "
-  SELECT COUNT(DISTINCT s.story_id)
-  FROM attempt_stories s
-  JOIN assessment_attempts a ON a.attempt_id=s.attempt_id
-  WHERE a.student_id=? AND a.set_type='RB' AND a.status='submitted'
-    AND s.percent >= ?",
+$rbPassed = (int)(scalar(
+  $conn,
+  "SELECT COUNT(DISTINCT s.story_id)
+     FROM attempt_stories s
+     JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
+    WHERE a.student_id = ? AND a.set_type = 'RB' AND a.status = 'submitted'
+      AND s.percent >= ?",
   [$studentId, $rbPassThreshold], 'id'
 ) ?? 0);
 
-/* final gates (now identical to stories_rb.php) */
+/* ----- Gates (you can tweak required counts) ----- */
+define('PB_PASS_REQUIRED', 8);
+define('RB_PASS_REQUIRED', 8);
+
 $pbUnlocked   = $sltDone;
-$rbUnlocked   = ($pbAidInProgress > 0)                   // may in-progress RB → unlocked
-             || ($pbOverallPercent >= $PB_OVERALL_PASS)  // OR PB overall pass
-             || ($pbPassed >= $requiredPBPass);          // OR scaled passed stories
-
-$certUnlocked = ($rbOverallPercent >= $RB_OVERALL_PASS)  // RB overall pass (e.g., 85%)
-             || ($rbPassed >= $requiredRBPass);          // OR scaled passed stories
-
+$rbUnlocked   = ($pbPassed >= PB_PASS_REQUIRED);
+$certUnlocked = ($rbPassed >= RB_PASS_REQUIRED);
 
 /* ----- Overall progress (10% SLT + 45% PB + 45% RB) ----- */
 /* Use COMPLETED stories so the bar moves even if a story didn't pass */
@@ -330,10 +300,10 @@ if ($isFirstTimer) {
   $ctaHref       = 'stories_pb.php';  // <-- landing/instructions page
 } elseif ($rbCompleted < $rbDen) {
   $nextStepLabel = 'Continue Rate Builder – Story ' . ($rbCompleted + 1);
+  $nextStepHref  = 'stories.php?continue=rb';
   $ctaText = ($rbCompleted === 0) ? 'Start Rate Builder' : 'Continue Rate Builder';
-  $ctaHref = 'stories_rb.php'; // same pattern as PB
-}
- elseif ($certUnlocked) {
+  $ctaHref = 'stories.php?continue=rb';
+} elseif ($certUnlocked) {
   $nextStepLabel = 'Congratulations! You can download your certificate.';
   $nextStepHref  = 'certificates.php';
   $ctaText = 'Download Certificate'; $ctaHref = 'certificates.php';
@@ -686,8 +656,7 @@ body, .main-content { border: 0 !important; }
 
 <?php if ($rbUnlocked): ?>
   <?php $rbBtnText = ($rbProgDone === 0) ? 'Start' : 'Continue'; ?>
-<button type="button" onclick="location.href='stories_rb.php'"><?= $rbBtnText; ?></button>
-
+  <button type="button" onclick="location.href='stories.php?continue=rb'"><?= $rbBtnText; ?></button>
 <?php else: ?>
   <button type="button" disabled aria-disabled="true">Locked</button>
 <?php endif; ?>
