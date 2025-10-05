@@ -22,9 +22,7 @@ function scalar(mysqli $c, string $sql, array $params = [], string $types = ''){
   $stmt->close();
   return $val;
 }
-function clamp($v, $min=0, $max=100){
-  $v = (float)$v; if($v<$min) $v=$min; if($v>$max) $v=$max; return $v;
-}
+function clamp($v, $min=0, $max=100){ $v=(float)$v; if($v<$min)$v=$min; if($v>$max)$v=$max; return $v; }
 
 /* ---------------- Data ---------------- */
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
@@ -50,7 +48,7 @@ $levelId      = isset($level['level_id']) ? (int)$level['level_id'] : null;
 $levelName    = $level['name']  ?? null;
 $isFirstTimer = empty($levelName);
 
-/* ----- Published story totals (compute once) ----- */
+/* ----- Published story totals (once) ----- */
 $pbPublishedTotal = 0;
 $rbPublishedTotal = 0;
 
@@ -64,11 +62,10 @@ if ($levelId) {
         AND (ss.status IS NULL OR ss.status IN ('published','draft'))
   ")) {
     $stmt->bind_param('i', $levelId);
-    $stmt->execute(); $r = $stmt->get_result();
+    $stmt->execute(); $r=$stmt->get_result();
     $pbPublishedTotal = (int)($r->fetch_assoc()['c'] ?? 0);
     $stmt->close();
   }
-
   // RB totals
   if ($stmt = $conn->prepare("
       SELECT COUNT(*) AS c
@@ -78,108 +75,30 @@ if ($levelId) {
         AND (ss.status IS NULL OR ss.status IN ('published','draft'))
   ")) {
     $stmt->bind_param('i', $levelId);
-    $stmt->execute(); $r = $stmt->get_result();
+    $stmt->execute(); $r=$stmt->get_result();
     $rbPublishedTotal = (int)($r->fetch_assoc()['c'] ?? 0);
     $stmt->close();
   }
 }
-
-$pbDen = max(1, $pbPublishedTotal);   // iwas /0
+$pbDen = max(1, $pbPublishedTotal);
 $rbDen = max(1, $rbPublishedTotal);
 
-/* ----- In-progress attempt IDs ----- */
-$pbAidInProgress = (int)(scalar(
-  $conn,
-  "SELECT attempt_id
-     FROM assessment_attempts
-    WHERE student_id=? AND set_type='PB' AND status='in_progress'
-    ORDER BY started_at DESC, attempt_id DESC
-    LIMIT 1",
-  [$studentId], 'i'
-) ?? 0);
-
-$rbAidInProgress = (int)(scalar(
-  $conn,
-  "SELECT attempt_id
-     FROM assessment_attempts
-    WHERE student_id=? AND set_type='RB' AND status='in_progress'
-    ORDER BY started_at DESC, attempt_id DESC
-    LIMIT 1",
-  [$studentId], 'i'
-) ?? 0);
-
-/* ----- Helper: attempt progress (done/total) ----- */
-$attemptProgress = function(mysqli $c, int $aid): array {
-  if ($aid <= 0) return [0,0];
-  $total = (int)(scalar($c, "SELECT COUNT(*) FROM attempt_stories WHERE attempt_id=?", [$aid], 'i') ?? 0);
-  $done  = (int)(scalar($c, "SELECT COUNT(*) FROM attempt_stories WHERE attempt_id=? AND score IS NOT NULL", [$aid], 'i') ?? 0);
-  return [$done, $total];
-};
-
-/* ----- PB progress shown on the card ----- */
-$pbProgDone  = 0;
-$pbProgTotal = $pbPublishedTotal; // fallback to all published stories
-
-if ($pbAidInProgress > 0) {
-  [$pbProgDone, $pbProgTotal] = $attemptProgress($conn, $pbAidInProgress);
-} else {
-  $pbLastAttempt = (int)(scalar(
-    $conn,
-    "SELECT attempt_id
-       FROM assessment_attempts
-      WHERE student_id=? AND set_type='PB' AND status IN ('submitted','scored')
-      ORDER BY submitted_at DESC, attempt_id DESC
-      LIMIT 1",
-    [$studentId], 'i'
-  ) ?? 0);
-  if ($pbLastAttempt > 0) {
-    [$pbProgDone, $pbProgTotal] = $attemptProgress($conn, $pbLastAttempt);
-  }
-}
-
-/* ----- RB progress shown on the card ----- */
-$rbProgDone  = 0;
-$rbProgTotal = $rbPublishedTotal;
-
-if ($rbAidInProgress > 0) {
-  [$rbProgDone, $rbProgTotal] = $attemptProgress($conn, $rbAidInProgress);
-} else {
-  $rbLastAttempt = (int)(scalar(
-    $conn,
-    "SELECT attempt_id
-       FROM assessment_attempts
-      WHERE student_id=? AND set_type='RB' AND status IN ('submitted','scored')
-      ORDER BY submitted_at DESC, attempt_id DESC
-      LIMIT 1",
-    [$studentId], 'i'
-  ) ?? 0);
-  if ($rbLastAttempt > 0) {
-    [$rbProgDone, $rbProgTotal] = $attemptProgress($conn, $rbLastAttempt);
-  }
-}
-
-/* ----- Fractions for overall progress ----- */
-$pbFrac = ($pbProgTotal > 0) ? ($pbProgDone / $pbProgTotal) : 0.0;
-$rbFrac = ($rbProgTotal > 0) ? ($rbProgDone / $rbProgTotal) : 0.0;
-
-/* ----- SLT done? ----- */
+/* ----- SLT done? (any finalized SLT attempt) ----- */
 $sltDone = (int)(scalar(
   $conn,
-  "SELECT COUNT(*)
-     FROM assessment_attempts
-    WHERE student_id = ? AND set_type = 'SLT' AND status IN ('submitted','scored')
+  "SELECT COUNT(*) FROM assessment_attempts
+    WHERE student_id=? AND set_type='SLT' AND status IN ('submitted','scored')
     LIMIT 1",
   [$studentId],'i'
 ) ?? 0) > 0;
 
-/* ----- Completed stories (must have score) ----- */
+/* ----- COMPLETED stories (must have score; attempt finalized) ----- */
 $pbCompleted = (int)(scalar(
   $conn,
   "SELECT COUNT(DISTINCT s.story_id)
      FROM attempt_stories s
-     JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
-    WHERE a.student_id = ?
-      AND a.set_type   = 'PB'
+     JOIN assessment_attempts a ON a.attempt_id=s.attempt_id
+    WHERE a.student_id=? AND a.set_type='PB'
       AND a.status IN ('submitted','scored')
       AND s.score IS NOT NULL",
   [$studentId],'i'
@@ -189,63 +108,30 @@ $rbCompleted = (int)(scalar(
   $conn,
   "SELECT COUNT(DISTINCT s.story_id)
      FROM attempt_stories s
-     JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
-    WHERE a.student_id = ?
-      AND a.set_type   = 'RB'
+     JOIN assessment_attempts a ON a.attempt_id=s.attempt_id
+    WHERE a.student_id=? AND a.set_type='RB'
       AND a.status IN ('submitted','scored')
       AND s.score IS NOT NULL",
   [$studentId],'i'
 ) ?? 0);
 
-/* ----- Pass thresholds for gating ----- */
-$pbPassThreshold = (float)(scalar(
-  $conn,
-  "SELECT min_percent FROM level_thresholds
-    WHERE applies_to='PB' AND level_id = ? LIMIT 1",
-  [$levelId],'i'
-) ?? 0.0);
+/* ===== Completion vs Published (for progress & gates) ===== */
+$pbCardDone  = min($pbCompleted, $pbPublishedTotal);
+$pbCardTotal = (int)$pbPublishedTotal;
 
-$rbPassThreshold = (float)(scalar(
-  $conn,
-  "SELECT min_percent FROM level_thresholds
-    WHERE applies_to='RB' AND level_id = ? LIMIT 1",
-  [$levelId],'i'
-) ?? 0.0);
+$rbCardDone  = min($rbCompleted, $rbPublishedTotal);
+$rbCardTotal = (int)$rbPublishedTotal;
 
-/* ----- How many PASSED stories (for unlock) ----- */
-$pbPassed = (int)(scalar(
-  $conn,
-  "SELECT COUNT(DISTINCT s.story_id)
-     FROM attempt_stories s
-     JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
-    WHERE a.student_id = ?
-      AND a.set_type   = 'PB'
-      AND a.status IN ('submitted','scored')
-      AND s.percent >= ?",
-  [$studentId, $pbPassThreshold], 'id'
-) ?? 0);
+/* Fractions for overall progress now use COMPLETION */
+$pbFrac = ($pbCardTotal > 0) ? ($pbCardDone / $pbCardTotal) : 0.0;
+$rbFrac = ($rbCardTotal > 0) ? ($rbCardDone / $rbCardTotal) : 0.0;
 
-$rbPassed = (int)(scalar(
-  $conn,
-  "SELECT COUNT(DISTINCT s.story_id)
-     FROM attempt_stories s
-     JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
-    WHERE a.student_id = ?
-      AND a.set_type   = 'RB'
-      AND a.status IN ('submitted','scored')
-      AND s.percent >= ?",
-  [$studentId, $rbPassThreshold], 'id'
-) ?? 0);
+/* Gates: unlock when ALL published stories are completed (scored) */
+$pbUnlocked   = $sltDone;  // PB still gated by SLT
+$rbUnlocked   = ($pbCardTotal > 0 && $pbCardDone >= $pbCardTotal);
+$certUnlocked = ($rbCardTotal > 0 && $rbCardDone >= $rbCardTotal);
 
-/* ----- Gates ----- */
-define('PB_PASS_REQUIRED', 8);
-define('RB_PASS_REQUIRED', 8);
-
-$pbUnlocked   = $sltDone;
-$rbUnlocked   = ($pbPassed >= PB_PASS_REQUIRED);
-$certUnlocked = ($rbPassed >= RB_PASS_REQUIRED);
-
-/* ----- Overall progress (10% SLT + 45% PB + 45% RB) ----- */
+/* Overall progress (10% SLT + 45% PB + 45% RB) */
 $overall   = 0.0;
 $overall  += $sltDone ? 10 : 0;
 $overall  += clamp($pbFrac, 0, 1) * 45;
@@ -255,10 +141,8 @@ $remaining = clamp(100 - $overall);
 
 /* ----- Color pill style ----- */
 function hex_to_rgb(string $hex): array {
-  $h = ltrim($hex, '#');
-  if (strlen($h) === 3) $h = $h[0].$h[0].$h[1].$h[1].$h[2].$h[2];
-  $int = hexdec($h);
-  return [($int>>16)&255, ($int>>8)&255, $int&255];
+  $h = ltrim($hex, '#'); if (strlen($h) === 3) $h=$h[0].$h[0].$h[1].$h[1].$h[2].$h[2];
+  $int = hexdec($h); return [($int>>16)&255, ($int>>8)&255, $int&255];
 }
 function level_color_hex(?string $name, ?string $hexFromDb): ?string {
   if ($hexFromDb) return $hexFromDb;
@@ -268,40 +152,31 @@ function level_color_hex(?string $name, ?string $hexFromDb): ?string {
 }
 $lvHex = level_color_hex($levelName ?? null, $level['color_hex'] ?? null);
 $levelPillStyle = '';
-if ($lvHex) { [$r,$g,$b] = hex_to_rgb($lvHex); $levelPillStyle = "background: rgba($r,$g,$b,.12); border:1px solid $lvHex; color:#1b3a1b;"; }
+if ($lvHex) { [$r,$g,$b]=hex_to_rgb($lvHex); $levelPillStyle = "background:rgba($r,$g,$b,.12);border:1px solid $lvHex;color:#1b3a1b;"; }
 
-/* ----- Next step label + CTA (consistent; prefer in-progress) ----- */
+/* ===== Next step (completion-based) ===== */
 $nextStepLabel = 'You’re all set! Review your results.';
 $ctaText = 'View Results'; $ctaHref = 'results.php';
 
 if ($isFirstTimer) {
   $nextStepLabel = 'Start your Starting Level Test';
   $ctaText = 'Start SLT'; $ctaHref = 'stories_sl.php';
-} elseif ($pbUnlocked) {
-  if ($pbAidInProgress && $pbProgTotal > 0 && $pbProgDone < $pbProgTotal) {
-    $nextStepLabel = 'Continue Power Builder – Story ' . ($pbProgDone + 1);
-    $ctaText = 'Continue Power Builder'; $ctaHref = 'stories_pb.php';
-  } elseif ($pbCompleted < $pbDen) {
-    $nextStepLabel = ($pbCompleted === 0)
-      ? 'Start Power Builder'
-      : ('Continue Power Builder – Story ' . ($pbCompleted + 1));
-    $ctaText = ($pbCompleted === 0) ? 'Start Power Builder' : 'Continue Power Builder';
-    $ctaHref = 'stories_pb.php';
-  } elseif ($rbUnlocked) {
-    if ($rbAidInProgress && $rbProgTotal > 0 && $rbProgDone < $rbProgTotal) {
-      $nextStepLabel = 'Continue Rate Builder – Story ' . ($rbProgDone + 1);
-      $ctaText = 'Continue Rate Builder'; $ctaHref = 'stories.php?continue=rb';
-    } elseif ($rbCompleted < $rbDen) {
-      $nextStepLabel = ($rbCompleted === 0)
-        ? 'Start Rate Builder'
-        : ('Continue Rate Builder – Story ' . ($rbCompleted + 1));
-      $ctaText = ($rbCompleted === 0) ? 'Start Rate Builder' : 'Continue Rate Builder';
-      $ctaHref = 'stories.php?continue=rb';
-    }
-  }
-}
 
-if ($certUnlocked) {
+} elseif ($pbCardTotal > 0 && $pbCardDone < $pbCardTotal) {
+  $nextStepLabel = ($pbCardDone === 0)
+    ? 'Start Power Builder'
+    : ('Continue Power Builder – Story ' . ($pbCardDone + 1));
+  $ctaText = ($pbCardDone === 0) ? 'Start Power Builder' : 'Continue Power Builder';
+  $ctaHref = 'stories_pb.php';
+
+} elseif ($rbCardTotal > 0 && $rbCardDone < $rbCardTotal) {
+  $nextStepLabel = ($rbCardDone === 0)
+    ? 'Start Rate Builder'
+    : ('Continue Rate Builder – Story ' . ($rbCardDone + 1));
+  $ctaText = ($rbCardDone === 0) ? 'Start Rate Builder' : 'Continue Rate Builder';
+  $ctaHref = 'stories_rb.php';
+
+} elseif ($certUnlocked) {
   $nextStepLabel = 'Congratulations! You can download your certificate.';
   $ctaText = 'Download Certificate'; $ctaHref = 'certificates.php';
 }
@@ -614,9 +489,11 @@ body, .main-content { border: 0 !important; }
   <div class="card-box <?= $pbUnlocked ? '' : 'locked' ?>"
        title="<?= $pbUnlocked ? '' : 'Unlocks after you finish the Starting Level Test' ?>">
     <h4>📈 Power Builder Assessment</h4>
-  <p style="opacity:.8;margin-top:-6px;">
-  Progress: <?= (int)$pbProgDone; ?>/<?= (int)$pbProgTotal; ?>
+<!-- PB Progress -->
+<p style="opacity:.8;margin-top:-6px;">
+  Progress: <?= (int)$pbCardDone; ?>/<?= (int)$pbCardTotal; ?>
 </p>
+
 
 
     <p>Take the test to improve your comprehension skills.</p>
@@ -640,8 +517,8 @@ body, .main-content { border: 0 !important; }
     <h4>📚 Rate Builder Assessment</h4>
     <p>Rate your Builder Assessment.</p>
   <p style="opacity:.8;margin-top:-6px;">
-  <?php if ($rbProgTotal > 0): ?>
-    Progress: <?= (int)$rbProgDone; ?>/<?= (int)$rbProgTotal; ?>
+  <?php if ($rbCardTotal > 0): ?>
+    Progress: <?= (int)$rbCardDone; ?>/<?= (int)$rbCardTotal; ?>
   <?php else: ?>
     Stories Available: 0
   <?php endif; ?>
