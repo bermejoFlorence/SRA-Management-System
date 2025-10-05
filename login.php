@@ -17,7 +17,7 @@
     <div class="left-content">
       <div class="logos" aria-hidden="true">
         <img src="l.png" alt="Logo"/>
-        <img src="o.webp" alt="CBSUA Logo"/>
+        <img src="1.png" alt="CBSUA Logo"/>
       </div>
 
       <div class="title-block">
