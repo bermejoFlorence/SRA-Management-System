@@ -22,7 +22,9 @@ function scalar(mysqli $c, string $sql, array $params = [], string $types = ''){
   $stmt->close();
   return $val;
 }
-function clamp($v, $min=0, $max=100){ $v=(float)$v; if($v<$min)$v=$min; if($v>$max)$v=$max; return $v; }
+function clamp($v, $min=0, $max=100){
+  $v = (float)$v; if($v<$min) $v=$min; if($v>$max)$v=$max; return $v;
+}
 
 /* ---------------- Data ---------------- */
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
@@ -46,7 +48,19 @@ if ($studentId > 0) {
 }
 $levelId      = isset($level['level_id']) ? (int)$level['level_id'] : null;
 $levelName    = $level['name']  ?? null;
-$isFirstTimer = empty($levelName);
+
+/* ----- SLT done? (any finalized SLT attempt) ----- */
+$sltDone = (int)(scalar(
+  $conn,
+  "SELECT COUNT(*)
+     FROM assessment_attempts
+    WHERE student_id=? AND set_type='SLT' AND status IN ('submitted','scored')
+    LIMIT 1",
+  [$studentId],'i'
+) ?? 0) > 0;
+
+/* IMPORTANT: ang tunay na first-timer ay 'di pa nakapag-SLT' */
+$isFirstTimer = !$sltDone;
 
 /* ----- Published story totals (once) ----- */
 $pbPublishedTotal = 0;
@@ -82,15 +96,6 @@ if ($levelId) {
 }
 $pbDen = max(1, $pbPublishedTotal);
 $rbDen = max(1, $rbPublishedTotal);
-
-/* ----- SLT done? (any finalized SLT attempt) ----- */
-$sltDone = (int)(scalar(
-  $conn,
-  "SELECT COUNT(*) FROM assessment_attempts
-    WHERE student_id=? AND set_type='SLT' AND status IN ('submitted','scored')
-    LIMIT 1",
-  [$studentId],'i'
-) ?? 0) > 0;
 
 /* ----- COMPLETED stories (must have score; attempt finalized) ----- */
 $pbCompleted = (int)(scalar(
@@ -141,13 +146,18 @@ $remaining = clamp(100 - $overall);
 
 /* ----- Color pill style ----- */
 function hex_to_rgb(string $hex): array {
-  $h = ltrim($hex, '#'); if (strlen($h) === 3) $h=$h[0].$h[0].$h[1].$h[1].$h[2].$h[2];
-  $int = hexdec($h); return [($int>>16)&255, ($int>>8)&255, $int&255];
+  $h = ltrim($hex, '#');
+  if (strlen($h) === 3) $h = $h[0].$h[0].$h[1].$h[1].$h[2].$h[2];
+  $int = hexdec($h);
+  return [($int>>16)&255, ($int>>8)&255, $int&255];
 }
 function level_color_hex(?string $name, ?string $hexFromDb): ?string {
   if ($hexFromDb) return $hexFromDb;
   if (!$name) return null;
-  $map = ['red'=>'#D32F2F','orange'=>'#EF6C00','yellow'=>'#F9A825','blue'=>'#1565C0','green'=>'#2E7D32','purple'=>'#7E57C2'];
+  $map = [
+    'red'=>'#D32F2F','orange'=>'#EF6C00','yellow'=>'#F9A825',
+    'blue'=>'#1565C0','green'=>'#2E7D32','purple'=>'#7E57C2'
+  ];
   return $map[strtolower(trim($name))] ?? null;
 }
 $lvHex = level_color_hex($levelName ?? null, $level['color_hex'] ?? null);
@@ -180,8 +190,72 @@ if ($isFirstTimer) {
   $nextStepLabel = 'Congratulations! You can download your certificate.';
   $ctaText = 'Download Certificate'; $ctaHref = 'certificates.php';
 }
-?>
 
+/* ===== (Optional) Debug panel: open page with ?debug=1 to see values ===== */
+if (isset($_GET['debug'])) {
+  echo '<div style="margin:12px 16px;padding:12px;border:1px solid #ddd;border-left:6px solid #1565C0;background:#f8fbff;border-radius:8px;">';
+  echo '<h4 style="margin:0 0 8px;">Debug (visible because ?debug=1)</h4><pre style="white-space:pre-wrap;font-size:12px;line-height:1.35;margin:0;">';
+  $debug = [
+    'studentId'=>$studentId,'levelId'=>$levelId,'levelName'=>$levelName,'sltDone'=>$sltDone,
+    'PB_publishedTotal'=>$pbPublishedTotal,'PB_completed'=>$pbCompleted,
+    'PB_cardDone/Total'=>"$pbCardDone/$pbCardTotal",'PB_unlocked'=>$pbUnlocked,
+    'RB_publishedTotal'=>$rbPublishedTotal,'RB_completed'=>$rbCompleted,
+    'RB_cardDone/Total'=>"$rbCardDone/$rbCardTotal",'RB_unlocked'=>$rbUnlocked,
+    'Cert_unlocked'=>$certUnlocked,'overall'=>$overall,'remaining'=>$remaining,
+  ];
+  print_r($debug);
+
+  // Per-story indicator (PB)
+  if ($levelId) {
+    echo "\nPB stories (published) vs scored:\n";
+    $sql = "
+      SELECT p.story_id,
+             MAX(CASE WHEN s.score IS NOT NULL THEN 1 ELSE 0 END) AS scored
+        FROM stories p
+        JOIN story_sets ss ON ss.set_id=p.set_id
+   LEFT JOIN assessment_attempts a
+          ON a.student_id=? AND a.set_type='PB' AND a.status IN ('submitted','scored')
+   LEFT JOIN attempt_stories s
+          ON s.attempt_id=a.attempt_id AND s.story_id=p.story_id
+       WHERE ss.set_type='PB' AND ss.level_id=? AND p.status='published'
+    GROUP BY p.story_id
+    ORDER BY p.story_id";
+    if ($st = $conn->prepare($sql)) {
+      $st->bind_param('ii', $studentId, $levelId);
+      $st->execute();
+      $rs = $st->get_result();
+      while ($row = $rs->fetch_assoc()) {
+        echo "  PB story {$row['story_id']} => ".($row['scored'] ? 'scored' : 'NOT scored')."\n";
+      }
+      $st->close();
+    }
+
+    echo "\nRB stories (published) vs scored:\n";
+    $sql = "
+      SELECT p.story_id,
+             MAX(CASE WHEN s.score IS NOT NULL THEN 1 ELSE 0 END) AS scored
+        FROM stories p
+        JOIN story_sets ss ON ss.set_id=p.set_id
+   LEFT JOIN assessment_attempts a
+          ON a.student_id=? AND a.set_type='RB' AND a.status IN ('submitted','scored')
+   LEFT JOIN attempt_stories s
+          ON s.attempt_id=a.attempt_id AND s.story_id=p.story_id
+       WHERE ss.set_type='RB' AND ss.level_id=? AND p.status='published'
+    GROUP BY p.story_id
+    ORDER BY p.story_id";
+    if ($st = $conn->prepare($sql)) {
+      $st->bind_param('ii', $studentId, $levelId);
+      $st->execute();
+      $rs = $st->get_result();
+      while ($row = $rs->fetch_assoc()) {
+        echo "  RB story {$row['story_id']} => ".($row['scored'] ? 'scored' : 'NOT scored')."\n";
+      }
+      $st->close();
+    }
+  }
+  echo "</pre></div>";
+}
+?>
 
 <style>
 /* ================= Page-scoped styles (responsive) ================= */
@@ -401,14 +475,12 @@ body, .main-content { border: 0 !important; }
 .card-box.locked{
   opacity: .55;
   filter: grayscale(.15);
-  /* wala nang pointer-events:none; para gumana ang title tooltip */
 }
 .card-box.locked button{
   background: #9aa09a !important;
   cursor: not-allowed;
   filter: none !important;
 }
-
 </style>
 
 <div class="main-content">
@@ -423,18 +495,17 @@ body, .main-content { border: 0 !important; }
     <div class="kpis" role="list">
       <div class="kpi" role="listitem" aria-label="Current Level">
         <div class="kpi-label">Color Category</div>
-       <div class="kpi-value">
-  <?php if ($isFirstTimer): ?>
-    <span class="badge-level" style="background:#f3f5f3;border:1px solid #dfe6df;color:#1b3a1b;">
-      Not set yet
-    </span>
-  <?php else: ?>
-    <span class="badge-level" style="<?= htmlspecialchars($levelPillStyle) ?>">
-      <?= htmlspecialchars($levelName) ?>
-    </span>
-  <?php endif; ?>
-</div>
-
+        <div class="kpi-value">
+          <?php if ($isFirstTimer): ?>
+            <span class="badge-level" style="background:#f3f5f3;border:1px solid #dfe6df;color:#1b3a1b;">
+              Not set yet
+            </span>
+          <?php else: ?>
+            <span class="badge-level" style="<?= htmlspecialchars($levelPillStyle) ?>">
+              <?= htmlspecialchars($levelName ?? '—') ?>
+            </span>
+          <?php endif; ?>
+        </div>
       </div>
 
       <div class="kpi" role="listitem" aria-label="Overall Progress">
@@ -452,104 +523,83 @@ body, .main-content { border: 0 !important; }
     </div>
   </section>
 
-  <!-- Banner with quote (kept)
-  <div class="banner">
-    <img src="assets/picture2.jpg" alt="picture2">
-    <div class="quote">
-      “The more that you read, the more things you will know.
-      The more that you learn, the more places you’ll go.”<br> — Dr. Seuss
-    </div>
-  </div> -->
-
   <!-- Next Step -->
   <section class="next-card">
     <div>
       <div class="next-title"><?= $isFirstTimer ? 'Start your journey' : 'Continue where you left off'; ?></div>
       <div class="next-sub"><?= htmlspecialchars($nextStepLabel); ?></div>
     </div>
-    <a class="btn-primary" href="<?= htmlspecialchars($ctaHref); ?>">
-  <?= htmlspecialchars($ctaText); ?>
-</a>
+    <a class="btn-primary" href="<?= htmlspecialchars($ctaHref); ?>"><?= htmlspecialchars($ctaText); ?></a>
   </section>
 
-<!-- Core Modules (with flow + arrows + locking) -->
-<div class="flow">
-  <!-- SLT -->
-  <div class="card-box">
-    <h4>📘 Starting Level Test</h4>
-    <p>Take the test to determine your reading level.</p>
-    <button type="button" onclick="location.href='stories_sl.php'">
-      <?= $sltDone ? 'Retake / Review' : 'Take Test' ?>
-    </button>
+  <!-- Core Modules (with flow + arrows + locking) -->
+  <div class="flow">
+    <!-- SLT -->
+    <div class="card-box">
+      <h4>📘 Starting Level Test</h4>
+      <p>Take the test to determine your reading level.</p>
+      <button type="button" onclick="location.href='stories_sl.php'">
+        <?= $sltDone ? 'Retake / Review' : 'Take Test' ?>
+      </button>
+    </div>
+
+    <i class="fas fa-arrow-right flow-arrow" aria-hidden="true"></i>
+
+    <!-- PB (locked until SLT is done) -->
+    <div class="card-box <?= $pbUnlocked ? '' : 'locked' ?>"
+         title="<?= $pbUnlocked ? '' : 'Unlocks after you finish the Starting Level Test' ?>">
+      <h4>📈 Power Builder Assessment</h4>
+      <p style="opacity:.8;margin-top:-6px;">
+        Progress: <?= (int)$pbCardDone; ?>/<?= (int)$pbCardTotal; ?>
+      </p>
+      <p>Take the test to improve your comprehension skills.</p>
+
+      <?php if ($pbUnlocked): ?>
+        <?php $pbBtnText = ($pbCardDone === 0) ? 'Start' : 'Continue'; ?>
+        <button type="button" onclick="location.href='stories_pb.php'"><?= $pbBtnText; ?></button>
+      <?php else: ?>
+        <button type="button" disabled aria-disabled="true">Locked</button>
+      <?php endif; ?>
+    </div>
+
+    <i class="fas fa-arrow-right flow-arrow" aria-hidden="true"></i>
+
+    <!-- RB (unlocks when ALL PB published are completed) -->
+    <div class="card-box <?= $rbUnlocked ? '' : 'locked' ?>"
+         title="<?= $rbUnlocked ? '' : 'Unlocks after you finish all published Power Builder stories' ?>">
+      <h4>📚 Rate Builder Assessment</h4>
+      <p>Rate your Builder Assessment.</p>
+      <p style="opacity:.8;margin-top:-6px;">
+        <?php if ($rbCardTotal > 0): ?>
+          Progress: <?= (int)$rbCardDone; ?>/<?= (int)$rbCardTotal; ?>
+        <?php else: ?>
+          Stories Available: 0
+        <?php endif; ?>
+      </p>
+
+      <?php if ($rbUnlocked): ?>
+        <?php $rbBtnText = ($rbCardDone === 0) ? 'Start' : 'Continue'; ?>
+        <button type="button" onclick="location.href='stories_rb.php'"><?= $rbBtnText; ?></button>
+      <?php else: ?>
+        <button type="button" disabled aria-disabled="true">Locked</button>
+      <?php endif; ?>
+    </div>
+
+    <i class="fas fa-arrow-right flow-arrow" aria-hidden="true"></i>
+
+    <!-- Certificate (unlocks when ALL RB published are completed) -->
+    <div class="card-box <?= $certUnlocked ? '' : 'locked' ?>"
+         title="<?= $certUnlocked ? '' : 'Unlocks after you finish all published Rate Builder stories' ?>">
+      <h4>🎓 Certificate</h4>
+      <p>Download your certificate once you finish Rate Builder.</p>
+
+      <?php if ($certUnlocked): ?>
+        <button type="button" onclick="location.href='certificates.php'">View Certificate</button>
+      <?php else: ?>
+        <button type="button" disabled aria-disabled="true">Locked</button>
+      <?php endif; ?>
+    </div>
   </div>
-
-  <i class="fas fa-arrow-right flow-arrow" aria-hidden="true"></i>
-
-  <!-- PB (locked until SLT is done) -->
-  <div class="card-box <?= $pbUnlocked ? '' : 'locked' ?>"
-       title="<?= $pbUnlocked ? '' : 'Unlocks after you finish the Starting Level Test' ?>">
-    <h4>📈 Power Builder Assessment</h4>
-<!-- PB Progress -->
-<p style="opacity:.8;margin-top:-6px;">
-  Progress: <?= (int)$pbCardDone; ?>/<?= (int)$pbCardTotal; ?>
-</p>
-
-
-
-    <p>Take the test to improve your comprehension skills.</p>
-
-<?php if ($pbUnlocked): ?>
-  <?php $pbBtnText = ($pbProgDone === 0) ? 'Start' : 'Continue'; ?>
-  <button type="button" onclick="location.href='stories_pb.php'"><?= $pbBtnText; ?></button>
-<?php else: ?>
-  <button type="button" disabled aria-disabled="true">Locked</button>
-<?php endif; ?>
-
-
-
-  </div>
-
-  <i class="fas fa-arrow-right flow-arrow" aria-hidden="true"></i>
-
-  <!-- RB (locked until PB >= threshold) -->
-  <div class="card-box <?= $rbUnlocked ? '' : 'locked' ?>"
-       title="<?= $rbUnlocked ? '' : 'Unlocks after you pass ' . PB_PASS_REQUIRED . ' Power Builder stories' ?>">
-    <h4>📚 Rate Builder Assessment</h4>
-    <p>Rate your Builder Assessment.</p>
-  <p style="opacity:.8;margin-top:-6px;">
-  <?php if ($rbCardTotal > 0): ?>
-    Progress: <?= (int)$rbCardDone; ?>/<?= (int)$rbCardTotal; ?>
-  <?php else: ?>
-    Stories Available: 0
-  <?php endif; ?>
-</p>
-
-<?php if ($rbUnlocked): ?>
-  <?php $rbBtnText = ($rbProgDone === 0) ? 'Start' : 'Continue'; ?>
-<button type="button" onclick="location.href='stories_rb.php'"><?= $rbBtnText; ?></button>
-
-<?php else: ?>
-  <button type="button" disabled aria-disabled="true">Locked</button>
-<?php endif; ?>
-
-  </div>
-
-  <i class="fas fa-arrow-right flow-arrow" aria-hidden="true"></i>
-
-  <!-- Certificate (locked until RB >= threshold) -->
-  <div class="card-box <?= $certUnlocked ? '' : 'locked' ?>"
-       title="<?= $certUnlocked ? '' : 'Unlocks after you pass ' . RB_PASS_REQUIRED . ' Rate Builder stories' ?>">
-    <h4>🎓 Certificate</h4>
-    <p>Download your certificate once you finish Rate Builder.</p>
-
-    <?php if ($certUnlocked): ?>
-      <button type="button" onclick="location.href='certificates.php'">View Certificate</button>
-    <?php else: ?>
-      <button type="button" disabled aria-disabled="true">Locked</button>
-    <?php endif; ?>
-  </div>
-</div>
-
 
   <!-- Announcements + Reading Tips -->
   <section class="info-grid">
