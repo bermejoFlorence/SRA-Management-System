@@ -1,13 +1,19 @@
 <?php
-// db_connect.php
-$DB_HOST = 'localhost';
-$DB_USER = 'root';
-$DB_PASS = '';           // change if you set a password
-$DB_NAME = 'sra_db';
+// db_connect.php — Hostinger
+date_default_timezone_set('Asia/Manila');
 
-$conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
-if ($conn->connect_error) {
+$DB_HOST = 'localhost';                       // mananatiling 'localhost' sa Hostinger
+$DB_NAME = 'u578970591_sra_dbssss';           // ← eksaktong DB name sa screenshot mo
+$DB_USER = 'u578970591_sra_db';               // ← eksaktong MySQL user
+$DB_PASS = 'sraDB_2025';  // ← password na sinet mo
+
+mysqli_report(MYSQLI_REPORT_OFF);
+$conn = @new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
+
+if ($conn->connect_errno) {
   http_response_code(500);
   die('DB connection failed: ' . $conn->connect_error);
 }
+
 $conn->set_charset('utf8mb4');
+@$conn->query("SET time_zone = '+08:00'");
