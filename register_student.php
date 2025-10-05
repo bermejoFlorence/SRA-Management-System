@@ -11,9 +11,7 @@ require_once __DIR__ . '/PHPMailer/src/PHPMailer.php';
 require_once __DIR__ . '/PHPMailer/src/SMTP.php';
 
 // CBSUA email-only gate
-if (!preg_match('/^[a-z0-9._%+\-]+@cbsua\.edu\.ph$/', $email)) {
-  jexit(false, 'Only @cbsua.edu.ph emails are allowed.');
-}
+
 function jexit($ok, $msg, $extra = []) {
   echo json_encode(array_merge(['success'=>$ok, 'message'=>$msg], $extra));
   exit;
@@ -40,6 +38,10 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
   jexit(false, 'Invalid email address.');
 }
 
+/* === CBSUA domain gate (case-insensitive) === */
+if (!preg_match('/@cbsua\.edu\.ph$/i', $email)) {
+  jexit(false, 'Only @cbsua.edu.ph emails are allowed.');
+}
 // Optional: enforce school email domain
 // if (!preg_match('/@cbsua\.edu\.ph$/i', $email)) {
 //   jexit(false, 'Please use your @cbsua.edu.ph email.');
