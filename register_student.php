@@ -103,7 +103,7 @@ $user_id = $stmt->insert_id;
 $stmt->close();
 
 // === Send verification email ===
-$verifyUrl = 'http://localhost/sra/verify_email.php?token=' . urlencode($token);
+$verifyUrl = 'https://sra-management.com/verify_email.php?token=' . urlencode($token);
 
 $mail = new PHPMailer(true);
 try {
