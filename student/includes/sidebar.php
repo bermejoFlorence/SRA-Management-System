@@ -15,7 +15,7 @@ $openCls   = fn($k) => ($ACTIVE_MENU === $k) ? 'open' : '';
 
   <!-- Logo (same look as admin) -->
   <div class="logo">
-    <img src="assets/logo.png" alt="SRA Logo" class="logo-img">
+    <img src="2.png" alt="SRA Logo" class="logo-img">
     <span class="logo-text">
       <span class="accent">S</span>cience
       <span class="accent">R</span>esearch
