@@ -27,7 +27,7 @@
 
       <div class="reading-center">
         <strong>READING CENTER</strong>
-        <span>Central Bicol State University of Agriculture</span>
+        <span>Central Bicol State University of Agriculture - Sipocot</span>
       </div>
     </div>
   </section>
