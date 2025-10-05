@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_role('student', '../login.php#login');
@@ -16,15 +15,19 @@ function scalar(mysqli $c, string $sql, array $params = [], string $types = ''){
   if (!$stmt = $c->prepare($sql)) return $val;
   if ($params) $stmt->bind_param($types ?: str_repeat('s', count($params)), ...$params);
   if ($stmt->execute()){
-    $res = $stmt->get_result();
-    if ($res) { $row = $res->fetch_row(); $val = $row ? $row[0] : null; $res->free(); }
+    if ($res = $stmt->get_result()){
+      $row = $res->fetch_row(); $val = $row ? $row[0] : null; $res->free();
+    }
   }
   $stmt->close();
   return $val;
 }
-function clamp($v, $min=0, $max=100){ $v = (float)$v; if($v<$min) $v=$min; if($v>$max) $v=$max; return $v; }
+function clamp($v, $min=0, $max=100){
+  $v = (float)$v; if($v<$min) $v=$min; if($v>$max) $v=$max; return $v;
+}
 
 /* ---------------- Data ---------------- */
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 $studentId   = (int)($_SESSION['user_id'] ?? 0);
 $studentName = htmlspecialchars($_SESSION['full_name'] ?? 'Student');
 
@@ -47,34 +50,44 @@ $levelId      = isset($level['level_id']) ? (int)$level['level_id'] : null;
 $levelName    = $level['name']  ?? null;
 $isFirstTimer = empty($levelName);
 
-/* ----- Helpers to clamp and scalar already defined above ----- */
-
-/* ----- PB total stories (published only for the student's current level) ----- */
+/* ----- Published story totals (compute once) ----- */
 $pbPublishedTotal = 0;
+$rbPublishedTotal = 0;
+
 if ($levelId) {
+  // PB totals
   if ($stmt = $conn->prepare("
       SELECT COUNT(*) AS c
       FROM stories s
       JOIN story_sets ss ON ss.set_id = s.set_id
-      WHERE ss.set_type = 'PB'
-        AND ss.level_id  = ?
-        AND s.status     = 'published'
-        /* optional: if you also gate by set status, keep this guard */
+      WHERE ss.set_type='PB' AND ss.level_id=? AND s.status='published'
         AND (ss.status IS NULL OR ss.status IN ('published','draft'))
   ")) {
     $stmt->bind_param('i', $levelId);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    $pbPublishedTotal = (int)($res->fetch_assoc()['c'] ?? 0);
+    $stmt->execute(); $r = $stmt->get_result();
+    $pbPublishedTotal = (int)($r->fetch_assoc()['c'] ?? 0);
+    $stmt->close();
+  }
+
+  // RB totals
+  if ($stmt = $conn->prepare("
+      SELECT COUNT(*) AS c
+      FROM stories s
+      JOIN story_sets ss ON ss.set_id = s.set_id
+      WHERE ss.set_type='RB' AND ss.level_id=? AND s.status='published'
+        AND (ss.status IS NULL OR ss.status IN ('published','draft'))
+  ")) {
+    $stmt->bind_param('i', $levelId);
+    $stmt->execute(); $r = $stmt->get_result();
+    $rbPublishedTotal = (int)($r->fetch_assoc()['c'] ?? 0);
     $stmt->close();
   }
 }
-/* ----- Totals per level (published only) ----- */
-$pbPublishedTotal = 0;
-$rbPublishedTotal = 0;
-/* ----- Dynamic attempt-based progress: PB & RB ----- */
 
-/** Find in-progress attempt IDs (PB/RB) */
+$pbDen = max(1, $pbPublishedTotal);   // iwas /0
+$rbDen = max(1, $rbPublishedTotal);
+
+/* ----- In-progress attempt IDs ----- */
 $pbAidInProgress = (int)(scalar(
   $conn,
   "SELECT attempt_id
@@ -95,7 +108,7 @@ $rbAidInProgress = (int)(scalar(
   [$studentId], 'i'
 ) ?? 0);
 
-/** Helper to get attempt progress (done/total) for a given attempt_id */
+/* ----- Helper: attempt progress (done/total) ----- */
 $attemptProgress = function(mysqli $c, int $aid): array {
   if ($aid <= 0) return [0,0];
   $total = (int)(scalar($c, "SELECT COUNT(*) FROM attempt_stories WHERE attempt_id=?", [$aid], 'i') ?? 0);
@@ -103,15 +116,13 @@ $attemptProgress = function(mysqli $c, int $aid): array {
   return [$done, $total];
 };
 
-/** PB progress numbers to SHOW on the card */
+/* ----- PB progress shown on the card ----- */
 $pbProgDone  = 0;
-$pbProgTotal = (int)$pbPublishedTotal; // fallback
+$pbProgTotal = $pbPublishedTotal; // fallback to all published stories
 
 if ($pbAidInProgress > 0) {
-  // live in-progress
   [$pbProgDone, $pbProgTotal] = $attemptProgress($conn, $pbAidInProgress);
 } else {
-  // fallback to latest submitted/scored PB attempt (most recent)
   $pbLastAttempt = (int)(scalar(
     $conn,
     "SELECT attempt_id
@@ -121,18 +132,14 @@ if ($pbAidInProgress > 0) {
       LIMIT 1",
     [$studentId], 'i'
   ) ?? 0);
-
   if ($pbLastAttempt > 0) {
     [$pbProgDone, $pbProgTotal] = $attemptProgress($conn, $pbLastAttempt);
-  } else {
-    $pbProgDone = 0;
-    $pbProgTotal = (int)$pbPublishedTotal;
   }
 }
 
-/** RB progress numbers to SHOW on the card */
+/* ----- RB progress shown on the card ----- */
 $rbProgDone  = 0;
-$rbProgTotal = (int)$rbPublishedTotal; // fallback
+$rbProgTotal = $rbPublishedTotal;
 
 if ($rbAidInProgress > 0) {
   [$rbProgDone, $rbProgTotal] = $attemptProgress($conn, $rbAidInProgress);
@@ -146,67 +153,35 @@ if ($rbAidInProgress > 0) {
       LIMIT 1",
     [$studentId], 'i'
   ) ?? 0);
-
   if ($rbLastAttempt > 0) {
     [$rbProgDone, $rbProgTotal] = $attemptProgress($conn, $rbLastAttempt);
-  } else {
-    $rbProgDone  = 0;
-    $rbProgTotal = (int)$rbPublishedTotal;
   }
 }
 
-/** Fractions for overall progress */
-$pbFrac = ($pbProgTotal > 0) ? $pbProgDone / $pbProgTotal : 0.0;
-$rbFrac = ($rbProgTotal > 0) ? $rbProgDone / $rbProgTotal : 0.0;
+/* ----- Fractions for overall progress ----- */
+$pbFrac = ($pbProgTotal > 0) ? ($pbProgDone / $pbProgTotal) : 0.0;
+$rbFrac = ($rbProgTotal > 0) ? ($rbProgDone / $rbProgTotal) : 0.0;
 
-if ($levelId) {
-  // PB
-  if ($stmt = $conn->prepare("
-      SELECT COUNT(*) AS c
-      FROM stories s
-      JOIN story_sets ss ON ss.set_id = s.set_id
-      WHERE ss.set_type='PB' AND ss.level_id=? AND s.status='published'
-        AND (ss.status IS NULL OR ss.status IN ('published','draft'))
-  ")) {
-    $stmt->bind_param('i', $levelId);
-    $stmt->execute(); $r=$stmt->get_result();
-    $pbPublishedTotal = (int)($r->fetch_assoc()['c'] ?? 0);
-    $stmt->close();
-  }
-  // RB
-  if ($stmt = $conn->prepare("
-      SELECT COUNT(*) AS c
-      FROM stories s
-      JOIN story_sets ss ON ss.set_id = s.set_id
-      WHERE ss.set_type='RB' AND ss.level_id=? AND s.status='published'
-        AND (ss.status IS NULL OR ss.status IN ('published','draft'))
-  ")) {
-    $stmt->bind_param('i', $levelId);
-    $stmt->execute(); $r=$stmt->get_result();
-    $rbPublishedTotal = (int)($r->fetch_assoc()['c'] ?? 0);
-    $stmt->close();
-  }
-}
-
-$pbDen = max(1, $pbPublishedTotal);   // iwas /0 sa calc
-$rbDen = max(1, $rbPublishedTotal);
-
-
-/* ----- SLT done? (any submitted SLT attempt) ----- */
+/* ----- SLT done? ----- */
 $sltDone = (int)(scalar(
   $conn,
-  "SELECT COUNT(*) FROM assessment_attempts
-    WHERE student_id = ? AND set_type = 'SLT' AND status = 'submitted' LIMIT 1",
+  "SELECT COUNT(*)
+     FROM assessment_attempts
+    WHERE student_id = ? AND set_type = 'SLT' AND status IN ('submitted','scored')
+    LIMIT 1",
   [$studentId],'i'
 ) ?? 0) > 0;
 
-/* ----- PB/RB: completed stories (distinct story_id) ----- */
+/* ----- Completed stories (must have score) ----- */
 $pbCompleted = (int)(scalar(
   $conn,
   "SELECT COUNT(DISTINCT s.story_id)
      FROM attempt_stories s
      JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
-    WHERE a.student_id = ? AND a.set_type = 'PB' AND a.status = 'submitted'",
+    WHERE a.student_id = ?
+      AND a.set_type   = 'PB'
+      AND a.status IN ('submitted','scored')
+      AND s.score IS NOT NULL",
   [$studentId],'i'
 ) ?? 0);
 
@@ -215,32 +190,37 @@ $rbCompleted = (int)(scalar(
   "SELECT COUNT(DISTINCT s.story_id)
      FROM attempt_stories s
      JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
-    WHERE a.student_id = ? AND a.set_type = 'RB' AND a.status = 'submitted'",
+    WHERE a.student_id = ?
+      AND a.set_type   = 'RB'
+      AND a.status IN ('submitted','scored')
+      AND s.score IS NOT NULL",
   [$studentId],'i'
 ) ?? 0);
 
-/* ----- Pass thresholds for gating (optional but nice) ----- */
+/* ----- Pass thresholds for gating ----- */
 $pbPassThreshold = (float)(scalar(
   $conn,
   "SELECT min_percent FROM level_thresholds
     WHERE applies_to='PB' AND level_id = ? LIMIT 1",
   [$levelId],'i'
-) ?? 0);
+) ?? 0.0);
 
 $rbPassThreshold = (float)(scalar(
   $conn,
   "SELECT min_percent FROM level_thresholds
     WHERE applies_to='RB' AND level_id = ? LIMIT 1",
   [$levelId],'i'
-) ?? 0);
+) ?? 0.0);
 
-/* ----- PB/RB: how many PASSED stories (for unlock rules) ----- */
+/* ----- How many PASSED stories (for unlock) ----- */
 $pbPassed = (int)(scalar(
   $conn,
   "SELECT COUNT(DISTINCT s.story_id)
      FROM attempt_stories s
      JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
-    WHERE a.student_id = ? AND a.set_type = 'PB' AND a.status = 'submitted'
+    WHERE a.student_id = ?
+      AND a.set_type   = 'PB'
+      AND a.status IN ('submitted','scored')
       AND s.percent >= ?",
   [$studentId, $pbPassThreshold], 'id'
 ) ?? 0);
@@ -250,12 +230,14 @@ $rbPassed = (int)(scalar(
   "SELECT COUNT(DISTINCT s.story_id)
      FROM attempt_stories s
      JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
-    WHERE a.student_id = ? AND a.set_type = 'RB' AND a.status = 'submitted'
+    WHERE a.student_id = ?
+      AND a.set_type   = 'RB'
+      AND a.status IN ('submitted','scored')
       AND s.percent >= ?",
   [$studentId, $rbPassThreshold], 'id'
 ) ?? 0);
 
-/* ----- Gates (you can tweak required counts) ----- */
+/* ----- Gates ----- */
 define('PB_PASS_REQUIRED', 8);
 define('RB_PASS_REQUIRED', 8);
 
@@ -264,56 +246,67 @@ $rbUnlocked   = ($pbPassed >= PB_PASS_REQUIRED);
 $certUnlocked = ($rbPassed >= RB_PASS_REQUIRED);
 
 /* ----- Overall progress (10% SLT + 45% PB + 45% RB) ----- */
-/* Use COMPLETED stories so the bar moves even if a story didn't pass */
-/* ----- Overall progress (10% SLT + 45% PB + 45% RB) — now attempt-based dynamic ----- */
-$overall = 0.0;
-$overall += $sltDone ? 10 : 0;
-$overall += clamp($pbFrac, 0, 1) * 45;  // PB fraction (done/total) from A)
-$overall += clamp($rbFrac, 0, 1) * 45;  // RB fraction (done/total) from A)
-$overall = clamp(round($overall, 1));
+$overall   = 0.0;
+$overall  += $sltDone ? 10 : 0;
+$overall  += clamp($pbFrac, 0, 1) * 45;
+$overall  += clamp($rbFrac, 0, 1) * 45;
+$overall   = clamp(round($overall, 1));
 $remaining = clamp(100 - $overall);
-
 
 /* ----- Color pill style ----- */
 function hex_to_rgb(string $hex): array {
-  $h = ltrim($hex, '#'); if (strlen($h) === 3) $h = $h[0].$h[0].$h[1].$h[1].$h[2].$h[2];
-  $int = hexdec($h); return [($int>>16)&255, ($int>>8)&255, $int&255];
+  $h = ltrim($hex, '#');
+  if (strlen($h) === 3) $h = $h[0].$h[0].$h[1].$h[1].$h[2].$h[2];
+  $int = hexdec($h);
+  return [($int>>16)&255, ($int>>8)&255, $int&255];
 }
 function level_color_hex(?string $name, ?string $hexFromDb): ?string {
   if ($hexFromDb) return $hexFromDb;
   if (!$name) return null;
-  $map = ['red'=>'#D32F2F','orange'=>'#EF6C00','yellow'=>'#F9A825','blue'=>'#1565C0','green'=>'#2E7D32'];
+  $map = ['red'=>'#D32F2F','orange'=>'#EF6C00','yellow'=>'#F9A825','blue'=>'#1565C0','green'=>'#2E7D32','purple'=>'#7E57C2'];
   return $map[strtolower(trim($name))] ?? null;
 }
 $lvHex = level_color_hex($levelName ?? null, $level['color_hex'] ?? null);
 $levelPillStyle = '';
 if ($lvHex) { [$r,$g,$b] = hex_to_rgb($lvHex); $levelPillStyle = "background: rgba($r,$g,$b,.12); border:1px solid $lvHex; color:#1b3a1b;"; }
 
-/* ----- Next step label + CTA ----- */
+/* ----- Next step label + CTA (consistent; prefer in-progress) ----- */
+$nextStepLabel = 'You’re all set! Review your results.';
+$ctaText = 'View Results'; $ctaHref = 'results.php';
+
 if ($isFirstTimer) {
   $nextStepLabel = 'Start your Starting Level Test';
-  $nextStepHref  = 'stories.php?start=slt';
   $ctaText = 'Start SLT'; $ctaHref = 'stories_sl.php';
-} elseif ($pbCompleted < $pbDen) {
-  $nextStepLabel = 'Continue Power Builder – Story ' . ($pbCompleted + 1);
-  $ctaText       = ($pbCompleted === 0) ? 'Start Power Builder' : 'Continue Power Builder';
-  $ctaHref       = 'stories_pb.php';  // <-- landing/instructions page
-} elseif ($rbCompleted < $rbDen) {
-  $nextStepLabel = 'Continue Rate Builder – Story ' . ($rbCompleted + 1);
-  $nextStepHref  = 'stories.php?continue=rb';
-  $ctaText = ($rbCompleted === 0) ? 'Start Rate Builder' : 'Continue Rate Builder';
-  $ctaHref = 'stories.php?continue=rb';
-} elseif ($certUnlocked) {
-  $nextStepLabel = 'Congratulations! You can download your certificate.';
-  $nextStepHref  = 'certificates.php';
-  $ctaText = 'Download Certificate'; $ctaHref = 'certificates.php';
-} else {
-  $nextStepLabel = 'You’re all set! Review your results.';
-  $nextStepHref  = 'results.php';
-  $ctaText = 'View Results'; $ctaHref = 'results.php';
+} elseif ($pbUnlocked) {
+  if ($pbAidInProgress && $pbProgTotal > 0 && $pbProgDone < $pbProgTotal) {
+    $nextStepLabel = 'Continue Power Builder – Story ' . ($pbProgDone + 1);
+    $ctaText = 'Continue Power Builder'; $ctaHref = 'stories_pb.php';
+  } elseif ($pbCompleted < $pbDen) {
+    $nextStepLabel = ($pbCompleted === 0)
+      ? 'Start Power Builder'
+      : ('Continue Power Builder – Story ' . ($pbCompleted + 1));
+    $ctaText = ($pbCompleted === 0) ? 'Start Power Builder' : 'Continue Power Builder';
+    $ctaHref = 'stories_pb.php';
+  } elseif ($rbUnlocked) {
+    if ($rbAidInProgress && $rbProgTotal > 0 && $rbProgDone < $rbProgTotal) {
+      $nextStepLabel = 'Continue Rate Builder – Story ' . ($rbProgDone + 1);
+      $ctaText = 'Continue Rate Builder'; $ctaHref = 'stories.php?continue=rb';
+    } elseif ($rbCompleted < $rbDen) {
+      $nextStepLabel = ($rbCompleted === 0)
+        ? 'Start Rate Builder'
+        : ('Continue Rate Builder – Story ' . ($rbCompleted + 1));
+      $ctaText = ($rbCompleted === 0) ? 'Start Rate Builder' : 'Continue Rate Builder';
+      $ctaHref = 'stories.php?continue=rb';
+    }
+  }
 }
 
+if ($certUnlocked) {
+  $nextStepLabel = 'Congratulations! You can download your certificate.';
+  $ctaText = 'Download Certificate'; $ctaHref = 'certificates.php';
+}
 ?>
+
 
 <style>
 /* ================= Page-scoped styles (responsive) ================= */
@@ -656,7 +649,8 @@ body, .main-content { border: 0 !important; }
 
 <?php if ($rbUnlocked): ?>
   <?php $rbBtnText = ($rbProgDone === 0) ? 'Start' : 'Continue'; ?>
-  <button type="button" onclick="location.href='stories.php?continue=rb'"><?= $rbBtnText; ?></button>
+<button type="button" onclick="location.href='stories_rb.php'"><?= $rbBtnText; ?></button>
+
 <?php else: ?>
   <button type="button" disabled aria-disabled="true">Locked</button>
 <?php endif; ?>
