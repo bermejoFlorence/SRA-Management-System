@@ -1301,24 +1301,28 @@ if (forceCompletedView) {
     }
   });
 
-  // 6) Detect tab switching / leaving page (optional – logging or warning)
+    // 6) Detect tab switching / leaving page – with logging
   document.addEventListener('visibilitychange', function() {
+    const state = document.hidden ? 'hidden' : 'visible';
+
+    // Log to server (best-effort, hindi nakaka-apekto sa exam kahit mag-fail)
+    fetch('slt_tab_switch_log.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        attempt_id: <?= json_encode($attemptId ?? 0) ?>,
+        state: state,
+        ts: Date.now()
+      })
+    }).catch(() => {});
+
     if (document.hidden) {
-      // Dito pwede kang:
-      //  - mag-log sa server (AJAX)
-      //  - mag-warning sa user
-      //  - i-auto-submit yung exam (kung gusto mo)
-      // Example log (commented by default):
-      /*
-      fetch('slt_tab_switch_log.php', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ attempt_id: <?= json_encode($attemptId ?? 0) ?>, ts: Date.now() })
-      }).catch(() => {});
-      */
-      console.warn('User switched away from the exam tab.');
+      console.warn('User switched AWAY from the exam tab.');
+    } else {
+      console.log('User RETURNED to the exam tab.');
     }
   });
+
 })();
 </script>
 </body>
