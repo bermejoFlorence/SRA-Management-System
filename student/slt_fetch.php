@@ -81,25 +81,29 @@ $s = $conn->prepare("
   $s->bind_param('i', $attemptId);
   $s->execute();
   $rs = $s->get_result();
-  while ($row = $rs->fetch_assoc()) {
+while ($row = $rs->fetch_assoc()) {
     $sid = (int)$row['story_id'];
     $storyIds[] = $sid;
 
     $limitSec = (int)$row['time_limit_seconds'];
-    $totalLimitSec += max(0, $limitSec);
 
-$stories[] = [
-  'attempt_story_id'  => (int)$row['attempt_story_id'],
-  'story_id'          => $sid,
-  'sequence'          => (int)$row['sequence'],
-  'title'             => (string)$row['title'],
-  'passage_html'      => (string)$row['passage_html'],
-  'image'             => (string)$row['image_path'],
-  'time_limit_seconds'=> (int)$row['time_limit_seconds'],   // NEW
-  'items'             => []
-];
+    // Instead of summing all stories, use the biggest single story limit
+    // (sa setup mo ngayon pare-pareho naman, e.g. 30 minutes)
+    if ($limitSec > 0) {
+        $totalLimitSec = max($totalLimitSec, $limitSec);
+    }
 
-  }
+    $stories[] = [
+        'attempt_story_id'  => (int)$row['attempt_story_id'],
+        'story_id'          => $sid,
+        'sequence'          => (int)$row['sequence'],
+        'title'             => (string)$row['title'],
+        'passage_html'      => (string)$row['passage_html'],
+        'image'             => (string)$row['image_path'],
+        'time_limit_seconds'=> $limitSec,
+        'items'             => []
+    ];
+}
   $rs->free();
   $s->close();
 
