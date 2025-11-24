@@ -5,10 +5,49 @@ require_once __DIR__ . '/../db_connect.php';
 
 require_once __DIR__ . '/includes/progress_gates.php';
 
-/* --- ADD THIS GUARD: kapag tapos na ang SLT, huwag nang ipakita ang intro --- */
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 $student_id = (int)($_SESSION['user_id'] ?? 0);
 
+/* --- DYNAMIC ESTIMATED TIME: based sa SLT stories --- */
+$estLabel = null;
+
+// 1) Hanapin ang latest published SLT set (pwede mong palitan logic kung may “current set” ka)
+$stmt = $conn->prepare("
+  SELECT set_id
+  FROM story_sets
+  WHERE set_type = 'SLT' AND status = 'published'
+  ORDER BY updated_at DESC, set_id DESC
+  LIMIT 1
+");
+$stmt->execute();
+$res = $stmt->get_result();
+$activeSetId = 0;
+if ($row = $res->fetch_assoc()) {
+  $activeSetId = (int)$row['set_id'];
+}
+$stmt->close();
+
+// 2) Kung may nahanap na set, kunin ang total time ng active stories sa set na iyon
+if ($activeSetId > 0) {
+  $stmt = $conn->prepare("
+    SELECT COALESCE(SUM(CASE WHEN time_limit_seconds > 0 THEN time_limit_seconds ELSE 0 END),0) AS total_secs
+    FROM stories
+    WHERE set_id = ? AND status = 'active'
+  ");
+  $stmt->bind_param('i', $activeSetId);
+  $stmt->execute();
+  $res = $stmt->get_result();
+  if ($row = $res->fetch_assoc()) {
+    $totalSecs = (int)$row['total_secs'];
+    if ($totalSecs > 0) {
+      $mins = (int)ceil($totalSecs / 60);
+      $estLabel = $mins . ' minute' . ($mins > 1 ? 's' : '');
+    }
+  }
+  $stmt->close();
+}
+
+/* --- GUARD: kapag tapos na ang SLT, huwag nang ipakita ang intro --- */
 $stmt = $conn->prepare("
   SELECT attempt_id, status
   FROM assessment_attempts
@@ -22,12 +61,10 @@ $last = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if ($last && in_array($last['status'], ['submitted', 'scored'])) {
-  // NOTE: kailangan naka-implement yung view=completed sa stories_sl_run.php (Step 2B-3)
   header('Location: stories_sl_run.php?aid=' . (int)$last['attempt_id'] . '&view=completed');
   exit;
 }
 /* --- END GUARD --- */
-
 $PAGE_TITLE  = 'Starting Level Test';
 $ACTIVE_MENU = 'learn';
 $ACTIVE_SUB  = 'slt';
