@@ -240,11 +240,18 @@ require_once __DIR__ . '/includes/sidebar.php';
   outline:3px solid rgba(0,51,0,.25);
   outline-offset:3px;
 }
+/* Disable text selection for exam area */
+#exam-content {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
 
 </style>
 
 <div class="main-content">
-  <div class="slt-wrap">
+  <div class="slt-wrap" id="exam-content">
 
     <!-- Runner header -->
     <section class="run-head" aria-live="polite">
@@ -1209,6 +1216,110 @@ if (forceCompletedView) {
   })();
 })();
 </script>
+<script>
+// Exam protection script – applies only on pages where this is included
+(function() {
+  // 1) Disable right-click
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  });
 
+  // 2) Disable text selection globally (backup, in case CSS is bypassed)
+  document.addEventListener('selectstart', function(e) {
+    // hayaan gumana ang selection sa input/textarea kung meron ka
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
+    e.preventDefault();
+  });
+
+  // 3) Try to clear clipboard (for PrintScreen / copy)
+  function tryClearClipboard() {
+    // Modern API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText('Screenshots and copying are not allowed during the test.')
+        .catch(function() {
+          // ignore errors silently
+        });
+    } else {
+      // Legacy fallback
+      const inp = document.createElement('input');
+      inp.value = '.';
+      inp.style.position = 'fixed';
+      inp.style.opacity = '0';
+      document.body.appendChild(inp);
+      inp.select();
+      try { document.execCommand('copy'); } catch (err) {}
+      document.body.removeChild(inp);
+    }
+  }
+
+  // 4) Block important keys / shortcuts
+  document.addEventListener('keydown', function(e) {
+    const key = (e.key || '').toLowerCase();
+
+    // F12 (DevTools)
+    if (key === 'f12') {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    // PrintScreen key (some browsers/OS)
+    if (key === 'printscreen' || e.keyCode === 44) {
+      e.preventDefault();
+      e.stopPropagation();
+      tryClearClipboard();
+      alert('Screenshots are not allowed during the test.');
+      return;
+    }
+
+    // Ctrl + something
+    if (e.ctrlKey) {
+      const blocked = ['c','x','s','p','u','a']; // copy, cut, save, print, view source, select all
+      if (blocked.includes(key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      // Ctrl+Shift+I / J / C (DevTools)
+      if (e.shiftKey && ['i','j','c'].includes(key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    }
+  });
+
+  // 5) Extra PrintScreen detection on keyup (sa ibang OS/browsers)
+  document.addEventListener('keyup', function(e) {
+    const key = (e.key || '').toLowerCase();
+    if (key === 'printscreen' || e.keyCode === 44) {
+      e.preventDefault();
+      tryClearClipboard();
+      alert('Screenshots are not allowed during the test.');
+    }
+  });
+
+  // 6) Detect tab switching / leaving page (optional – logging or warning)
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      // Dito pwede kang:
+      //  - mag-log sa server (AJAX)
+      //  - mag-warning sa user
+      //  - i-auto-submit yung exam (kung gusto mo)
+      // Example log (commented by default):
+      /*
+      fetch('slt_tab_switch_log.php', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ attempt_id: <?= json_encode($attemptId ?? 0) ?>, ts: Date.now() })
+      }).catch(() => {});
+      */
+      console.warn('User switched away from the exam tab.');
+    }
+  });
+})();
+</script>
 </body>
 </html>
