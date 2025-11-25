@@ -55,13 +55,15 @@ if ($activeSetId > 0) {
 
 
 /* --- GUARD: kapag tapos na ang SLT, huwag nang ipakita ang intro --- */
+// 1) Hanapin ang current SLT set: unang published SLT set (by sequence)
 $stmt = $conn->prepare("
-  SELECT attempt_id, status
-  FROM assessment_attempts
-  WHERE student_id = ? AND set_type = 'SLT'
-  ORDER BY submitted_at DESC, started_at DESC, attempt_id DESC
+  SELECT set_id
+  FROM story_sets
+  WHERE set_type = 'SLT' AND status = 'published'
+  ORDER BY sequence ASC, set_id ASC
   LIMIT 1
 ");
+
 $stmt->bind_param('i', $student_id);
 $stmt->execute();
 $last = $stmt->get_result()->fetch_assoc();
