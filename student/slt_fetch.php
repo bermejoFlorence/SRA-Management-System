@@ -55,7 +55,7 @@ try {
        WHERE attempt_id = ? AND student_id = ? AND started_at IS NULL
     ");
     $upd->bind_param('iii', $nowTs, $attemptId, $studentId);
-    $upd->execute();
+    $upd->execute();$totalLimitSec = 0;
     $upd->close();
     $startedTs = $nowTs; // lock to DB time just written
   }
@@ -182,10 +182,25 @@ while ($row = $rs->fetch_assoc()) {
 
   /* ---------- 6) Compute attempt-level time window ---------- */
   // Single-story SLT → totalLimitSec is just that story’s limit.
-  $limitSec = max(0, (int)$totalLimitSec);              // 0 means "no time limit"
-  $deadlineTs = $limitSec > 0 ? ($startedTs + $limitSec) : null;
-  $remaining  = $limitSec > 0 ? max(0, $deadlineTs - $nowTs) : null;
-  $timeUp     = $limitSec > 0 ? ($nowTs >= $deadlineTs) : false;
+ /* ---------- 6) Compute attempt-level time window ---------- */
+/*
+ * Gagamitin natin ang unang story na may time_limit_seconds > 0
+ * bilang global time limit ng buong SLT attempt.
+ * (Halimbawa: Story A = 60 sec → buong SLT = 60 sec)
+ */
+$limitSec = 0;
+foreach ($storiesOut as $st) {
+    if (!empty($st['time_limit_seconds']) && (int)$st['time_limit_seconds'] > 0) {
+        $limitSec = (int)$st['time_limit_seconds'];
+        break; // unang non-zero lang ang kukunin
+    }
+}
+
+// 0 = walang limit (stopwatch mode)
+$deadlineTs = $limitSec > 0 ? ($startedTs + $limitSec) : null;
+$remaining  = $limitSec > 0 ? max(0, $deadlineTs - $nowTs) : null;
+$timeUp     = $limitSec > 0 ? ($nowTs >= $deadlineTs) : false;
+
 
   if (ob_get_length()) ob_clean();
   echo json_encode([

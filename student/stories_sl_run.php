@@ -360,18 +360,22 @@ require_once __DIR__ . '/includes/sidebar.php';
     <div id="perStoryWrap" class="per-story"></div>
 
     <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px;">
-      <a href="index.php" class="btn">Go to Dashboard</a>
-      <!-- NEW: add id so we can update the link later -->
-      <a id="pbLink" href="stories.php?continue=pb" class="btn pb-btn">
- <a href="stories_pb.php" class="btn-pb">
-  <span>Start Power Builder</span>
-  <span class="arr">→</span>
-</a>
+  <a href="index.php" class="btn">Go to Dashboard</a>
 
-  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" style="margin-left:8px">
-    <path d="M13 5l7 7-7 7M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-</a>
+  <!-- Single anchor only, with id="pbLink" -->
+  <a id="pbLink" href="stories_pb.php" class="btn-pb">
+    <span>Start Power Builder</span>
+    <span class="arr">→</span>
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" style="margin-left:8px">
+      <path d="M13 5l7 7-7 7M5 12h14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"/>
+    </svg>
+  </a>
+</div>
 
     </div>
   </div>
