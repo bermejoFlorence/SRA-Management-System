@@ -939,10 +939,11 @@ function updatePbLink(assign){
 
 }
 // --- Analyze → Reveal → Continue flow ---
-async function runAnalyzeAndFinish({ fast=false } = {}){
+// --- Analyze → Reveal → Continue flow ---
+async function runAnalyzeAndFinish({ fast=false } = {}) {
   // Fallback if the overlay isn’t present for any reason
   if (!$analyze) {
-    await submitAll().catch(()=>{});
+    await submitAll().catch(() => {});
     showCompleted();
     return;
   }
@@ -968,19 +969,35 @@ async function runAnalyzeAndFinish({ fast=false } = {}){
     showCompleted();
     return;
   }
-  // capture assigned level/color from server finalize
-finalAssign = {
-  levelId:    result?.assigned_level_id ?? result?.level_id ?? null,
-  levelName:  result?.assigned_level_name ?? result?.level_name ?? null,
-  colorHex:   result?.assigned_color_hex ?? null,
-  overallPct: result?.overall_pct ?? result?.summary?.percent ?? null,
-};
 
-// (optional) update reveal overlay badge text if needed
-if (finalAssign?.levelName) {
-  $revealBadge.textContent = finalAssign.levelName;
-  $revealLine.textContent  = `Congratulations! You’ll start in the ${finalAssign.levelName} category.`;
-}
+  // 🔴 NEW: kung sinabi ng server na "allow_retake", huwag na mag-assign ng level
+  //        → balik sa SLT page para mag-retake
+  if (result && result.allow_retake) {
+    $analyze.style.display = 'none';
+    window.removeEventListener('beforeunload', onBeforeUnload);
+
+    const msg = result.retry_message
+      || 'Your attempt was not scored (not enough answers or time ran out).\n\nYou may retake the Starting Level Test.';
+    alert(msg);
+
+    // balik sa SLT landing page na may flag, para pwede kang magpakita ng notice doon
+    window.location.href = 'stories_sl.php?retry=1';
+    return;
+  }
+
+  // ✅ Normal path: may valid assignment galing backend
+  finalAssign = {
+    levelId:    result?.assigned_level_id ?? result?.level_id ?? null,
+    levelName:  result?.assigned_level_name ?? result?.level_name ?? null,
+    colorHex:   result?.assigned_color_hex ?? null,
+    overallPct: result?.overall_pct ?? result?.summary?.percent ?? null,
+  };
+
+  // (optional) update reveal overlay badge text if needed
+  if (finalAssign?.levelName) {
+    $revealBadge.textContent = finalAssign.levelName;
+    $revealLine.textContent  = `Congratulations! You’ll start in the ${finalAssign.levelName} category.`;
+  }
 
   // Pull assigned level from server response (use whatever keys you return)
   const levelName  = result?.assigned_level_name || result?.level_name || result?.pb_level_name || null;
@@ -996,20 +1013,20 @@ if (finalAssign?.levelName) {
   $revealState.style.display  = '';
 
   return new Promise(resolve => {
-  const btn = $revealSeeResults || document.getElementById('revealSeeResults');
-  if (btn) {
-    btn.addEventListener('click', () => {
+    const btn = $revealSeeResults || document.getElementById('revealSeeResults');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        $analyze.style.display = 'none';
+        showCompleted();
+        resolve();
+      }, { once: true });
+    } else {
+      // safety fallback
       $analyze.style.display = 'none';
       showCompleted();
       resolve();
-    }, { once: true });
-  } else {
-    // safety fallback
-    $analyze.style.display = 'none';
-    showCompleted();
-    resolve();
-  }
-});
+    }
+  });
 }
 
 async function onTimeUp(){
