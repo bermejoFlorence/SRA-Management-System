@@ -28,24 +28,31 @@ if ($row = $res->fetch_assoc()) {
 $stmt->close();
 
 // 2) Kung may nahanap na set, kunin ang total time ng active stories sa set na iyon
+// 2) Kung may nahanap na set, kunin ang time limit ng UNANG active story
+//    (same logic as slt_fetch → base sa unang story na may non-zero limit)
 if ($activeSetId > 0) {
   $stmt = $conn->prepare("
-    SELECT COALESCE(SUM(CASE WHEN time_limit_seconds > 0 THEN time_limit_seconds ELSE 0 END),0) AS total_secs
+    SELECT COALESCE(time_limit_seconds,0) AS limit_secs
     FROM stories
-    WHERE set_id = ? AND status = 'active'
+    WHERE set_id = ?
+      AND status = 'active'
+      AND COALESCE(time_limit_seconds,0) > 0
+    ORDER BY sequence ASC, story_id ASC
+    LIMIT 1
   ");
   $stmt->bind_param('i', $activeSetId);
   $stmt->execute();
   $res = $stmt->get_result();
   if ($row = $res->fetch_assoc()) {
-    $totalSecs = (int)$row['total_secs'];
-    if ($totalSecs > 0) {
-      $mins = (int)ceil($totalSecs / 60);
+    $limitSecs = (int)$row['limit_secs'];
+    if ($limitSecs > 0) {
+      $mins = (int)ceil($limitSecs / 60);
       $estLabel = $mins . ' minute' . ($mins > 1 ? 's' : '');
     }
   }
   $stmt->close();
 }
+
 
 /* --- GUARD: kapag tapos na ang SLT, huwag nang ipakita ang intro --- */
 $stmt = $conn->prepare("
