@@ -9,23 +9,52 @@ if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 $student_id = (int)($_SESSION['user_id'] ?? 0);
 
 /* --- DYNAMIC ESTIMATED TIME: based sa SLT stories --- */
+/* --- DYNAMIC ESTIMATED TIME: base sa kasalukuyang SLT set --- */
 $estLabel = null;
 
-// 1) Hanapin ang latest published SLT set (pwede mong palitan logic kung may “current set” ka)
+// 1) Gamitin ang PAREHONG rule ng stories_sl_start.php:
+//    unang published SLT set by sequence (current SLT set)
 $stmt = $conn->prepare("
   SELECT set_id
   FROM story_sets
-  WHERE set_type = 'SLT' AND status = 'published'
-  ORDER BY updated_at DESC, set_id DESC
+  WHERE set_type = 'SLT'
+    AND status = 'published'
+  ORDER BY sequence ASC, set_id ASC
   LIMIT 1
 ");
 $stmt->execute();
 $res = $stmt->get_result();
 $activeSetId = 0;
 if ($row = $res->fetch_assoc()) {
-  $activeSetId = (int)$row['set_id'];
+    $activeSetId = (int)$row['set_id'];
 }
 $stmt->close();
+
+// 2) Kunin ang time limit ng UNANG active story na may non-zero limit
+if ($activeSetId > 0) {
+    $stmt = $conn->prepare("
+      SELECT COALESCE(time_limit_seconds,0) AS limit_secs
+      FROM stories
+      WHERE set_id = ?
+        AND status = 'active'
+        AND COALESCE(time_limit_seconds,0) > 0
+      ORDER BY sequence ASC, story_id ASC
+      LIMIT 1
+    ");
+    $stmt->bind_param('i', $activeSetId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($row = $res->fetch_assoc()) {
+        $limitSecs = (int)$row['limit_secs'];
+        if ($limitSecs > 0) {
+            // round/ceil to minutes
+            $mins = max(1, (int)ceil($limitSecs / 60));
+            $estLabel = $mins . ' minute' . ($mins > 1 ? 's' : '');
+        }
+    }
+    $stmt->close();
+}
+
 
 // 2) Kung may nahanap na set, kunin ang total time ng active stories sa set na iyon
 // 2) Kung may nahanap na set, kunin ang time limit ng UNANG active story
