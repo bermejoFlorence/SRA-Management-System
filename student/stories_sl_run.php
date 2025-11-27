@@ -316,6 +316,88 @@ require_once __DIR__ . '/includes/sidebar.php';
   line-height:1.5;
 }
 
+/* Header + motivational card layout */
+.done-header{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:18px;
+}
+
+.done-main{
+  flex:1 1 260px;
+  min-width:260px;
+}
+
+/* BIG, SLANTED “YOU DID IT!” STYLE CARD */
+.mot-card{
+  flex:0 0 min(430px, 42vw);
+  max-width:480px;
+
+  /* gradient banner look */
+  background: linear-gradient(115deg, #FFE58F 0%, #FFF6D9 35%, #CFF7E5 100%);
+  border-radius:26px;
+  padding:16px 22px 18px;
+
+  border:1px solid rgba(255,255,255,.85);
+  box-shadow:0 12px 30px rgba(0,0,0,.18);
+  position:relative;
+  overflow:hidden;
+
+  /* para hindi “bumaba”: rotate + akyat ng konti */
+  transform-origin: left center;
+  transform: rotate(-3deg) translateY(-10px); /* adjust -10px kung gusto mo mas taas/baba */
+
+  /* para hindi dumikit masyado sa text sa kaliwa */
+  margin-top:0;
+}
+
+/* dekorasyon sa loob ng card – parang confetti/stars vibe */
+.mot-card::before{
+  content:'';
+  position:absolute;
+  inset:-30%;
+  background:
+    radial-gradient(circle at 0 0, rgba(236,163,5,.45), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(0,102,51,.25), transparent 55%);
+  opacity:.8;
+  pointer-events:none;
+}
+
+/* text sa loob ng banner */
+.mot-title{
+  position:relative;
+  z-index:1;
+  font-weight:900;
+  letter-spacing:.12em;
+  font-size:1.05rem;
+  text-transform:uppercase;
+  color:#102410;
+  margin:0 0 4px;
+}
+.mot-text{
+  position:relative;
+  z-index:1;
+  margin:0;
+  color:#274327;
+  font-size:.95rem;
+}
+
+/* Mobile: alisin yung slant para hindi magulo sa maliit na screen */
+@media (max-width: 768px){
+  .done-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .mot-card{
+    flex:1 1 100%;
+    max-width:100%;
+    transform:none;          /* no rotate on mobile */
+    margin-top:4px;
+  }
+}
 
 </style>
 
