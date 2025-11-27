@@ -246,15 +246,14 @@ require_once __DIR__ . '/includes/sidebar.php';
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-}
-/* Completion */
+}/* Completion */
 .done{
   padding:36px 16px;
 }
 .done h2{
   margin:0 0 8px;
   color: var(--g);
-  font-size:clamp(1.1rem,1rem + .8vw,1.6rem);
+  font-size:clamp(1.2rem,1.05rem + 1vw,1.8rem);
 }
 .done p{
   margin:0 0 16px;
@@ -265,34 +264,53 @@ require_once __DIR__ . '/includes/sidebar.php';
 .done-header{
   display:flex;
   flex-wrap:wrap;
-  align-items:flex-start;
+  align-items:stretch;
   justify-content:space-between;
-  gap:16px;
-  margin-bottom:16px;
+  gap:24px;
+  margin-bottom:18px;
 }
 .done-main{
-  flex:1 1 260px;
-  min-width:260px;
+  flex:1 1 320px;
+  min-width:280px;
 }
+
+/* MOTIVATION CARD */
 .mot-card{
-  flex:0 0 260px;
-  max-width:320px;
-  background:#ffffff;
-  border:1px solid #eef2ee;
-  border-radius:14px;
-  padding:12px 14px;
-  box-shadow:var(--shadow);
+  flex:0 0 320px;            /* mas malapad */
+  max-width:380px;
+  background:
+    radial-gradient(600px 200px at 0% 0%, var(--acc-soft), transparent 60%),
+    #ffffff;
+  border-radius:18px;
+  padding:18px 20px;
+  border:1px solid #f0f3ef;
+  border-left:4px solid var(--acc);  /* accent line */
+  box-shadow:0 14px 32px rgba(0,0,0,.08);
   text-align:left;
 }
 .mot-title{
-  font-weight:800;
+  font-weight:900;
   color:#1b3a1b;
-  margin-bottom:4px;
+  margin-bottom:6px;
+  font-size:clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
 }
 .mot-text{
   margin:0;
   color:#6b7c6b;
-  font-size:.95rem;
+  font-size:.98rem;
+  line-height:1.6;
+}
+
+/* Responsive: card full width sa mobile */
+@media (max-width:768px){
+  .done-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .mot-card{
+    flex:1 1 auto;
+    max-width:100%;
+  }
 }
 
 </style>
