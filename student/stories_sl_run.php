@@ -246,157 +246,6 @@ require_once __DIR__ . '/includes/sidebar.php';
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-}/* YOU DID IT! – banner style motivation card */
-.mot-card{
-  position:relative;
-  flex:0 0 340px;
-  max-width:420px;
-
-  padding:18px 22px;
-  border-radius:20px;
-  border:none;
-
-  /* festive background */
-  background:
-    radial-gradient(circle at 0% 0%,   rgba(236,163,5,.28), transparent 60%),
-    radial-gradient(circle at 100% 0%, rgba(0,180,120,.22), transparent 60%),
-    radial-gradient(circle at 0% 100%, rgba(255,105,135,.22), transparent 60%),
-    #fffbe6;
-
-  box-shadow:0 14px 32px rgba(0,0,0,.18);
-  transform:rotate(-2deg);          /* slight slant like a banner */
-  overflow:hidden;
-}
-
-/* extra color bursts sa corners */
-.mot-card::before,
-.mot-card::after{
-  content:"";
-  position:absolute;
-  width:140px;
-  height:140px;
-  border-radius:40%;
-  opacity:.65;
-  pointer-events:none;
-}
-.mot-card::before{
-  background:radial-gradient(circle at 30% 30%, #ffdf7c 0, #ffdf7c 40%, transparent 60%);
-  top:-60px;
-  left:-40px;
-}
-.mot-card::after{
-  background:radial-gradient(circle at 70% 70%, #8be9c4 0, #8be9c4 40%, transparent 60%);
-  bottom:-60px;
-  right:-40px;
-}
-
-/* text na straight, hindi slanted */
-.mot-title,
-.mot-text{
-  transform:rotate(2deg);           /* counter-rotate para straight tingnan */
-  transform-origin:left center;
-  position:relative;
-  z-index:1;                         /* above background blobs */
-}
-
-.mot-title{
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  color:#1b3a1b;
-  font-size:1.1rem;
-  margin-bottom:6px;
-  text-shadow:0 2px 0 rgba(255,255,255,.6);
-}
-
-.mot-text{
-  margin:0;
-  color:#324832;
-  font-size:.97rem;
-  line-height:1.5;
-}
-
-/* Header + motivational card layout */
-.done-header{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:18px;
-  margin-bottom:18px;
-}
-
-.done-main{
-  flex:1 1 260px;
-  min-width:260px;
-}
-
-/* BIG, SLANTED “YOU DID IT!” STYLE CARD */
-.mot-card{
-  flex:0 0 min(430px, 42vw);
-  max-width:480px;
-
-  /* gradient banner look */
-  background: linear-gradient(115deg, #FFE58F 0%, #FFF6D9 35%, #CFF7E5 100%);
-  border-radius:26px;
-  padding:16px 22px 18px;
-
-  border:1px solid rgba(255,255,255,.85);
-  box-shadow:0 12px 30px rgba(0,0,0,.18);
-  position:relative;
-  overflow:hidden;
-
-  /* para hindi “bumaba”: rotate + akyat ng konti */
-  transform-origin: left center;
-  transform: rotate(-3deg) translateY(-10px); /* adjust -10px kung gusto mo mas taas/baba */
-
-  /* para hindi dumikit masyado sa text sa kaliwa */
-  margin-top:0;
-}
-
-/* dekorasyon sa loob ng card – parang confetti/stars vibe */
-.mot-card::before{
-  content:'';
-  position:absolute;
-  inset:-30%;
-  background:
-    radial-gradient(circle at 0 0, rgba(236,163,5,.45), transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(0,102,51,.25), transparent 55%);
-  opacity:.8;
-  pointer-events:none;
-}
-
-/* text sa loob ng banner */
-.mot-title{
-  position:relative;
-  z-index:1;
-  font-weight:900;
-  letter-spacing:.12em;
-  font-size:1.05rem;
-  text-transform:uppercase;
-  color:#102410;
-  margin:0 0 4px;
-}
-.mot-text{
-  position:relative;
-  z-index:1;
-  margin:0;
-  color:#274327;
-  font-size:.95rem;
-}
-
-/* Mobile: alisin yung slant para hindi magulo sa maliit na screen */
-@media (max-width: 768px){
-  .done-header{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-  .mot-card{
-    flex:1 1 100%;
-    max-width:100%;
-    transform:none;          /* no rotate on mobile */
-    margin-top:4px;
-  }
 }
 
 </style>
@@ -492,56 +341,45 @@ require_once __DIR__ . '/includes/sidebar.php';
       <div style="color:#6b7c6b; font-size:.9rem;">No back button is available during the quiz.</div>
     </section>
 
-<!-- Done view -->
+    <!-- Done view -->
+  <!-- Done view -->
 <section id="doneView" class="done-card" style="display:none;">
   <div class="done">
-    <div class="done-header">
-      <!-- LEFT: main text -->
-      <div class="done-main">
-        <h2>You’ve completed the Starting Level Test.</h2>
+    <h2>You’ve completed the Starting Level Test.</h2>
 
-        <!-- Color category line -->
-        <p id="colorLine" class="color-line" style="margin:-6px 0 12px;">
-          Your Color Category:
-          <span id="colorBadge" class="color-badge">—</span>
-        </p>
+    <!-- NEW: color category line (under the heading) -->
+    <p id="colorLine" class="color-line" style="margin:-6px 0 12px;">
+      Your Color Category:
+      <span id="colorBadge" class="color-badge">—</span>
+    </p>
 
-        <p>Your results are ready. Here’s a quick summary.</p>
-      </div>
+    <p>Your results are ready. Here’s a quick summary.</p>
 
-      <!-- RIGHT: motivational message card -->
-      <aside id="motCard" class="mot-card" aria-live="polite">
-        <div id="motTitle" class="mot-title">Nice work! 🎉</div>
-        <p id="motText" class="mot-text">
-          Your test is completed. We’ll show a short message here based on your score.
-        </p>
-      </aside>
-    </div>
-
-    <!-- existing analytics containers -->
+    <!-- existing analytics containers (keep if you already have them) -->
     <div id="finalStats" class="stats-grid" aria-live="polite"></div>
     <div id="perStoryWrap" class="per-story"></div>
 
     <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px;">
-      <a href="index.php" class="btn">Go to Dashboard</a>
+  <a href="index.php" class="btn">Go to Dashboard</a>
 
-      <!-- Single anchor only, with id="pbLink" -->
-      <a id="pbLink" href="stories_pb.php" class="btn-pb">
-        <span>Start Power Builder</span>
-        <span class="arr">→</span>
-        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" style="margin-left:8px">
-          <path d="M13 5l7 7-7 7M5 12h14"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"/>
-        </svg>
-      </a>
+  <!-- Single anchor only, with id="pbLink" -->
+  <a id="pbLink" href="stories_pb.php" class="btn-pb">
+    <span>Start Power Builder</span>
+    <span class="arr">→</span>
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" style="margin-left:8px">
+      <path d="M13 5l7 7-7 7M5 12h14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"/>
+    </svg>
+  </a>
+</div>
+
     </div>
   </div>
 </section>
-
 
     <!-- Time-up modal -->
     <div id="timeUpModal" class="modal" style="display:none;" role="dialog" aria-modal="true">
@@ -843,35 +681,6 @@ const forceCompletedView = params.get('view') === 'completed';
     $btnNext.textContent = onLastSet ? 'Finish story' : 'Next set';
     updateNextEnabled();
   }
-function updateMotivation(pct){
-  const card  = document.getElementById('motCard');
-  const title = document.getElementById('motTitle');
-  const text  = document.getElementById('motText');
-  if (!card || !title || !text) return;
-
-  let heading, body;
-
-  // Walang items (safety)
-  if (!Number.isFinite(pct)) {
-    heading = 'Nice work! 🎉';
-    body    = 'Your test is completed. Keep going with the next activities.';
-  } else if (pct >= 90) {
-    heading = 'Outstanding! 🌟';
-    body    = 'You did a great job!';
-  } else if (pct >= 75) {
-    heading = 'Great job! 👍';
-    body    = 'Keep it up.';
-  } else if (pct >= 50) {
-    heading = 'Good effort! 🙂';
-    body    = 'Let’s keep practicing.';
-  } else {
-    heading = 'Don’t give up! 💪';
-    body    = 'You can improve on the next stories.';
-  }
-
-  title.textContent = heading;
-  text.textContent  = body;
-}
 
   function renderCompletedAnalytics(){
   const $stats = document.getElementById('finalStats');
@@ -883,12 +692,6 @@ function updateMotivation(pct){
   const correct= rows.reduce((s,r)=> s + (r.score||0), 0);
   const pct    = totalQ ? Math.round((correct/totalQ)*100) : 0;
   const readAll= rows.reduce((s,r)=> s + (r.read_secs||0), 0);
-  // update motivational message based on overall percent
-  if (totalQ > 0) {
-    updateMotivation(pct);
-  } else {
-    updateMotivation(null);
-  }
 
   const wpms   = rows.map(r=> r.wpm).filter(v=> typeof v==='number' && isFinite(v));
   const avgWpm = wpms.length ? Math.round(wpms.reduce((s,v)=>s+v,0)/wpms.length) : '—';
