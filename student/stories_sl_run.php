@@ -246,72 +246,76 @@ require_once __DIR__ . '/includes/sidebar.php';
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-}/* Completion */
-.done{
-  padding:36px 16px;
-}
-.done h2{
-  margin:0 0 8px;
-  color: var(--g);
-  font-size:clamp(1.2rem,1.05rem + 1vw,1.8rem);
-}
-.done p{
-  margin:0 0 16px;
-  opacity:.9;
-}
-
-/* Header + motivational card layout */
-.done-header{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:stretch;
-  justify-content:space-between;
-  gap:24px;
-  margin-bottom:18px;
-}
-.done-main{
-  flex:1 1 320px;
-  min-width:280px;
-}
-
-/* MOTIVATION CARD */
+}/* YOU DID IT! – banner style motivation card */
 .mot-card{
-  flex:0 0 320px;            /* mas malapad */
-  max-width:380px;
+  position:relative;
+  flex:0 0 340px;
+  max-width:420px;
+
+  padding:18px 22px;
+  border-radius:20px;
+  border:none;
+
+  /* festive background */
   background:
-    radial-gradient(600px 200px at 0% 0%, var(--acc-soft), transparent 60%),
-    #ffffff;
-  border-radius:18px;
-  padding:18px 20px;
-  border:1px solid #f0f3ef;
-  border-left:4px solid var(--acc);  /* accent line */
-  box-shadow:0 14px 32px rgba(0,0,0,.08);
-  text-align:left;
+    radial-gradient(circle at 0% 0%,   rgba(236,163,5,.28), transparent 60%),
+    radial-gradient(circle at 100% 0%, rgba(0,180,120,.22), transparent 60%),
+    radial-gradient(circle at 0% 100%, rgba(255,105,135,.22), transparent 60%),
+    #fffbe6;
+
+  box-shadow:0 14px 32px rgba(0,0,0,.18);
+  transform:rotate(-2deg);          /* slight slant like a banner */
+  overflow:hidden;
 }
+
+/* extra color bursts sa corners */
+.mot-card::before,
+.mot-card::after{
+  content:"";
+  position:absolute;
+  width:140px;
+  height:140px;
+  border-radius:40%;
+  opacity:.65;
+  pointer-events:none;
+}
+.mot-card::before{
+  background:radial-gradient(circle at 30% 30%, #ffdf7c 0, #ffdf7c 40%, transparent 60%);
+  top:-60px;
+  left:-40px;
+}
+.mot-card::after{
+  background:radial-gradient(circle at 70% 70%, #8be9c4 0, #8be9c4 40%, transparent 60%);
+  bottom:-60px;
+  right:-40px;
+}
+
+/* text na straight, hindi slanted */
+.mot-title,
+.mot-text{
+  transform:rotate(2deg);           /* counter-rotate para straight tingnan */
+  transform-origin:left center;
+  position:relative;
+  z-index:1;                         /* above background blobs */
+}
+
 .mot-title{
   font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
   color:#1b3a1b;
+  font-size:1.1rem;
   margin-bottom:6px;
-  font-size:clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
-}
-.mot-text{
-  margin:0;
-  color:#6b7c6b;
-  font-size:.98rem;
-  line-height:1.6;
+  text-shadow:0 2px 0 rgba(255,255,255,.6);
 }
 
-/* Responsive: card full width sa mobile */
-@media (max-width:768px){
-  .done-header{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-  .mot-card{
-    flex:1 1 auto;
-    max-width:100%;
-  }
+.mot-text{
+  margin:0;
+  color:#324832;
+  font-size:.97rem;
+  line-height:1.5;
 }
+
 
 </style>
 
