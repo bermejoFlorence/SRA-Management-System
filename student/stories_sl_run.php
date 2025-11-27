@@ -247,6 +247,53 @@ require_once __DIR__ . '/includes/sidebar.php';
   -ms-user-select: none;
   user-select: none;
 }
+/* Completion */
+.done{
+  padding:36px 16px;
+}
+.done h2{
+  margin:0 0 8px;
+  color: var(--g);
+  font-size:clamp(1.1rem,1rem + .8vw,1.6rem);
+}
+.done p{
+  margin:0 0 16px;
+  opacity:.9;
+}
+
+/* Header + motivational card layout */
+.done-header{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:16px;
+}
+.done-main{
+  flex:1 1 260px;
+  min-width:260px;
+}
+.mot-card{
+  flex:0 0 260px;
+  max-width:320px;
+  background:#ffffff;
+  border:1px solid #eef2ee;
+  border-radius:14px;
+  padding:12px 14px;
+  box-shadow:var(--shadow);
+  text-align:left;
+}
+.mot-title{
+  font-weight:800;
+  color:#1b3a1b;
+  margin-bottom:4px;
+}
+.mot-text{
+  margin:0;
+  color:#6b7c6b;
+  font-size:.95rem;
+}
 
 </style>
 
@@ -341,45 +388,56 @@ require_once __DIR__ . '/includes/sidebar.php';
       <div style="color:#6b7c6b; font-size:.9rem;">No back button is available during the quiz.</div>
     </section>
 
-    <!-- Done view -->
-  <!-- Done view -->
+<!-- Done view -->
 <section id="doneView" class="done-card" style="display:none;">
   <div class="done">
-    <h2>You’ve completed the Starting Level Test.</h2>
+    <div class="done-header">
+      <!-- LEFT: main text -->
+      <div class="done-main">
+        <h2>You’ve completed the Starting Level Test.</h2>
 
-    <!-- NEW: color category line (under the heading) -->
-    <p id="colorLine" class="color-line" style="margin:-6px 0 12px;">
-      Your Color Category:
-      <span id="colorBadge" class="color-badge">—</span>
-    </p>
+        <!-- Color category line -->
+        <p id="colorLine" class="color-line" style="margin:-6px 0 12px;">
+          Your Color Category:
+          <span id="colorBadge" class="color-badge">—</span>
+        </p>
 
-    <p>Your results are ready. Here’s a quick summary.</p>
+        <p>Your results are ready. Here’s a quick summary.</p>
+      </div>
 
-    <!-- existing analytics containers (keep if you already have them) -->
+      <!-- RIGHT: motivational message card -->
+      <aside id="motCard" class="mot-card" aria-live="polite">
+        <div id="motTitle" class="mot-title">Nice work! 🎉</div>
+        <p id="motText" class="mot-text">
+          Your test is completed. We’ll show a short message here based on your score.
+        </p>
+      </aside>
+    </div>
+
+    <!-- existing analytics containers -->
     <div id="finalStats" class="stats-grid" aria-live="polite"></div>
     <div id="perStoryWrap" class="per-story"></div>
 
     <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px;">
-  <a href="index.php" class="btn">Go to Dashboard</a>
+      <a href="index.php" class="btn">Go to Dashboard</a>
 
-  <!-- Single anchor only, with id="pbLink" -->
-  <a id="pbLink" href="stories_pb.php" class="btn-pb">
-    <span>Start Power Builder</span>
-    <span class="arr">→</span>
-    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" style="margin-left:8px">
-      <path d="M13 5l7 7-7 7M5 12h14"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"/>
-    </svg>
-  </a>
-</div>
-
+      <!-- Single anchor only, with id="pbLink" -->
+      <a id="pbLink" href="stories_pb.php" class="btn-pb">
+        <span>Start Power Builder</span>
+        <span class="arr">→</span>
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" style="margin-left:8px">
+          <path d="M13 5l7 7-7 7M5 12h14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"/>
+        </svg>
+      </a>
     </div>
   </div>
 </section>
+
 
     <!-- Time-up modal -->
     <div id="timeUpModal" class="modal" style="display:none;" role="dialog" aria-modal="true">
@@ -681,6 +739,35 @@ const forceCompletedView = params.get('view') === 'completed';
     $btnNext.textContent = onLastSet ? 'Finish story' : 'Next set';
     updateNextEnabled();
   }
+function updateMotivation(pct){
+  const card  = document.getElementById('motCard');
+  const title = document.getElementById('motTitle');
+  const text  = document.getElementById('motText');
+  if (!card || !title || !text) return;
+
+  let heading, body;
+
+  // Walang items (safety)
+  if (!Number.isFinite(pct)) {
+    heading = 'Nice work! 🎉';
+    body    = 'Your test is completed. Keep going with the next activities.';
+  } else if (pct >= 90) {
+    heading = 'Outstanding! 🌟';
+    body    = 'You did a great job!';
+  } else if (pct >= 75) {
+    heading = 'Great job! 👍';
+    body    = 'Keep it up.';
+  } else if (pct >= 50) {
+    heading = 'Good effort! 🙂';
+    body    = 'Let’s keep practicing.';
+  } else {
+    heading = 'Don’t give up! 💪';
+    body    = 'You can improve on the next stories.';
+  }
+
+  title.textContent = heading;
+  text.textContent  = body;
+}
 
   function renderCompletedAnalytics(){
   const $stats = document.getElementById('finalStats');
@@ -692,6 +779,12 @@ const forceCompletedView = params.get('view') === 'completed';
   const correct= rows.reduce((s,r)=> s + (r.score||0), 0);
   const pct    = totalQ ? Math.round((correct/totalQ)*100) : 0;
   const readAll= rows.reduce((s,r)=> s + (r.read_secs||0), 0);
+  // update motivational message based on overall percent
+  if (totalQ > 0) {
+    updateMotivation(pct);
+  } else {
+    updateMotivation(null);
+  }
 
   const wpms   = rows.map(r=> r.wpm).filter(v=> typeof v==='number' && isFinite(v));
   const avgWpm = wpms.length ? Math.round(wpms.reduce((s,v)=>s+v,0)/wpms.length) : '—';
