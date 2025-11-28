@@ -578,13 +578,12 @@ if ($rawImg && !preg_match('#^https?://#', $rawImg)) {
             <option value="published">published</option>
           </select>
         </div>
-        <div>
-  <label for="pbTimeLimit">Time limit (seconds)</label>
-  <input type="number" name="time_limit_seconds" id="pbTimeLimit" min="0" step="1"
-         placeholder="e.g., 600 for 10 minutes">
+       <div>
+  <label for="pbTimeLimit">Time limit (minutes)</label>
+  <input type="number" name="time_limit_minutes" id="pbTimeLimit" min="0" step="1"
+         placeholder="e.g., 10 for 10 minutes">
   <div class="muted" style="font-size:.85rem;">Leave blank or 0 for no time limit.</div>
 </div>
-
         <div>
           <label for="pbPassage">Passage</label>
           <div class="note-callout note-compact">Paragraphs are auto-numbered on student view. Live preview:</div>
@@ -771,11 +770,12 @@ if ($rawImg && !preg_match('#^https?://#', $rawImg)) {
       if (pbStatus) pbStatus.value = normalized;
 
       if (pbPassage) pbPassage.value = pass;
-        var pbTL = document.getElementById('pbTimeLimit');
-    if (pbTL) {
-      var tlim = parseInt(data.time_limit_seconds || 0, 10);
-      pbTL.value = (tlim > 0 ? tlim : '');
-    }
+      var pbTL = document.getElementById('pbTimeLimit');
+if (pbTL) {
+  var tlim = parseInt(data.time_limit_seconds || 0, 10); // seconds from DB
+  var mins = tlim > 0 ? Math.round(tlim / 60) : '';       // convert to minutes
+  pbTL.value = mins;
+}
 pbClearPreview();
 var img = data.image_path || '';
 
@@ -786,8 +786,6 @@ if (img) {
   }
   pbSetPreview(img);
 }
-
-
       pbRefreshWords();
       openAdd();
     });
