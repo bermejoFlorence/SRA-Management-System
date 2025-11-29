@@ -12,12 +12,22 @@ try {
   if ($attempt_id <= 0) throw new RuntimeException('bad_attempt');
 
   // 1) Verify attempt belongs to this student + PB + in_progress
-  $st = $conn->prepare("
-    SELECT a.attempt_id, a.student_id, a.set_id, a.level_id, a.status
-    FROM assessment_attempts a
-    WHERE a.attempt_id=? AND a.student_id=? AND a.set_type='PB' AND a.status='in_progress'
-    LIMIT 1
-  ");
+$st = $conn->prepare("
+  SELECT ast.attempt_story_id, ast.story_id, ast.sequence,
+         s.title,
+         s.passage_html,
+         s.image_path,
+         s.time_limit_seconds,
+         s.notes,
+         s.author        AS story_author
+  FROM attempt_stories ast
+  JOIN stories s ON s.story_id = ast.story_id
+  WHERE ast.attempt_id = ?
+    AND (ast.score IS NULL)
+  ORDER BY ast.sequence ASC, ast.attempt_story_id ASC
+  LIMIT 1
+");
+
   $st->bind_param('ii', $attempt_id, $_SESSION['user_id']);
   $st->execute();
   $att = $st->get_result()->fetch_assoc();
@@ -57,7 +67,7 @@ if (!$row) {
     'title'            => (string)$row['title'],
     'passage_html'     => (string)($row['passage_html'] ?? ''),
     'image'            => $row['image_path'] ?: null,
-    'author'        => $row['author'], 
+    'author'           => isset($row['story_author']) ? (string)$row['story_author'] : '',
     'time_limit'       => (int)($row['time_limit_seconds'] ?? 0),
   ];
 
