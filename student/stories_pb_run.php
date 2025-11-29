@@ -134,11 +134,43 @@ require_once __DIR__ . '/includes/sidebar.php';
 .btn-ghost{ background:#eef2ed; color:#1f3a1f; }
 
 /* Modals */
-.modal{ position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; z-index:10000; }
-.modal-card{ width:min(560px,90vw); background:#fff; border:1px solid #eef2ee; border-radius:16px; box-shadow:var(--shadow); padding:20px; }
-.modal-card h3{ margin:0 0 8px; color:#2b422b; font-size:1.2rem; }
-.modal-text{ color:#213421; line-height:1.6; margin:0 0 16px; }
-.modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
+.modal-card{
+  width:min(560px,90vw);
+  background:#fff;
+  border:1px solid #eef2ee;
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  padding:20px;
+
+  /* para hindi lalampas sa screen */
+  max-height:90vh;
+  overflow-y:auto;
+}
+
+/* 🔹 Recap list: 2 columns + sariling scroll */
+#storyDone .recap-list{
+  max-height:260px;       /* pwede mong taasan/bawasan */
+  overflow-y:auto;
+  margin-left:1em;
+  padding-left:1em;
+  list-style:disc;
+  
+
+  -webkit-columns:2;
+  -moz-columns:2;
+  columns:2;              /* gawing 3 kung gusto mo 3 columns */
+  column-gap:18px;
+}
+
+/* Sa maliit na screen, 1 column lang para hindi magsiksikan */
+@media (max-width:768px){
+  #storyDone .recap-list{
+    -webkit-columns:1;
+    -moz-columns:1;
+    columns:1;
+  }
+}
+
 /* ==== PB: sizing tweaks for header/instructions/questions ==== */
 
 /* header pill: Well, Did You Read? — Questions … */
@@ -777,71 +809,29 @@ function showSummary(res){
   const timePart = `• Reading time: ${fmtClock(secs)}`;
 
   const recap = Array.isArray(res.recap) ? res.recap : [];
-  const listItems = recap.length
-    ? recap.map(d =>
-        `<li>Q${d.qno}: Your answer <b>${escapeHTML(d.your || '—')}</b>; ` +
-        `correct <b>${escapeHTML(d.correct || '—')}</b></li>`
-      ).join('')
-    : `<li>Great job! All answers correct.</li>`;
+const listItems = recap.length
+  ? recap.map(d =>
+      `<li>Q${d.qno}: Your answer <b>${escapeHTML(d.your || '—')}</b>; correct <b>${escapeHTML(d.correct || '—')}</b></li>`
+    ).join('')
+  : `<li>Great job! All answers correct.</li>`;
 
-  const html = `
-    <h3>Story complete</h3>
-    <p class="modal-text">Your answers for this story have been saved.</p>
-    <p class="modal-text"><strong>Score: ${correct}/${total} (${pct}%)</strong> ${wpmPart} ${timePart}</p>
-    <ul class="modal-text" style="margin-left:1em;">${listItems}</ul>
-    <div class="modal-actions">
-      <a href="stories_pb_start.php?aid=${encodeURIComponent(attemptId)}&next=1" class="btn">Continue</a>
-    </div>
-  `;
+const html = `
+  <h3>Story complete</h3>
+  <p class="modal-text">Your answers for this story have been saved.</p>
+  <p class="modal-text"><strong>Score: ${correct}/${total} (${pct}%)</strong> ${wpmPart} ${timePart}</p>
+  <!-- 🔹 recap-list class for columns -->
+  <ul class="modal-text recap-list">${listItems}</ul>
+  <div class="modal-actions">
+    <a id="storyNext" href="stories_pb_start.php?aid=${encodeURIComponent(attemptId)}&next=1" class="btn">Continue</a>
+  </div>
+`;
+
 
   const card = document.querySelector('#storyDone .modal-card');
   if (card) card.innerHTML = html;
   document.getElementById('storyDone').style.display = 'flex';
 }
-
-function showSummary(res){
-  const correct = res.score?.correct ?? 0;
-  const total   = res.score?.total ?? 0;
-  const pct     = res.score?.percent ?? 0;
-
-  const secs = res.reading?.secs ?? 0;
-  const wpm  = res.reading?.wpm;
-  const wpmPart  = (wpm && Number.isFinite(wpm)) ? `• WPM: ${wpm}` 
-                                                 : `• WPM: N/A (${escapeHTML(res.reading?.note || '—')})`;
-  const timePart = `• Reading time: ${fmtClock(secs)}`;
-
-  const recap = Array.isArray(res.recap) ? res.recap : [];
-  const listItems = recap.length
-    ? recap.map(d =>
-        `<li>Q${d.qno}: Your answer <b>${escapeHTML(d.your || '—')}</b>; correct <b>${escapeHTML(d.correct || '—')}</b></li>`
-      ).join('')
-    : `<li>Great job! All answers correct.</li>`;
-
-  const html = `
-    <h3>Story complete</h3>
-    <p class="modal-text">Your answers for this story have been saved.</p>
-    <p class="modal-text"><strong>Score: ${correct}/${total} (${pct}%)</strong> ${wpmPart} ${timePart}</p>
-    <ul class="modal-text" style="margin-left:1em;">${listItems}</ul>
-    <div class="modal-actions">
-      <a id="storyNext" href="stories_pb_start.php?aid=${encodeURIComponent(attemptId)}&next=1" class="btn">Continue</a>
-    </div>
-  `;
-
-  const card = document.querySelector('#storyDone .modal-card');
-  if (card) card.innerHTML = html;
-  document.getElementById('storyDone').style.display = 'flex';
-
-  // ✅ payagan na ang navigation (alisin ang prompt)
-  canLeave = true;
-  window.removeEventListener('beforeunload', beforeUnloadHandler);
-
-  // safety: kung ma-click ang Continue, siguradong walang prompt
-  document.getElementById('storyNext')?.addEventListener('click', () => {
-    canLeave = true;
-    window.removeEventListener('beforeunload', beforeUnloadHandler);
-  });
-}
- /* ------------ BOOT ------------ */
+/* ------------ BOOT ------------ */
   (async function init(){
     try{
 
