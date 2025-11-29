@@ -375,8 +375,6 @@ require_once __DIR__ . '/includes/sidebar.php';
     <div class="head-meta" aria-label="Time information">
       <div class="meta-label">Per Story Time Limit</div>
       <div class="meta-value"><?= htmlspecialchars($timeLimitLabel) ?></div>
-      <div class="meta-label" style="margin-top:4px;">Estimated Total (15 stories)</div>
-      <div class="meta-value"><?= htmlspecialchars($timeTotalLabel) ?></div>
     </div>
   </div>
   <div class="callout-body">
