@@ -165,26 +165,29 @@ if ($levelId) {
     $stmt->close();
   }
 }
-/* ----- Intro progress numbers (attempt-based) ----- */
+
+// denominator = lahat ng PUBLISHED stories para sa current level / PB set
+$pbProgressTotal = (int)$pbPublishedTotal;
 $pbProgressDone  = 0;
-$pbProgressTotal = (int)$pbPublishedTotal; // fallback to total available for level
 
-if ($pbAidInProgress > 0) {
-  // total stories queued for THIS attempt
-  $pbProgressTotal = (int)(scalar(
-    $conn,
-    "SELECT COUNT(*) FROM attempt_stories WHERE attempt_id=?",
-    [$pbAidInProgress], 'i'
-  ) ?? 0);
-
-  // finished in THIS attempt (score not null)
-  $pbProgressDone = (int)(scalar(
-    $conn,
-    "SELECT COUNT(*) FROM attempt_stories
-      WHERE attempt_id=? AND score IS NOT NULL",
-    [$pbAidInProgress], 'i'
-  ) ?? 0);
+if ($pbAidInProgress > 0 && $pbProgressTotal > 0) {
+    // numerator = ilang PUBLISHED stories sa attempt na ito ang may score (tapos na)
+    if ($stmt = $conn->prepare("
+        SELECT COUNT(DISTINCT ast.story_id) AS c
+          FROM attempt_stories ast
+          JOIN stories s ON s.story_id = ast.story_id
+         WHERE ast.attempt_id = ?
+           AND ast.score IS NOT NULL
+           AND s.status = 'published'
+    ")) {
+        $stmt->bind_param('i', $pbAidInProgress);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $pbProgressDone = (int)($res->fetch_assoc()['c'] ?? 0);
+        $stmt->close();
+    }
 }
+
 
 
 /* ----- PB: time limit summary across published stories of this level ----- */
