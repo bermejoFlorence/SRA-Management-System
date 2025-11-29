@@ -315,6 +315,7 @@ $flash = flash_pop();
         data-story='<?= json_encode([
          'story_id'           => (int)$s['story_id'],
 'title'              => $s['title'] ?? '',
+'author'             => $s['author'] ?? '',   // ← ADD THIS LINE
 'status'             => $s['status'] ?? 'draft',
 'image_path'         => $s['image_path'] ?? null,
 'time_limit_seconds' => isset($s['time_limit_seconds']) ? (int)$s['time_limit_seconds'] : 0,
@@ -393,6 +394,10 @@ $flash = flash_pop();
           <textarea name="passage_html" id="rbPassage" placeholder="Paste the passage text here…"></textarea>
           <div class="muted" id="rbWordInfo">Words: 0</div>
         </div>
+            <div>
+      <label for="rbAuthor">Author (optional)</label>
+      <input type="text" name="author" id="rbAuthor" placeholder="e.g., By Juan Dela Cruz">
+    </div>
 
         <div>
           <label for="rbCover">Cover image (optional)</label>
@@ -552,6 +557,9 @@ function rbToAdd(){
   const rbTime = document.getElementById('rbTimeLimit');
   if (rbTime) rbTime.value = '';   // blank = no limit
 
+   const rbAuthor = document.getElementById('rbAuthor');   // NEW
+  if (rbAuthor) rbAuthor.value = '';
+    
   if (rbPassage) rbPassage.value = '';
   rbClearPreview();
   rbRefreshWords();
@@ -586,6 +594,9 @@ document.querySelectorAll('.js-rb-edit').forEach(btn=>{
     document.getElementById('rbRemoveImage').value = '0';
 
     document.getElementById('rbTitle').value  = data.title ?? '';
+
+        const rbAuthor = document.getElementById('rbAuthor');
+    if (rbAuthor) rbAuthor.value = data.author || '';
 
     const statusVal = (data.status || 'draft').toLowerCase();
     const normalized = (statusVal === 'active') ? 'published' : statusVal;

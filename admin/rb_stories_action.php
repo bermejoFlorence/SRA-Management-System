@@ -57,6 +57,7 @@ if ($action === 'add_story') {
   if (!csrf_ok()){ flash_set('err','Invalid request.'); back_to_manage($set_id); }
 
   $title   = trim((string)($_POST['title'] ?? ''));
+  $author  = trim((string)($_POST['author'] ?? ''));   // ← ADD HERE
   $status  = $_POST['status'] ?? 'draft';
   $allowed = ['draft','published','archived'];
   if (!in_array($status,$allowed,true)) $status='draft';
@@ -79,13 +80,15 @@ if ($action === 'add_story') {
   $img_err=null; $image_path = rb_handle_upload($img_err);
   if ($image_path === false) { flash_set('err',$img_err ?? 'Image upload error.'); back_to_manage($set_id); }
 
-  if ($stmt = $conn->prepare("
+    if ($stmt = $conn->prepare("
     INSERT INTO stories
-      (set_id, title, passage_html, image_path, time_limit_seconds, status, created_at, updated_at)
+      (set_id, title, author, passage_html, image_path, time_limit_seconds, status, created_at, updated_at)
     VALUES
-      (      ?,     ?,            ?,         ?,   NULLIF(?,0),     ?,       NOW(),      NOW())
+      (      ?,     ?,      ?,            ?,         ?,   NULLIF(?,0),     ?,       NOW(),      NOW())
   ")) {
-    $stmt->bind_param('isssis', $set_id, $title, $passage, $image_path, $tls, $status);
+    // i = int (set_id), s = string (title, author, passage, image, status), i = int (tls)
+    $stmt->bind_param('issssis', $set_id, $title, $author, $passage, $image_path, $tls, $status);
+
     if ($stmt->execute()) flash_set('ok','Story saved.');
     else flash_set('err','Insert failed: '.$conn->error);
     $stmt->close();
@@ -132,6 +135,7 @@ if ($action === 'update_story') {
 
   $story_id = (int)($_POST['story_id'] ?? 0);
   $title    = trim((string)($_POST['title'] ?? ''));
+   $author   = trim((string)($_POST['author'] ?? ''));   // ← ADD HERE
   $status   = $_POST['status'] ?? 'draft';
   $allowed  = ['draft','published','archived'];
   if (!in_array($status,$allowed,true)) $status='draft';
@@ -173,9 +177,10 @@ if ($action === 'update_story') {
     }
   }
 
-  if ($stmt = $conn->prepare("
+    if ($stmt = $conn->prepare("
     UPDATE stories
        SET title=?,
+           author=?,                                  -- ← NEW
            status=?,
            passage_html=?,
            image_path=?,
@@ -183,7 +188,18 @@ if ($action === 'update_story') {
            updated_at=NOW()
      WHERE story_id=? AND set_id=? LIMIT 1
   ")) {
-    $stmt->bind_param('ssssiii', $title, $status, $passage, $new_image_path, $tls, $story_id, $set_id);
+    // s(title) s(author) s(status) s(passage) s(image) i(tls) i(story_id) i(set_id)
+    $stmt->bind_param('ssssssii',
+      $title,
+      $author,
+      $status,
+      $passage,
+      $new_image_path,
+      $tls,
+      $story_id,
+      $set_id
+    );
+
     if ($stmt->execute()) flash_set('ok','Story updated.');
     else flash_set('err','Update failed: '.$conn->error);
     $stmt->close();
