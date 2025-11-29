@@ -42,6 +42,33 @@ require_once __DIR__ . '/includes/sidebar.php';
   border-radius:999px; padding:6px 10px; font-weight:700; font-size:.9rem; }
 .pill.warn   { background:#fff5e6; border-color:#f4d58f; color:#5a4200; }
 .pill.danger { background:#fdeaea; border-color:#f3b1b1; color:#7a0d0d; }
+.run-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin:8px 0 16px; padding:14px 18px;
+  background:linear-gradient(180deg,#fff,#fefefe); border:1px solid #eef2ee;
+  border-radius:14px; box-shadow:var(--shadow);
+}
+.run-title{ margin:0; font-weight:900; letter-spacing:.2px; color:var(--g);
+  font-size:clamp(1.2rem,1rem + 1vw,1.6rem); }
+
+/* ⬇⬇ NEW ⬇⬇ */
+.run-left{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.rb-story-author{
+  font-size:.95rem;
+  color:var(--muted);
+}
+
+/* optional: konting ibang look kapag no time limit */
+.pill-muted{
+  background:#f5f5f5;
+  color:var(--muted);
+}
+/* ⬆⬆ NEW ⬆⬆ */
 
 /* Cards */
 .read-card, .quiz-card, .done-card{
@@ -119,13 +146,17 @@ require_once __DIR__ . '/includes/sidebar.php';
   <div class="rb-wrap">
 
     <!-- Runner header -->
-    <section class="run-head" aria-live="polite">
-      <h1 id="storyTitle" class="run-title">Loading…</h1>
-      <div class="rb-meta">
-        <span id="crumb" class="pill">Story —</span>
-        <span id="elapsed" class="pill" title="Remaining time">--:--</span>
-      </div>
-    </section>
+   <section class="run-head" aria-live="polite">
+  <div class="run-left">
+    <h1 id="storyTitle" class="run-title">Loading…</h1>
+    <div id="storyAuthor" class="rb-story-author" style="display:none;"></div>
+  </div>
+  <div class="rb-meta">
+    <span id="crumb" class="pill pill-muted">No time limit</span>
+    <span id="elapsed" class="pill" title="Remaining time">--:--</span>
+  </div>
+</section>
+
 
     <!-- Reading view -->
     <section id="readView" class="read-card" style="display:none;">
@@ -236,6 +267,7 @@ require_once __DIR__ . '/includes/sidebar.php';
 
   /* ----- DOM ----- */
   const $title   = document.getElementById('storyTitle');
+  const $author  = document.getElementById('storyAuthor');   // NEW
   const $crumb   = document.getElementById('crumb');
   const $elapsed = document.getElementById('elapsed');
 
@@ -280,9 +312,35 @@ require_once __DIR__ . '/includes/sidebar.php';
     return `${m}:${s}`;
   };
 
-  function setCrumb() {
-    $crumb.textContent = story ? `Story #${String(story.attempt_story_id || story.story_id)}` : 'Story —';
+function setLimitLabel(){
+  if (!$crumb) return;
+  const secs = Number(story?.time_limit || 0);
+
+  if (!secs) {
+    $crumb.textContent = 'No time limit';
+    $crumb.classList.add('pill-muted');
+  } else {
+    $crumb.textContent = 'Time limit: ' + fmt(secs);
+    $crumb.classList.remove('pill-muted');
   }
+}
+function refreshHeader(){
+  $title.textContent = story?.title || 'Story';
+
+  if ($author){
+    const name = story?.author || '';
+    if (name){
+      $author.textContent = 'by ' + name;
+      $author.style.display = '';
+    } else {
+      $author.textContent = '';
+      $author.style.display = 'none';
+    }
+  }
+
+  setLimitLabel();
+}
+
 
   function updateReadProgress(){
     if ($readView.style.display !== 'block') { $readProg.style.width = '0%'; return; }
@@ -352,7 +410,7 @@ function msToClock(sec){
   /* ----- Rendering ----- */
   function showReading(){
     $title.textContent = story?.title || 'Story';
-    setCrumb();
+
     // Trusted admin HTML
     $readPassage.innerHTML = story?.passage_html || '';
     if (story?.image){ $imgWrap.style.display=''; $readImage.src = story.image; }
@@ -559,8 +617,7 @@ return;
 story = data.story || null;
 items = Array.isArray(data.items) ? data.items : [];
 
-$title.textContent = story?.title || 'Story';
-setCrumb();
+refreshHeader();
 
 if (story?.quiz_started) {
   // If user refreshed mid-quiz, continue with server-left seconds
