@@ -134,6 +134,17 @@ require_once __DIR__ . '/includes/sidebar.php';
 .btn-ghost{ background:#eef2ed; color:#1f3a1f; }
 
 /* Modals */
+/* 🔹 Overlay wrapper para sa Story complete */
+#storyDone{
+  position: fixed;              /* lumutang sa ibabaw ng page */
+  inset: 0;                     /* puno buong screen */
+  background: rgba(0,0,0,.5);   /* dark overlay */
+  display: none;                /* default, JS → 'flex' pag tapos na */
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
 .modal-card{
   width:min(560px,90vw);
   background:#fff;
