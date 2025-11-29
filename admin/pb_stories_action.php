@@ -41,6 +41,7 @@ if ($action === 'add_story') {
   if (!in_array($status,$allowed,true)) $status='draft';
 
   $passage = (string)($_POST['passage_html'] ?? '');
+    $author  = trim((string)($_POST['author'] ?? ''));  // ✅ NEW
 
   // ✅ NEW: minutes from form → seconds for DB
   $time_limit_minutes = isset($_POST['time_limit_minutes']) ? (int)$_POST['time_limit_minutes'] : 0;
@@ -122,10 +123,20 @@ if ($action === 'add_story') {
 
   // Insert story (now includes passage_html, image_path, status, time_limit_seconds)
   if ($stmt = $conn->prepare("
-    INSERT INTO stories (set_id, title, passage_html, image_path, time_limit_seconds, status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+    INSERT INTO stories (set_id, title, author, passage_html, image_path, time_limit_seconds, status, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
   ")) {
-    $stmt->bind_param('isssis', $set_id, $title, $passage, $image_path, $time_limit, $status);
+    $stmt->bind_param(
+      'issssis',
+      $set_id,
+      $title,
+      $author,
+      $passage,
+      $image_path,
+      $time_limit,
+      $status
+    );
+
     if ($stmt->execute()) {
       flash_set('ok','Story saved.');
     } else {
@@ -188,6 +199,8 @@ if ($action === 'update_story') {
   if (!in_array($status,$allowed,true)) $status='draft';
   $passage  = (string)($_POST['passage_html'] ?? '');
   $remove_image = isset($_POST['remove_image']) && $_POST['remove_image'] === '1';
+
+    $author  = trim((string)($_POST['author'] ?? ''));   // ✅ NEW
 
   // ✅ NEW: minutes from form → seconds for DB
   $time_limit_minutes = isset($_POST['time_limit_minutes']) ? (int)$_POST['time_limit_minutes'] : 0;
@@ -284,9 +297,10 @@ if ($action === 'update_story') {
   }
 
   // perform update
-  if ($stmt = $conn->prepare("
+    if ($stmt = $conn->prepare("
     UPDATE stories
        SET title=?,
+           author=?,
            status=?,
            passage_html=?,
            image_path=?,
@@ -294,8 +308,18 @@ if ($action === 'update_story') {
            updated_at=NOW()
      WHERE story_id=? AND set_id=? LIMIT 1
   ")) {
-    $stmt->bind_param('ssssiii', $title, $status, $passage, $new_image_path, $time_limit, $story_id, $set_id);
-    if ($stmt->execute()) {
+    $stmt->bind_param(
+      'ssssssii',
+      $title,
+      $author,
+      $status,
+      $passage,
+      $new_image_path,
+      $time_limit,
+      $story_id,
+      $set_id
+    );
+if ($stmt->execute()) {
       flash_set('ok','Story updated.');
     } else {
       flash_set('err','Update failed: '.$conn->error);

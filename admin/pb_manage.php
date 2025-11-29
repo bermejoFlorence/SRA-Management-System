@@ -403,17 +403,6 @@ $flash = flash_pop();
 
 <div class="main-content">
   <div class="page-wrap">
-
-    <?php if($flash): ?>
-      <script>
-        Swal.fire({
-          icon: '<?= $flash['t']==='ok'?'success':'error' ?>',
-          title: <?= json_encode($flash['m']) ?>,
-          confirmButtonColor: '#ECA305'
-        });
-      </script>
-    <?php endif; ?>
-
     <!-- Top-right back (same position/feel as SLT) -->
     <div class="top-actions">
       <a class="btn btn-back" href="stories_pb.php" title="Back to PB Sets">
@@ -509,6 +498,7 @@ if ($rawImg && !preg_match('#^https?://#', $rawImg)) {
     "story_id"   => (int)$s["story_id"],
     "title"      => $s["title"] ?? "",
     "status"     => $s["status"] ?? "draft",
+    "author"     => $s["author"] ?? "", 
     "image_path" => $imgUrl ?: null,   // <— normalized URL
     "time_limit_seconds" => isset($s["time_limit_seconds"]) ? (int)$s["time_limit_seconds"] : 0,
   ], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_AMP|JSON_HEX_QUOT) ?>'
@@ -584,14 +574,30 @@ if ($rawImg && !preg_match('#^https?://#', $rawImg)) {
          placeholder="e.g., 10 for 10 minutes">
   <div class="muted" style="font-size:.85rem;">Leave blank or 0 for no time limit.</div>
 </div>
-        <div>
+                <div>
           <label for="pbPassage">Passage</label>
           <div class="note-callout note-compact">Paragraphs are auto-numbered on student view. Live preview:</div>
-<div id="pbPassagePreview" class="pb-num"
-     style="border:1px solid #e5e7eb;border-radius:10px;padding:10px;max-height:200px;overflow:auto;background:#fff"></div>
+          <div id="pbPassagePreview" class="pb-num"
+               style="border:1px solid #e5e7eb;border-radius:10px;padding:10px;max-height:200px;overflow:auto;background:#fff"></div>
 
           <textarea name="passage_html" id="pbPassage" placeholder="Paste the passage text here…"></textarea>
           <div class="muted" id="pbWordInfo">Words: 0</div>
+        </div>
+
+        <!-- NEW: Author -->
+        <div>
+          <label for="pbAuthor">Author</label>
+          <input type="text" name="author" id="pbAuthor"
+                 placeholder="e.g., by Ann Green">
+        </div>
+
+        <div>
+          <label for="pbCover">Cover image (optional)</label>
+          <input type="file" name="cover_image" id="pbCover" accept="image/*">
+          <div class="muted" style="font-size:.85rem;">JPG, PNG, WebP, o GIF — hanggang 3 MB.</div>
+
+          <img id="pbImgPreview" alt="Preview" style="display:none; margin-top:8px;">
+          <button type="button" class="btn" id="pbClearImg" style="display:none; margin-top:6px;">Remove image</button>
         </div>
 
         <div>
@@ -746,6 +752,10 @@ if ($rawImg && !preg_match('#^https?://#', $rawImg)) {
     if (pbPassage) pbPassage.value = '';
      var pbTL = document.getElementById('pbTimeLimit');
   if (pbTL) pbTL.value = '';
+
+        var pbAuthor = document.getElementById('pbAuthor');   // ✅ NEW
+    if (pbAuthor) pbAuthor.value = '';  
+
   pbClearPreview();
   pbRefreshWords();
   }
@@ -776,6 +786,9 @@ if (pbTL) {
   var mins = tlim > 0 ? Math.round(tlim / 60) : '';       // convert to minutes
   pbTL.value = mins;
 }
+
+   var pbAuthor = document.getElementById('pbAuthor');      // ✅ NEW
+   if (pbAuthor) pbAuthor.value = data.author || '';        // prefill
 pbClearPreview();
 var img = data.image_path || '';
 
