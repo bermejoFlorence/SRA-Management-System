@@ -169,10 +169,17 @@ require_once __DIR__ . '/includes/sidebar.php';
   height: 28px;
   font-size: .95rem;
 }
+/* Disable text selection for exam area (PB) */
+#exam-content {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
 
 </style>
 
-<div class="main-content">
+<div class="main-content" id="exam-content">
   <div class="slt-wrap">
 
     <!-- Header -->
@@ -288,8 +295,7 @@ let gIdx = 0;           // current group index
 let itemsAll = [];      // flat list for total N + global numbering
   let readingStart = null;          // stopwatch
   let metaPB = {};   // <-- dito natin ise-store ang directions galing sa pb_fetch
-
-
+  let timeUpHandled = false;
   /* ------------ DOM ------------ */
   const $title   = document.getElementById('storyTitle');
   const $author  = document.getElementById('storyAuthor'); // NEW
@@ -659,26 +665,30 @@ submitAnswers();
 function startCountdown(limitSecs){
   const secs = Number(limitSecs || 0);
   if (!$limit) return;
+
+  // walang limit → display lang
   if (secs <= 0){
     $limit.style.display = '';
     $limit.textContent = 'No time limit';
     return;
   }
-  let end = Date.now() + secs*1000;
+
+  let end = Date.now() + secs * 1000;
   $limit.style.display = '';
+
   const tick = () => {
-    const left = Math.max(0, Math.round((end - Date.now())/1000));
+    const left = Math.max(0, Math.round((end - Date.now()) / 1000));
     $limit.textContent = 'Time left ' + fmtClock(left);
+
     if (left === 0) {
       clearInterval(tid);
-      // (optional) pwede ka mag auto-finish dito kung gusto mo
-      // $done.style.display = 'flex';
+      onTimeUpPB();   // 🔔 dito na natin ia-auto-submit
     }
   };
+
   tick();
   const tid = setInterval(tick, 1000);
 }
-
   // keyboard shortcuts for MC (A–D, 1–4)
   document.addEventListener('keydown', (e)=>{
     if ($quizView.style.display !== 'block') return;
@@ -734,6 +744,23 @@ async function submitAnswers(){
     showSummary(res);
   } catch (err){
     alert('Submit failed: ' + err.message);
+  }
+}
+async function onTimeUpPB(){
+  if (timeUpHandled) return;
+  timeUpHandled = true;
+
+  // kung nasa reading pa at wala pang readingSecs, kuhanin na natin
+  if (readingStart && readingSecs === 0) {
+    readingSecs = Math.max(0, Math.round((Date.now() - readingStart)/1000));
+  }
+
+  alert('Time is up for this story. We will save any answers you have.');
+
+  try {
+    await submitAnswers();
+  } catch (err) {
+    alert('Submit failed after time up: ' + err.message);
   }
 }
 
@@ -851,6 +878,87 @@ showReading();
       location.href = 'stories_pb.php';
     }
   })();
+})();
+</script>
+<script>
+// Exam protection script – PB version
+(function() {
+  // 1) Disable right-click
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  });
+
+  // 2) Disable text selection (backup kahit may CSS na)
+  document.addEventListener('selectstart', function(e) {
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return; // allow typing
+    e.preventDefault();
+  });
+
+  // 3) Try to clear clipboard (for PrintScreen / copy)
+  function tryClearClipboard() {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText('Screenshots and copying are not allowed during the test.')
+        .catch(function() {});
+    } else {
+      const inp = document.createElement('input');
+      inp.value = '.';
+      inp.style.position = 'fixed';
+      inp.style.opacity = '0';
+      document.body.appendChild(inp);
+      inp.select();
+      try { document.execCommand('copy'); } catch (err) {}
+      document.body.removeChild(inp);
+    }
+  }
+
+  // 4) Block important keys / shortcuts
+  document.addEventListener('keydown', function(e) {
+    const key = (e.key || '').toLowerCase();
+
+    // F12 (DevTools)
+    if (key === 'f12') {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    // PrintScreen key
+    if (key === 'printscreen' || e.keyCode === 44) {
+      e.preventDefault();
+      e.stopPropagation();
+      tryClearClipboard();
+      alert('Screenshots are not allowed during the test.');
+      return;
+    }
+
+    // Ctrl + something
+    if (e.ctrlKey) {
+      const blocked = ['c','x','s','p','u','a']; // copy, cut, save, print, view source, select all
+      if (blocked.includes(key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      // Ctrl+Shift+I / J / C (DevTools shortcuts)
+      if (e.shiftKey && ['i','j','c'].includes(key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    }
+  });
+
+  // 5) Extra PrintScreen detection on keyup
+  document.addEventListener('keyup', function(e) {
+    const key = (e.key || '').toLowerCase();
+    if (key === 'printscreen' || e.keyCode === 44) {
+      e.preventDefault();
+      tryClearClipboard();
+      alert('Screenshots are not allowed during the test.');
+    }
+  });
 })();
 </script>
 
