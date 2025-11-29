@@ -41,8 +41,11 @@ if ($action === 'add_story') {
   if (!in_array($status,$allowed,true)) $status='draft';
 
   $passage = (string)($_POST['passage_html'] ?? '');
-$time_limit = isset($_POST['time_limit_seconds']) ? (int)$_POST['time_limit_seconds'] : 0;
-$time_limit = ($time_limit > 0) ? $time_limit : null;
+
+  // ✅ NEW: minutes from form → seconds for DB
+  $time_limit_minutes = isset($_POST['time_limit_minutes']) ? (int)$_POST['time_limit_minutes'] : 0;
+  $time_limit = ($time_limit_minutes > 0) ? ($time_limit_minutes * 60) : 0; // 0 = no limit
+
   if ($title === '') {
     flash_set('err','Title is required.');
     header('Location: pb_manage.php?set_id='.$set_id); exit;
@@ -117,21 +120,21 @@ $time_limit = ($time_limit > 0) ? $time_limit : null;
     }
   }
 
-  // Insert story (now includes passage_html, image_path, status)
-if ($stmt = $conn->prepare("
+  // Insert story (now includes passage_html, image_path, status, time_limit_seconds)
+  if ($stmt = $conn->prepare("
     INSERT INTO stories (set_id, title, passage_html, image_path, time_limit_seconds, status, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
-")) {
-  $stmt->bind_param('isssis', $set_id, $title, $passage, $image_path, $time_limit, $status);
-  if ($stmt->execute()) {
-    flash_set('ok','Story saved.');
+  ")) {
+    $stmt->bind_param('isssis', $set_id, $title, $passage, $image_path, $time_limit, $status);
+    if ($stmt->execute()) {
+      flash_set('ok','Story saved.');
+    } else {
+      flash_set('err','Insert failed: '.$conn->error);
+    }
+    $stmt->close();
   } else {
     flash_set('err','Insert failed: '.$conn->error);
   }
-  $stmt->close();
-} else {
-  flash_set('err','Insert failed: '.$conn->error);
-}
 
   header('Location: pb_manage.php?set_id='.$set_id); exit;
 }
@@ -185,12 +188,10 @@ if ($action === 'update_story') {
   if (!in_array($status,$allowed,true)) $status='draft';
   $passage  = (string)($_POST['passage_html'] ?? '');
   $remove_image = isset($_POST['remove_image']) && $_POST['remove_image'] === '1';
-  // NEW: time limit (seconds). Blank/<=0 => NULL (no limit)
-$time_limit = isset($_POST['time_limit_seconds']) ? (int)$_POST['time_limit_seconds'] : 0;
-$time_limit = ($time_limit > 0) ? $time_limit : null;
-// NOTE: Kung NOT NULL ang column mo, gawin mo itong:
-// $time_limit = ($time_limit > 0) ? $time_limit : 0;
 
+  // ✅ NEW: minutes from form → seconds for DB
+  $time_limit_minutes = isset($_POST['time_limit_minutes']) ? (int)$_POST['time_limit_minutes'] : 0;
+  $time_limit = ($time_limit_minutes > 0) ? ($time_limit_minutes * 60) : 0; // 0 = no limit
 
   // validate story belongs to this set
   $row = null;
@@ -212,7 +213,12 @@ $time_limit = ($time_limit > 0) ? $time_limit : null;
   if ($stmt = $conn->prepare("SELECT 1 FROM stories WHERE set_id=? AND title=? AND story_id<>? LIMIT 1")) {
     $stmt->bind_param('isi', $set_id, $title, $story_id);
     $stmt->execute(); $stmt->store_result();
-    if ($stmt->num_rows > 0) { $stmt->close(); flash_set('err','Another story with the same title exists.'); header('Location: pb_manage.php?set_id='.$set_id); exit; }
+    if ($stmt->num_rows > 0) { 
+      $stmt->close(); 
+      flash_set('err','Another story with the same title exists.'); 
+      header('Location: pb_manage.php?set_id='.$set_id); 
+      exit; 
+    }
     $stmt->close();
   }
 
@@ -277,28 +283,27 @@ $time_limit = ($time_limit > 0) ? $time_limit : null;
     }
   }
 
-// perform update
-if ($stmt = $conn->prepare("
-  UPDATE stories
-     SET title=?,
-         status=?,
-         passage_html=?,
-         image_path=?,
-         time_limit_seconds=?,
-         updated_at=NOW()
-   WHERE story_id=? AND set_id=? LIMIT 1
-")) {
-  $stmt->bind_param('ssssiii', $title, $status, $passage, $new_image_path, $time_limit, $story_id, $set_id);
-  if ($stmt->execute()) {
-    flash_set('ok','Story updated.');
+  // perform update
+  if ($stmt = $conn->prepare("
+    UPDATE stories
+       SET title=?,
+           status=?,
+           passage_html=?,
+           image_path=?,
+           time_limit_seconds=?,
+           updated_at=NOW()
+     WHERE story_id=? AND set_id=? LIMIT 1
+  ")) {
+    $stmt->bind_param('ssssiii', $title, $status, $passage, $new_image_path, $time_limit, $story_id, $set_id);
+    if ($stmt->execute()) {
+      flash_set('ok','Story updated.');
+    } else {
+      flash_set('err','Update failed: '.$conn->error);
+    }
+    $stmt->close();
   } else {
     flash_set('err','Update failed: '.$conn->error);
   }
-  $stmt->close();
-} else {
-  flash_set('err','Update failed: '.$conn->error);
-}
-
 
   header('Location: pb_manage.php?set_id='.$set_id); exit;
 }
