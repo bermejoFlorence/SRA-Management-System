@@ -135,11 +135,40 @@ require_once __DIR__ . '/includes/sidebar.php';
 
 /* Modals */
 .modal{ position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; z-index:10000; }
-.modal-card{ width:min(560px,90vw); background:#fff; border:1px solid #eef2ee; border-radius:16px; box-shadow:var(--shadow); padding:20px; }
+.modal-card{
+  width:min(560px,90vw);
+  max-height:80vh;          /* para hindi lumampas sa screen */
+  overflow-y:auto;          /* mag-scroll ang loob kung sobrang haba */
+  background:#fff;
+  border:1px solid #eef2ee;
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  padding:20px;
+}
+
 .modal-card h3{ margin:0 0 8px; color:#2b422b; font-size:1.2rem; }
 .modal-text{ color:#213421; line-height:1.6; margin:0 0 16px; }
 .modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
 /* ==== PB: sizing tweaks for header/instructions/questions ==== */
+/* Recap list sa PB story modal: 2 columns + sariling scroll */
+#storyDone ul.modal-text{
+  max-height:260px;      /* taas ng area ng list (pwede mong baguhin) */
+  overflow-y:auto;       /* list lang ang naka-scroll */
+  -webkit-columns:2;
+  -moz-columns:2;
+  columns:2;             /* gawing 3 kung gusto mo 3 columns */
+  column-gap:18px;
+  padding-left:1.2em;    /* konting indent sa bullets */
+}
+
+/* Sa maliit na screen, 1 column para hindi siksik */
+@media (max-width:768px){
+  #storyDone ul.modal-text{
+    -webkit-columns:1;
+    -moz-columns:1;
+    columns:1;
+  }
+}
 
 /* header pill: Well, Did You Read? — Questions … */
 #quizView #qIndex.pill{
