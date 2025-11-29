@@ -188,7 +188,9 @@ if ($pbAidInProgress > 0) {
 
 
 /* ----- PB: time limit summary across published stories of this level ----- */
-$timeLimitLabel = 'No time limit';
+$timeLimitLabel = 'No time limit';          // per story
+$timeTotalLabel = 'No overall time limit';  // estimated total (all stories)
+
 if ($levelId) {
   // Use MIN/MAX of nonzero values; if same -> fixed; if different -> range; if none -> no limit.
   $minTL = (int)(scalar($conn, "
@@ -198,6 +200,7 @@ if ($levelId) {
              WHERE ss.set_type='PB' AND ss.level_id=? AND s.status='published'
                AND (ss.status IS NULL OR ss.status IN ('published','draft'))",
              [$levelId], 'i') ?? 0);
+
   $maxTL = (int)(scalar($conn, "
               SELECT COALESCE(MAX(NULLIF(s.time_limit_seconds,0)), 0)
               FROM stories s
@@ -206,12 +209,28 @@ if ($levelId) {
                AND (ss.status IS NULL OR ss.status IN ('published','draft'))",
              [$levelId], 'i') ?? 0);
 
+  // Kung may kahit isang story na may time limit
   if ($maxTL > 0) {
+    // Per-story label (same logic as before)
+    if ($minTL === 0) $minTL = $maxTL; // iwas "0 – 10m"
     $timeLimitLabel = ($minTL === $maxTL)
       ? human_duration($minTL)
       : human_duration($minTL) . ' – ' . human_duration($maxTL);
+
+    // Estimated total for 15 stories (or target)
+    $storiesTarget = 15; // PB target stories
+
+    $minTotal = $minTL * $storiesTarget;
+    $maxTotal = $maxTL * $storiesTarget;
+
+    if ($minTotal === $maxTotal) {
+      $timeTotalLabel = human_duration($minTotal);
+    } else {
+      $timeTotalLabel = human_duration($minTotal) . ' – ' . human_duration($maxTotal);
+    }
   }
 }
+
 
 /* ---------- PB progress (completed stories of 15) ---------- */
 define('TOTAL_STORIES_PER_SET', 15);
@@ -317,19 +336,21 @@ require_once __DIR__ . '/includes/sidebar.php';
     <?php if (!$hasSubmittedSLT || !$levelName): ?>
       <!-- Blocker when SLT is not done yet -->
       <section class="card callout lock" role="region" aria-labelledby="pbBlockTitle">
-        <div class="callout-head">
+<div class="callout-head">
   <div class="icon"><i class="fas fa-clipboard-check"></i></div>
   <div>
     <span class="kicker">Please read</span>
-    <h3 id="pbRulesTitle">Before you start</h3>
+    <h3 id="pbBlockTitle">Before you start</h3>
   </div>
 
-  <!-- NEW: right-side meta -->
-  <div class="head-meta" aria-label="Time limit information">
-    <div class="meta-label">Time Limit</div>
+  <div class="head-meta" aria-label="Time information">
+    <div class="meta-label">Per Story Time Limit</div>
     <div class="meta-value"><?= htmlspecialchars($timeLimitLabel) ?></div>
+    <div class="meta-label" style="margin-top:4px;">Estimated Total (15 stories)</div>
+    <div class="meta-value"><?= htmlspecialchars($timeTotalLabel) ?></div>
   </div>
 </div>
+
 
         <div class="callout-body">
           <p style="margin:0 0 10px; line-height:1.6;">
@@ -346,14 +367,21 @@ require_once __DIR__ . '/includes/sidebar.php';
     <?php else: ?>
       <!-- Instructions + Start -->
       <section class="card callout" role="region" aria-labelledby="pbRulesTitle">
-        <div class="callout-head">
-          <div class="icon"><i class="fas fa-clipboard-check"></i></div>
-          <div>
-            <span class="kicker">Please read</span>
-            <h3 id="pbRulesTitle">Before you start</h3>
-          </div>
-        </div>
-        <div class="callout-body">
+  <div class="callout-head">
+    <div class="icon"><i class="fas fa-clipboard-check"></i></div>
+    <div>
+      <span class="kicker">Please read</span>
+      <h3 id="pbRulesTitle">Before you start</h3>
+    </div>
+
+    <div class="head-meta" aria-label="Time information">
+      <div class="meta-label">Per Story Time Limit</div>
+      <div class="meta-value"><?= htmlspecialchars($timeLimitLabel) ?></div>
+      <div class="meta-label" style="margin-top:4px;">Estimated Total (15 stories)</div>
+      <div class="meta-value"><?= htmlspecialchars($timeTotalLabel) ?></div>
+    </div>
+  </div>
+  <div class="callout-body">
           <ul class="rulelist check">
             <li><strong>15 stories total.</strong> Answer the questions after each story to check your understanding.</li>
             <li><strong>One read only.</strong> After you move forward, you cannot go back to re-read the story.</li>
