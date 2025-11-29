@@ -57,6 +57,7 @@ if (!$row) {
     'title'            => (string)$row['title'],
     'passage_html'     => (string)($row['passage_html'] ?? ''),
     'image'            => $row['image_path'] ?: null,
+    'author'        => $row['author'], 
     'time_limit'       => (int)($row['time_limit_seconds'] ?? 0),
   ];
 

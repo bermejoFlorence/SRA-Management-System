@@ -24,30 +24,41 @@ require_once __DIR__ . '/includes/sidebar.php';
 @media (max-width:992px){ .main-content{ width:100%; margin-left:0; } }
 .slt-wrap{ max-width:1320px; margin:0 auto; padding:16px 24px; padding-top:12px; }
 
-/* Runner header (story title + pill) */
+/* Runner header (story title + pill) — copied from SLT for uniform look */
 .run-head{
-  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
   margin:8px 0 16px; padding:14px 18px;
   background:linear-gradient(180deg,#fff,#fefefe); border:1px solid #eef2ee;
   border-radius:14px; box-shadow:var(--shadow);
 }
-.run-head-main{
-  display:flex; flex-direction:column; gap:4px;
+.run-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin:8px 0 16px; padding:14px 18px;
+  background:linear-gradient(180deg,#fff,#fefefe); border:1px solid #eef2ee;
+  border-radius:14px; box-shadow:var(--shadow);
 }
+
+.run-head-main{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
 .run-title{
   margin:0; font-weight:900; letter-spacing:.2px; color:var(--g);
   font-size:clamp(1.2rem,1rem + 1vw,1.6rem);
 }
+
+/* NEW: author line under title */
 .run-author{
   margin:0;
   font-size:.95rem;
   color:var(--muted);
   font-weight:600;
 }
-.pill{
-  background:#eff3ef; color:#1b3a1b; border:1px solid #d9e3d9;
-  border-radius:999px; padding:6px 10px; font-weight:700; font-size:.9rem;
-}
+
+.pill{ background:#eff3ef; color:#1b3a1b; border:1px solid #d9e3d9;
+  border-radius:999px; padding:6px 10px; font-weight:700; font-size:.9rem; }
 
 /* Cards shared with SLT */
 .read-card, .quiz-card{
@@ -55,12 +66,10 @@ require_once __DIR__ . '/includes/sidebar.php';
   box-shadow:0 8px 24px rgba(0,0,0,.06); padding:clamp(16px,2.4vw,24px); margin:0 0 16px;
 }
 
-/* Reading layout / typography */
+/* Reading layout / typography — same as SLT */
 .read-grid{
-  display:block;                /* single column na lang */
-}
-#imgWrap{
-  display:none !important;      /* hide right-side image panel */
+  display:grid; grid-template-columns:minmax(0, 2fr) minmax(240px, 1fr);
+  gap:20px; align-items:start;
 }
 .read-passage{
   font-size:clamp(1.05rem, 0.95rem + 0.6vw, 1.35rem);
@@ -79,7 +88,7 @@ require_once __DIR__ . '/includes/sidebar.php';
 .theme-dark  .read-passage{ background:#111; border-color:#222; color:#e7e7e7; }
 .theme-dark  .read-note  { color:#a5b4a5; }
 
-/* Image (kept for structure but hidden by #imgWrap rule above) */
+/* Image */
 .read-img{ width:100%; border-radius:12px; border:1px solid var(--line); object-fit:cover; max-height:420px; background:#f5f5f5; }
 .read-img.zoomable{ cursor:zoom-in; }
 .lightbox{ position:fixed; inset:0; background:rgba(0,0,0,.8); display:none; align-items:center; justify-content:center; z-index:9999; }
@@ -90,7 +99,7 @@ require_once __DIR__ . '/includes/sidebar.php';
 .read-progress > span{ display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--acc), #ffd37a); }
 
 /* Quiz bits — same visual language as SLT */
-.slt-meta{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:0;}
+.slt-meta{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;}
 .progress{ width:100%; height:10px; border-radius:999px; overflow:hidden; background:#ececec; }
 .progress > span{ display:block; height:100%; background:linear-gradient(90deg, var(--acc), #ffd37a); }
 
@@ -130,48 +139,58 @@ require_once __DIR__ . '/includes/sidebar.php';
 .modal-card h3{ margin:0 0 8px; color:#2b422b; font-size:1.2rem; }
 .modal-text{ color:#213421; line-height:1.6; margin:0 0 16px; }
 .modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
-
 /* ==== PB: sizing tweaks for header/instructions/questions ==== */
+
+/* header pill: Well, Did You Read? — Questions … */
 #quizView #qIndex.pill{
   font-size: clamp(1.02rem, 0.95rem + 0.75vw, 1.28rem);
   padding: 10px 16px;
   letter-spacing: .2px;
   font-weight: 900;
 }
+
+/* instructions line just below the progress bar */
 #quizView #qNote{
   font-size: clamp(1rem, 0.95rem + 0.45vw, 1.18rem);
   font-weight: 700;
-  color: #213421;
+  color: #213421; /* darker green for emphasis */
   margin: 8px 0 10px;
 }
+
+/* question title (Q1 …) a bit smaller than before */
 #quizView .qtext{
   font-size: clamp(1rem, 0.95rem + 0.40vw, 1.25rem);
-  padding: 12px 16px 12px 48px;
+  padding: 12px 16px 12px 48px;  /* slightly tighter left padding */
 }
+
+/* smaller circular Q-badge */
 #quizView .qtext::before{
   width: 28px;
   height: 28px;
   font-size: .95rem;
 }
+
 </style>
 
 <div class="main-content">
   <div class="slt-wrap">
 
     <!-- Header -->
-    <section class="run-head" aria-live="polite">
-      <div class="run-head-main">
-        <h1 id="storyTitle" class="run-title">Loading…</h1>
-        <p id="storyAuthor" class="run-author" style="display:none;">Author: …</p>
-      </div>
-      <div class="slt-meta">
-        <span id="crumb" class="pill">Story</span>
-        <span id="elapsed" class="pill" title="Elapsed time">00:00</span>
-        <!-- Time limit / countdown pill -->
-        <span id="limit" class="pill" title="Time limit" style="display:none;"></span>
-      </div>
-    </section>
+<section class="run-head" aria-live="polite">
+  <div class="run-head-main">
+    <h1 id="storyTitle" class="run-title">Loading…</h1>
+    <!-- NEW: author line (hidden by default) -->
+    <p id="storyAuthor" class="run-author" style="display:none;">by …</p>
+  </div>
+  <div class="slt-meta">
+    <!-- Itinago lang ang Story at elapsed para di na makita -->
+    <span id="crumb" class="pill" style="display:none;">Story</span>
+    <span id="elapsed" class="pill" title="Elapsed time" style="display:none;">00:00</span>
 
+    <!-- ITO NA LANG ANG MAKIKITA: time limit / countdown -->
+    <span id="limit" class="pill" title="Time limit" style="display:none;"></span>
+  </div>
+</section>
     <!-- Reading view -->
     <section id="readView" class="read-card" style="display:none;">
       <div class="read-toolbar">
@@ -227,6 +246,7 @@ require_once __DIR__ . '/includes/sidebar.php';
         <button id="btnNext" class="btn" disabled>Next</button>
       </div>
       <div class="read-note">Use Back/Next to move between pages.</div>
+
     </section>
 
     <!-- Story complete modal -->
@@ -249,7 +269,7 @@ require_once __DIR__ . '/includes/sidebar.php';
 </div>
 
 <script>
-let canLeave = false;
+  let canLeave = false;
 function beforeUnloadHandler(e){
   if (!canLeave){
     e.preventDefault();
@@ -260,18 +280,19 @@ function beforeUnloadHandler(e){
   const attemptId = <?= json_encode($attemptId) ?>;
 
   /* ------------ STATE ------------ */
-  let story = null;                 // { story_id, title, passage_html, image, author, time_limit }
-  let items = [];
-  let answers = {};
-  let groups = [];
-  let gIdx = 0;
-  let itemsAll = [];
-  let readingStart = null;
-  let metaPB = {};
+  let story = null;                 // { story_id, title, passage_html, image }
+  let items = [];                   // full item list (READ first → LAW after), numbered 1..N
+  let answers = {};                 // { item_id: value } value can be number|string
+  let groups = [];        // [{ items:[…], meta:{title,note}, firstNo, lastNo }]
+let gIdx = 0;           // current group index
+let itemsAll = [];      // flat list for total N + global numbering
+  let readingStart = null;          // stopwatch
+  let metaPB = {};   // <-- dito natin ise-store ang directions galing sa pb_fetch
+
 
   /* ------------ DOM ------------ */
   const $title   = document.getElementById('storyTitle');
-  const $authorEl= document.getElementById('storyAuthor');
+  const $author  = document.getElementById('storyAuthor'); // NEW
   const $crumb   = document.getElementById('crumb');
   const $elapsed = document.getElementById('elapsed');
 
@@ -296,11 +317,11 @@ function beforeUnloadHandler(e){
   const $lightbox = document.getElementById('lightbox');
   const $lightImg = document.getElementById('lightboxImg');
 
-  const $done  = document.getElementById('storyDone');
+  const $done = document.getElementById('storyDone');
   const $limit = document.getElementById('limit');
+  let passageWordCount = 0;  // bilang ng salita sa passage (for WPM)
+let readingSecs = 0;       // reading time lang (hindi kasama ang quiz)
 
-  let passageWordCount = 0;
-  let readingSecs = 0;
 
   /* ------------ UTILS ------------ */
   const fmtClock = (s) => {
@@ -309,18 +330,18 @@ function beforeUnloadHandler(e){
     const ss= (t%60).toString().padStart(2,'0');
     return `${m}:${ss}`;
   };
-  function escapeHTML(s){
-    return (s==null?'':String(s))
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  }
-  function wordCountFromHTML(html){
-    const d = document.createElement('div');
-    d.innerHTML = html || '';
-    const txt = (d.textContent || '').trim();
-    if (!txt) return 0;
-    return txt.split(/\s+/).filter(Boolean).length;
-  }
+function escapeHTML(s){
+  return (s==null?'':String(s))
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function wordCountFromHTML(html){
+  const d = document.createElement('div');
+  d.innerHTML = html || '';
+  const txt = (d.textContent || '').trim();
+  if (!txt) return 0;
+  return txt.split(/\s+/).filter(Boolean).length;
+}
 
   function startStopwatch(){
     const started = Date.now();
@@ -334,9 +355,13 @@ function beforeUnloadHandler(e){
     $readProg.style.width = pct.toFixed(0) + '%';
   }
 
-  // (sorting / grouping helpers – unchanged) -------------------
-  function rankSection(code){ return (code === 'read') ? 0 : 1; }
+  function rankSection(code){
+    // READ first (0), everything else after (1) — Learn About Words (vocab/wordstudy)
+    return (code === 'read') ? 0 : 1;
+  }
+
   function sortItems(raw){
+    // sort by READ first, then by section, sub_label, then number/sequence
     return [...raw].sort((a,b)=>{
       const ra = rankSection(a.section_code || ''), rb = rankSection(b.section_code || '');
       if (ra !== rb) return ra - rb;
@@ -346,138 +371,154 @@ function beforeUnloadHandler(e){
       if (la !== 0) return la;
       const na = (a.number || a.sequence || 0) - (b.number || b.sequence || 0);
       return na;
-    }).map((x,i)=>({ ...x, __qno: i+1 }));
-  }
-  function currentGroup(){ return groups[gIdx] || { items:[], meta:{title:'',note:''}, firstNo:0, lastNo:0 }; }
-  function updateNextEnabled(){
-    const g = currentGroup();
-    let ok = true;
-    for (const it of g.items){
-      const v = answers[it.item_id];
-      if (v == null || v === '') { ok = false; break; }
-    }
-    $btnNext.disabled = !ok;
-  }
-  function secOrder(s){
-    if (s === 'read') return 0;
-    if (s === 'vocab') return 1;
-    if (s === 'wordstudy') return 2;
-    return 9;
-  }
-  function sortAndNumber(raw){
-    const arr = [...raw].sort((a,b)=>{
-      const r = secOrder(a.section_code||'') - secOrder(b.section_code||'');
-      if (r) return r;
-      const s = (a.section_code||'').localeCompare(b.section_code||'');
-      if (s) return s;
-      const l = (a.sub_label||'').localeCompare(b.sub_label||'');
-      if (l) return l;
-      return (a.number||a.sequence||0) - (b.number||b.sequence||0);
-    });
-    return arr.map((x,i)=>({ ...x, __qno: i+1 }));
+    }).map((x,i)=>({ ...x, __qno: i+1 })); // continuous numbering 1..N
   }
 
-  // directions + meta
-  function getDirections(sectionCode, subLabel){
-    const m = metaPB || {};
-    if (sectionCode === 'read') {
-      return (m.read && m.read.directions) || '';
-    }
-    if (sectionCode === 'vocab') {
-      return (m.vocab && m.vocab[subLabel] && m.vocab[subLabel].directions) || '';
-    }
-    if (sectionCode === 'wordstudy') {
-      return (m.wordstudy && m.wordstudy[subLabel] && m.wordstudy[subLabel].directions) || '';
-    }
-    return '';
+function currentGroup(){ return groups[gIdx] || { items:[], meta:{title:'',note:''}, firstNo:0, lastNo:0 }; }
+
+
+function updateNextEnabled(){
+  const g = currentGroup();
+  let ok = true;
+  for (const it of g.items){
+    const v = answers[it.item_id];
+    if (v == null || v === '') { ok = false; break; }
   }
-  function metaFor(first){
-    const sec = first.section_code;
-    const L   = first.sub_label || '';
-    const dir = getDirections(sec, L);
-    if (sec === 'read') {
-      return {
-        title: 'Well, Did You Read?',
-        note:  dir || 'Answer Yes or No based on the story.'
-      };
-    }
-    if (sec === 'vocab') {
-      return {
-        title: `Vocabulary — Set ${L}`,
-        note:  dir || 'Choose the best meaning for each word.'
-      };
-    }
-    if (sec === 'wordstudy') {
-      const banky = (first.item_type === 'text_bank' || first.item_type === 'bank');
-      return {
-        title: `Word Study — Set ${L}`,
-        note:  dir || (banky ? 'Use the word bank to complete each sentence.'
-                             : 'Type the correct word or part.')
-      };
-    }
-    return { title: 'Questions', note: (dir || '') };
+  $btnNext.disabled = !ok;
+}
+
+function secOrder(s){
+  // READ first (0), VOCAB next (1), WORDSTUDY last (2), then others
+  if (s === 'read') return 0;
+  if (s === 'vocab') return 1;
+  if (s === 'wordstudy') return 2;
+  return 9;
+}
+
+// 2a) sort + global renumber 1..N
+function sortAndNumber(raw){
+  const arr = [...raw].sort((a,b)=>{
+    const r = secOrder(a.section_code||'') - secOrder(b.section_code||'');
+    if (r) return r;
+    const s = (a.section_code||'').localeCompare(b.section_code||'');
+    if (s) return s;
+    const l = (a.sub_label||'').localeCompare(b.sub_label||'');
+    if (l) return l;
+    return (a.number||a.sequence||0) - (b.number||b.sequence||0);
+  });
+  return arr.map((x,i)=>({ ...x, __qno: i+1 }));
+}
+
+// ==== DIRECTIONS helper ====
+function getDirections(sectionCode, subLabel){
+  const m = metaPB || {};
+  if (sectionCode === 'read') {
+    return (m.read && m.read.directions) || '';
   }
-  function buildGroups(sorted){
-    const out = [];
-    let curKey = null, cur = [];
-    for (const it of sorted){
-      const key = `${it.section_code}|${it.sub_label||''}`;
-      if (key !== curKey){
-        if (cur.length) out.push(cur);
-        cur = [];
-        curKey = key;
+  if (sectionCode === 'vocab') {
+    return (m.vocab && m.vocab[subLabel] && m.vocab[subLabel].directions) || '';
+  }
+  if (sectionCode === 'wordstudy') {
+    return (m.wordstudy && m.wordstudy[subLabel] && m.wordstudy[subLabel].directions) || '';
+  }
+  return '';
+}
+
+function metaFor(first){
+  const sec = first.section_code;
+  const L   = first.sub_label || '';
+  const dir = getDirections(sec, L);   // ← kunin mula sa meta
+
+  if (sec === 'read') {
+    return {
+      title: 'Well, Did You Read?',
+      note:  dir || 'Answer Yes or No based on the story.'
+    };
+  }
+  if (sec === 'vocab') {
+    return {
+      title: `Vocabulary — Set ${L}`,
+      note:  dir || 'Choose the best meaning for each word.'
+    };
+  }
+  if (sec === 'wordstudy') {
+    const banky = (first.item_type === 'text_bank' || first.item_type === 'bank');
+    return {
+      title: `Word Study — Set ${L}`,
+      note:  dir || (banky ? 'Use the word bank to complete each sentence.'
+                           : 'Type the correct word or part.')
+    };
+  }
+  return { title: 'Questions', note: (dir || '') };
+}
+
+// 2c) build grouped pages from sorted items
+function buildGroups(sorted){
+  const out = [];
+  let curKey = null, cur = [];
+  for (const it of sorted){
+    const key = `${it.section_code}|${it.sub_label||''}`;
+    if (key !== curKey){
+      if (cur.length) out.push(cur);
+      cur = [];
+      curKey = key;
+    }
+    cur.push(it);
+  }
+  if (cur.length) out.push(cur);
+
+  // expand to objects with meta + range
+  return out.map(g => {
+    const m = metaFor(g[0]);
+    const firstNo = g[0].__qno;
+    const lastNo  = g[g.length-1].__qno;
+    return { items: g, meta: m, firstNo, lastNo };
+  });
+}
+// 🔁 REPLACE your current ensureBankWords with this version
+function ensureBankWords(arr){
+  arr.forEach(it=>{
+    if (it.item_type === 'text_bank' || it.item_type === 'bank') {
+
+      // 1) try: per-item answer_key.bank (kung meron)
+      if (!Array.isArray(it.bank_words) || it.bank_words.length === 0){
+        const ak = it.answer_key || {};
+        if (ak && Array.isArray(ak.bank)) it.bank_words = [...ak.bank];
       }
-      cur.push(it);
-    }
-    if (cur.length) out.push(cur);
-    return out.map(g => {
-      const m = metaFor(g[0]);
-      const firstNo = g[0].__qno;
-      const lastNo  = g[g.length-1].__qno;
-      return { items: g, meta: m, firstNo, lastNo };
-    });
-  }
-  // word bank helper
-  function ensureBankWords(arr){
-    arr.forEach(it=>{
-      if (it.item_type === 'text_bank' || it.item_type === 'bank') {
-        if (!Array.isArray(it.bank_words) || it.bank_words.length === 0){
-          const ak = it.answer_key || {};
-          if (ak && Array.isArray(ak.bank)) it.bank_words = [...ak.bank];
+
+      // 2) fallback: kunin sa metaPB per section + set label
+      if ((!it.bank_words || it.bank_words.length === 0) && metaPB){
+        const L = it.sub_label || '';
+        let list = null;
+        if (it.section_code === 'vocab') {
+          list = metaPB.vocab && metaPB.vocab[L] && metaPB.vocab[L].bank;
+        } else if (it.section_code === 'wordstudy') {
+          list = metaPB.wordstudy && metaPB.wordstudy[L] && metaPB.wordstudy[L].bank;
         }
-        if ((!it.bank_words || it.bank_words.length === 0) && metaPB){
-          const L = it.sub_label || '';
-          let list = null;
-          if (it.section_code === 'vocab') {
-            list = metaPB.vocab && metaPB.vocab[L] && metaPB.vocab[L].bank;
-          } else if (it.section_code === 'wordstudy') {
-            list = metaPB.wordstudy && metaPB.wordstudy[L] && metaPB.wordstudy[L].bank;
-          }
-          if (Array.isArray(list)) it.bank_words = [...list];
-        }
+        if (Array.isArray(list)) it.bank_words = [...list];
       }
-    });
+    }
+  });
+}
+function applyAuthor(){
+  if (!$author) return;
+  // depende sa ibinabalik ng pb_fetch.php:
+  const au = story?.author || story?.author_name || '';
+  if (au){
+    $author.textContent = 'by ' + au;
+    $author.style.display = '';
+  } else {
+    $author.style.display = 'none';
   }
+}
 
   /* ------------ RENDER: Reading ------------ */
-  function applyAuthor(){
-    if (!$authorEl) return;
-    const au = story?.author || story?.author_name || '';
-    if (au){
-      $authorEl.textContent = 'Author: ' + au;
-      $authorEl.style.display = '';
-    } else {
-      $authorEl.style.display = 'none';
-    }
-  }
-
   function showReading(){
     $title.textContent = story?.title || 'Story';
-    applyAuthor();
+      applyAuthor();     
     $crumb.textContent = 'Story';
     $readPass.innerHTML = story?.passage_html || '';
-    // image panel is hidden globally, but keep logic in case you want to re-enable later
-    if (story?.image) { $imgWrap.style.display = 'none'; $readImg.src = story.image; }
+    if (story?.image) { $imgWrap.style.display = ''; $readImg.src = story.image; }
     else { $imgWrap.style.display = 'none'; $readImg.removeAttribute('src'); }
 
     $readView.style.display = 'block';
@@ -487,80 +528,84 @@ function beforeUnloadHandler(e){
   }
 
   /* ------------ RENDER: Quiz ------------ */
-  function renderGroup(){
-    const g = currentGroup();
-    const totalN = itemsAll.length;
+function renderGroup(){
+  const g = currentGroup();
+  const totalN = itemsAll.length;
 
-    $qList.innerHTML = '';
-    $qIndex.textContent = `${g.meta.title} — Questions ${g.firstNo}–${g.lastNo} of ${totalN}`;
-    $bar.style.width = `${(g.lastNo/totalN)*100}%`;
-    document.getElementById('qNote').textContent = g.meta.note || '';
+  // Header line (pill) + progress
+  $qList.innerHTML = '';
+  $qIndex.textContent = `${g.meta.title} — Questions ${g.firstNo}–${g.lastNo} of ${totalN}`;
+  $bar.style.width = `${(g.lastNo/totalN)*100}%`;
+  document.getElementById('qNote').textContent = g.meta.note || '';
 
-    g.items.forEach(it=>{
-      const qBlock = document.createElement('div');
-      qBlock.className = 'qblock';
-      qBlock.innerHTML = `<div class="qtext" data-qbadge="Q${it.__qno}">${it.question_text || it.question || ''}</div>`;
-      const optsWrap = document.createElement('div');
-      optsWrap.className = 'opts';
+  // Build the questions for this group
+  g.items.forEach(it=>{
+    const qBlock = document.createElement('div');
+    qBlock.className = 'qblock';
+    qBlock.innerHTML = `<div class="qtext" data-qbadge="Q${it.__qno}">${it.question_text || it.question || ''}</div>`;
+    const optsWrap = document.createElement('div');
+    optsWrap.className = 'opts';
 
-      const type = it.item_type;
-      if (type === 'single' || type === 'ab' || type === 'tf' || type === 'yn') {
-        const chs = Array.isArray(it.choices) ? it.choices : [];
-        chs.forEach((c,k)=>{
-          const label = (c.label != null) ? String(c.label) : String.fromCharCode(65+k);
-          const text  = c.text ?? c.choice_text ?? c.label ?? '';
-          const row   = document.createElement('label');
-          row.className = 'opt';
-          row.innerHTML = `
-            <span class="letter">${label}</span>
-            <input type="radio" name="q_${it.item_id}" value="${k}">
-            <span>${text}</span>`;
-          const radio = row.querySelector('input');
-          if (answers[it.item_id] === k) { radio.checked = true; row.classList.add('selected'); }
-          row.addEventListener('click', ()=>{
-            optsWrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));
-            row.classList.add('selected');
-            answers[it.item_id] = k;
-            updateNextEnabled();
-          });
-          optsWrap.appendChild(row);
-        });
-      } else if (type === 'text'){
-        const inp = document.createElement('input');
-        inp.type = 'text'; inp.className = 'fillin';
-        inp.value = (answers[it.item_id] || '');
-        inp.placeholder = 'Type your answer…';
-        inp.addEventListener('input', ()=>{
-          answers[it.item_id] = inp.value.trim();
+    const type = it.item_type;
+    if (type === 'single' || type === 'ab' || type === 'tf' || type === 'yn') {
+  const chs = Array.isArray(it.choices) ? it.choices : [];
+  chs.forEach((c,k)=>{
+    const label = (c.label != null) ? String(c.label) : String.fromCharCode(65+k);
+    const text  = c.text ?? c.choice_text ?? c.label ?? '';
+        const row   = document.createElement('label');
+        row.className = 'opt';
+        row.innerHTML = `
+          <span class="letter">${label}</span>
+          <input type="radio" name="q_${it.item_id}" value="${k}">
+          <span>${text}</span>`;
+        const radio = row.querySelector('input');
+        if (answers[it.item_id] === k) { radio.checked = true; row.classList.add('selected'); }
+        row.addEventListener('click', ()=>{
+          optsWrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));
+          row.classList.add('selected');
+          answers[it.item_id] = k;
           updateNextEnabled();
         });
-        optsWrap.appendChild(inp);
-      } else if (type === 'text_bank' || type === 'bank'){
-        const sel = document.createElement('select');
-        sel.className = 'banksel';
-        const bank = Array.isArray(it.bank_words) ? it.bank_words : [];
-        sel.innerHTML = `<option value="">— choose —</option>` + bank.map(w=>`<option>${w}</option>`).join('');
-        if (answers[it.item_id]) sel.value = answers[it.item_id];
-        sel.addEventListener('change', ()=>{ answers[it.item_id] = sel.value; updateNextEnabled(); });
-        optsWrap.appendChild(sel);
-      } else {
-        const inp = document.createElement('input');
-        inp.type = 'text'; inp.className = 'fillin'; inp.placeholder = 'Your answer…';
-        inp.addEventListener('input', ()=>{ answers[it.item_id] = inp.value.trim(); updateNextEnabled(); });
-        optsWrap.appendChild(inp);
-      }
+        optsWrap.appendChild(row);
+      });
+    } else if (type === 'text'){
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.className = 'fillin';
+      inp.value = (answers[it.item_id] || '');
+      inp.placeholder = 'Type your answer…';
+      inp.addEventListener('input', ()=>{
+        answers[it.item_id] = inp.value.trim();
+        updateNextEnabled();
+      });
+      optsWrap.appendChild(inp);
+    } else if (type === 'text_bank' || type === 'bank'){
+      const sel = document.createElement('select');
+      sel.className = 'banksel';
+      const bank = Array.isArray(it.bank_words) ? it.bank_words : [];
+      sel.innerHTML = `<option value="">— choose —</option>` + bank.map(w=>`<option>${w}</option>`).join('');
+      if (answers[it.item_id]) sel.value = answers[it.item_id];
+      sel.addEventListener('change', ()=>{ answers[it.item_id] = sel.value; updateNextEnabled(); });
+      optsWrap.appendChild(sel);
+    } else {
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.className = 'fillin'; inp.placeholder = 'Your answer…';
+      inp.addEventListener('input', ()=>{ answers[it.item_id] = inp.value.trim(); updateNextEnabled(); });
+      optsWrap.appendChild(inp);
+    }
 
-      qBlock.appendChild(optsWrap);
-      $qList.appendChild(qBlock);
-    });
+    qBlock.appendChild(optsWrap);
+    $qList.appendChild(qBlock);
+  });
 
-    $btnPrev.disabled = (gIdx === 0);
-    $btnNext.textContent = (gIdx >= groups.length - 1) ? 'Finish story' : 'Next page';
+  // nav labels
+  $btnPrev.disabled = (gIdx === 0);
+  $btnNext.textContent = (gIdx >= groups.length - 1) ? 'Finish story' : 'Next page';
 
-    updateNextEnabled();
-  }
+  updateNextEnabled();
+}
 
   /* ------------ EVENTS ------------ */
+  // reading controls
   let fontScale = parseFloat(localStorage.getItem('pb_fontScale') || '1.0');
   function applyFont(){ $readPass.style.fontSize = `calc(1em * ${fontScale})`; }
   document.getElementById('btnFontMinus').addEventListener('click', ()=>{
@@ -581,54 +626,60 @@ function beforeUnloadHandler(e){
   $readPass.addEventListener('scroll', readProgress, {passive:true});
   window.addEventListener('resize', readProgress);
 
+  // image lightbox
   $readImg.addEventListener('click', ()=>{
     if (!$readImg.src) return; $lightImg.src = $readImg.src; $lightbox.style.display='flex';
   });
   $lightbox.addEventListener('click', ()=>{ $lightbox.style.display='none'; $lightImg.removeAttribute('src'); });
 
+  // start quiz confirm
   $btnStart.addEventListener('click', ()=>{ $confirm.style.display='flex'; });
   $confirmCancel.addEventListener('click', ()=>{ $confirm.style.display='none'; });
   $confirm.addEventListener('click', (e)=>{ if (e.target===$confirm) $confirm.style.display='none'; });
   $confirmProceed.addEventListener('click', ()=>{ $confirm.style.display='none'; goQuiz(); });
 
-  $btnPrev.addEventListener('click', ()=>{
-    if (gIdx <= 0) return;
-    gIdx -= 1;
+  // quiz nav
+$btnPrev.addEventListener('click', ()=>{
+  if (gIdx <= 0) return;
+  gIdx -= 1;
+  renderGroup();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+$btnNext.addEventListener('click', ()=>{
+  if (gIdx < groups.length - 1){
+    gIdx += 1;
     renderGroup();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-  $btnNext.addEventListener('click', ()=>{
-    if (gIdx < groups.length - 1){
-      gIdx += 1;
-      renderGroup();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    submitAnswers();
-  });
-
-  function startCountdown(limitSecs){
-    const secs = Number(limitSecs || 0);
-    if (!$limit) return;
-    if (secs <= 0){
-      $limit.style.display = '';
-      $limit.textContent = 'No time limit';
-      return;
-    }
-    let end = Date.now() + secs*1000;
-    $limit.style.display = '';
-    const tick = () => {
-      const left = Math.max(0, Math.round((end - Date.now())/1000));
-      $limit.textContent = 'Time left ' + fmtClock(left);
-      if (left === 0) {
-        clearInterval(tid);
-        // optional: auto-submit
-      }
-    };
-    tick();
-    const tid = setInterval(tick, 1000);
+    return;
   }
+ // finished this story; submit answers then show recap
+submitAnswers();
 
+});
+function startCountdown(limitSecs){
+  const secs = Number(limitSecs || 0);
+  if (!$limit) return;
+  if (secs <= 0){
+    $limit.style.display = '';
+    $limit.textContent = 'No time limit';
+    return;
+  }
+  let end = Date.now() + secs*1000;
+  $limit.style.display = '';
+  const tick = () => {
+    const left = Math.max(0, Math.round((end - Date.now())/1000));
+    $limit.textContent = 'Time left ' + fmtClock(left);
+    if (left === 0) {
+      clearInterval(tid);
+      // (optional) pwede ka mag auto-finish dito kung gusto mo
+      // $done.style.display = 'flex';
+    }
+  };
+  tick();
+  const tid = setInterval(tick, 1000);
+}
+
+  // keyboard shortcuts for MC (A–D, 1–4)
   document.addEventListener('keydown', (e)=>{
     if ($quizView.style.display !== 'block') return;
     const radios = $qList.querySelectorAll('input[type=radio]');
@@ -639,10 +690,12 @@ function beforeUnloadHandler(e){
     if (['A','B','C','D'].includes(k)) n = k.charCodeAt(0)-65;
     if (n!=null && radios[n]){
       radios[n].checked = true;
+      // visually mark the wrapper
       const opt = radios[n].closest('.opt');
       opt?.parentElement?.querySelectorAll('.opt')?.forEach(x=>x.classList.remove('selected'));
       opt?.classList.add('selected');
-      const nm = radios[n].name;
+      // find item_id via name
+      const nm = radios[n].name; // q_<item_id>
       const itemId = Number(nm.slice(2));
       answers[itemId] = n;
       updateNextEnabled();
@@ -651,104 +704,147 @@ function beforeUnloadHandler(e){
     }
   });
 
-  function goQuiz(){
-    readingSecs = Math.max(0, Math.round((Date.now() - readingStart)/1000));
-    $readPass.innerHTML = '';
-    $readView.style.display = 'none';
-    $quizView.style.display = 'block';
-    gIdx = 0;
-    renderGroup();
+function goQuiz(){
+  // one-way reading: clear passage so refresh always starts over
+  readingSecs = Math.max(0, Math.round((Date.now() - readingStart)/1000));
+  $readPass.innerHTML = '';
+  $readView.style.display = 'none';
+  $quizView.style.display = 'block';
+  gIdx = 0;                // ✅ current group
+  renderGroup();           // ✅ render the group page
+}
+async function submitAnswers(){
+  try{
+    const payload = {
+      attempt_id: attemptId,
+      story_id: story?.story_id || (itemsAll[0]?.story_id ?? 0),
+      answers: answers,                 // { item_id: value } – index/letter/string
+      reading_secs: readingSecs,        // reading time lang
+      passage_words: passageWordCount   // for WPM
+    };
+
+    const resp = await fetch('pb_submit.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const res = await resp.json();
+    if (!res.ok) throw new Error(res.error || 'Submit failed');
+
+    showSummary(res);
+  } catch (err){
+    alert('Submit failed: ' + err.message);
   }
+}
 
-  async function submitAnswers(){
-    try{
-      const payload = {
-        attempt_id: attemptId,
-        story_id: story?.story_id || (itemsAll[0]?.story_id ?? 0),
-        answers: answers,
-        reading_secs: readingSecs,
-        passage_words: passageWordCount
-      };
+function showSummary(res){
+  const correct = res.score?.correct ?? 0;
+  const total   = res.score?.total ?? 0;
+  const pct     = res.score?.percent ?? 0;
 
-      const resp = await fetch('pb_submit.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const res = await resp.json();
-      if (!res.ok) throw new Error(res.error || 'Submit failed');
+  const secs = res.reading?.secs ?? 0;
+  const wpm  = res.reading?.wpm;
+  const wpmPart = (wpm && Number.isFinite(wpm))
+      ? `• WPM: ${wpm}`
+      : `• WPM: N/A (${escapeHTML(res.reading?.note || '—')})`;
+  const timePart = `• Reading time: ${fmtClock(secs)}`;
 
-      showSummary(res);
-    } catch (err){
-      alert('Submit failed: ' + err.message);
-    }
-  }
+  const recap = Array.isArray(res.recap) ? res.recap : [];
+  const listItems = recap.length
+    ? recap.map(d =>
+        `<li>Q${d.qno}: Your answer <b>${escapeHTML(d.your || '—')}</b>; ` +
+        `correct <b>${escapeHTML(d.correct || '—')}</b></li>`
+      ).join('')
+    : `<li>Great job! All answers correct.</li>`;
 
-  function showSummary(res){
-    const correct = res.score?.correct ?? 0;
-    const total   = res.score?.total ?? 0;
-    const pct     = res.score?.percent ?? 0;
+  const html = `
+    <h3>Story complete</h3>
+    <p class="modal-text">Your answers for this story have been saved.</p>
+    <p class="modal-text"><strong>Score: ${correct}/${total} (${pct}%)</strong> ${wpmPart} ${timePart}</p>
+    <ul class="modal-text" style="margin-left:1em;">${listItems}</ul>
+    <div class="modal-actions">
+      <a href="stories_pb_start.php?aid=${encodeURIComponent(attemptId)}&next=1" class="btn">Continue</a>
+    </div>
+  `;
 
-    const secs = res.reading?.secs ?? 0;
-    const wpm  = res.reading?.wpm;
-    const wpmPart  = (wpm && Number.isFinite(wpm)) ? `• WPM: ${wpm}` 
-                                                   : `• WPM: N/A (${escapeHTML(res.reading?.note || '—')})`;
-    const timePart = `• Reading time: ${fmtClock(secs)}`;
+  const card = document.querySelector('#storyDone .modal-card');
+  if (card) card.innerHTML = html;
+  document.getElementById('storyDone').style.display = 'flex';
+}
 
-    const recap = Array.isArray(res.recap) ? res.recap : [];
-    const listItems = recap.length
-      ? recap.map(d =>
-          `<li>Q${d.qno}: Your answer <b>${escapeHTML(d.your || '—')}</b>; correct <b>${escapeHTML(d.correct || '—')}</b></li>`
-        ).join('')
-      : `<li>Great job! All answers correct.</li>`;
+function showSummary(res){
+  const correct = res.score?.correct ?? 0;
+  const total   = res.score?.total ?? 0;
+  const pct     = res.score?.percent ?? 0;
 
-    const html = `
-      <h3>Story complete</h3>
-      <p class="modal-text">Your answers for this story have been saved.</p>
-      <p class="modal-text"><strong>Score: ${correct}/${total} (${pct}%)</strong> ${wpmPart} ${timePart}</p>
-      <ul class="modal-text" style="margin-left:1em;">${listItems}</ul>
-      <div class="modal-actions">
-        <a id="storyNext" href="stories_pb_start.php?aid=${encodeURIComponent(attemptId)}&next=1" class="btn">Continue</a>
-      </div>
-    `;
+  const secs = res.reading?.secs ?? 0;
+  const wpm  = res.reading?.wpm;
+  const wpmPart  = (wpm && Number.isFinite(wpm)) ? `• WPM: ${wpm}` 
+                                                 : `• WPM: N/A (${escapeHTML(res.reading?.note || '—')})`;
+  const timePart = `• Reading time: ${fmtClock(secs)}`;
 
-    const card = document.querySelector('#storyDone .modal-card');
-    if (card) card.innerHTML = html;
-    document.getElementById('storyDone').style.display = 'flex';
+  const recap = Array.isArray(res.recap) ? res.recap : [];
+  const listItems = recap.length
+    ? recap.map(d =>
+        `<li>Q${d.qno}: Your answer <b>${escapeHTML(d.your || '—')}</b>; correct <b>${escapeHTML(d.correct || '—')}</b></li>`
+      ).join('')
+    : `<li>Great job! All answers correct.</li>`;
 
+  const html = `
+    <h3>Story complete</h3>
+    <p class="modal-text">Your answers for this story have been saved.</p>
+    <p class="modal-text"><strong>Score: ${correct}/${total} (${pct}%)</strong> ${wpmPart} ${timePart}</p>
+    <ul class="modal-text" style="margin-left:1em;">${listItems}</ul>
+    <div class="modal-actions">
+      <a id="storyNext" href="stories_pb_start.php?aid=${encodeURIComponent(attemptId)}&next=1" class="btn">Continue</a>
+    </div>
+  `;
+
+  const card = document.querySelector('#storyDone .modal-card');
+  if (card) card.innerHTML = html;
+  document.getElementById('storyDone').style.display = 'flex';
+
+  // ✅ payagan na ang navigation (alisin ang prompt)
+  canLeave = true;
+  window.removeEventListener('beforeunload', beforeUnloadHandler);
+
+  // safety: kung ma-click ang Continue, siguradong walang prompt
+  document.getElementById('storyNext')?.addEventListener('click', () => {
     canLeave = true;
     window.removeEventListener('beforeunload', beforeUnloadHandler);
-    document.getElementById('storyNext')?.addEventListener('click', () => {
-      canLeave = true;
-      window.removeEventListener('beforeunload', beforeUnloadHandler);
-    });
-  }
-
-  /* ------------ BOOT ------------ */
+  });
+}
+ /* ------------ BOOT ------------ */
   (async function init(){
     try{
-      window.addEventListener('beforeunload', beforeUnloadHandler);
+
+       window.addEventListener('beforeunload', beforeUnloadHandler);
       const r = await fetch(`pb_fetch.php?attempt_id=${encodeURIComponent(attemptId)}`);
       const data = await r.json();
       if (!data.ok) throw new Error(data.error || 'Fetch failed');
 
       story = data.story || {};
       passageWordCount = wordCountFromHTML(story.passage_html);
-      metaPB = data.meta || {};
+      metaPB = data.meta || {};   // <-- ito ang directions per section/set
+      applyAuthor();   // NEW
 
-      let raw = Array.isArray(data.items) ? data.items : [];
-      ensureBankWords(raw);
-      startCountdown(story.time_limit || 0);
+let raw = Array.isArray(data.items) ? data.items : [];
 
-      itemsAll = sortAndNumber(raw);
-      groups = buildGroups(itemsAll);
+// (optional) kunin ang word bank mula answer_key kung available
+ensureBankWords(raw);
+startCountdown(story.time_limit || 0);
 
-      $title.textContent = story?.title || 'Story';
-      applyAuthor();
-      $crumb.textContent = 'Story';
-      startStopwatch();
-      applyFont();
-      showReading();
+// sort + global numbers
+itemsAll = sortAndNumber(raw);
+
+// group by section + set label
+groups = buildGroups(itemsAll);
+
+$title.textContent = story?.title || 'Story';
+$crumb.textContent = 'Story';
+startStopwatch();
+applyFont();
+showReading();
 
     } catch (err){
       alert('Cannot load this story: ' + err.message);
