@@ -289,7 +289,7 @@ require_once __DIR__ . '/includes/sidebar.php';
     </section>
 
     <!-- Story complete modal -->
-    <div id="storyDone" class="modal" role="dialog" aria-modal="true" style="display:none;">
+    <div id="storyDone" role="dialog" aria-modal="true" style="display:none;">
       <div class="modal-card">
         <h3>Story complete</h3>
         <p class="modal-text">Your answers for this story have been saved.</p>
@@ -819,12 +819,12 @@ const html = `
   <h3>Story complete</h3>
   <p class="modal-text">Your answers for this story have been saved.</p>
   <p class="modal-text"><strong>Score: ${correct}/${total} (${pct}%)</strong> ${wpmPart} ${timePart}</p>
-  <!-- 🔹 recap-list class for columns -->
   <ul class="modal-text recap-list">${listItems}</ul>
   <div class="modal-actions">
     <a id="storyNext" href="stories_pb_start.php?aid=${encodeURIComponent(attemptId)}&next=1" class="btn">Continue</a>
   </div>
 `;
+
 
 
   const card = document.querySelector('#storyDone .modal-card');
