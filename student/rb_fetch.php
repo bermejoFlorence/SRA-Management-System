@@ -23,6 +23,7 @@ $sql = "
       ats.attempt_story_id,
       ats.story_id,
       s.title,
+      s.author AS author_name,          -- ⬅️ BAGONG LINYA
       s.passage_html,
       s.image_path,
       COALESCE(s.time_limit_seconds, 0) AS time_limit_seconds
@@ -33,6 +34,7 @@ $sql = "
   ORDER BY ats.sequence ASC, ats.attempt_story_id ASC
   LIMIT 1
 ";
+
 $stmt = $conn->prepare($sql);
 $stmt->bind_param('ii', $attempt_id, $student_id);
 $stmt->execute();
@@ -114,6 +116,7 @@ echo json_encode([
     'attempt_story_id' => (int)$st['attempt_story_id'],
     'story_id'         => $storyId,
     'title'            => $st['title'],
+    'author'           => $st['author_name'] ?? null,   // ⬅️
     'passage_html'     => $st['passage_html'],
     'image'            => $st['image_path'],
     'quiz_started'     => false,   // walang per-story timestamps sa schema
