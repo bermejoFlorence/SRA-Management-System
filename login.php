@@ -1,4 +1,3 @@
-
 <?php /* Login <-> Register sliding panels on one page (with backend hooks) */ ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,7 +17,7 @@
     <div class="left-content">
       <div class="logos" aria-hidden="true">
         <img src="l.png" alt="Logo"/>
-        <img src="1.png" alt="CBSUA Logo"/>
+        <img src="o.webp" alt="CBSUA Logo"/>
       </div>
 
       <div class="title-block">
@@ -28,7 +27,7 @@
 
       <div class="reading-center">
         <strong>READING CENTER</strong>
-        <span>Central Bicol State University of Agriculture - Sipocot</span>
+        <span>Central Bicol State University of Agriculture</span>
       </div>
     </div>
   </section>
