@@ -177,6 +177,21 @@ require_once __DIR__ . '/includes/sidebar.php';
 .list{ display:grid; gap:10px; }
 .prev-card{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border:1px solid #eef2ee; border-radius:12px; background:#fff; }
 .prev-meta{ color:#6b7c6b; font-size:.9rem; }
+.banner{
+  margin:10px 0 16px;
+  padding:18px 20px;
+  border-radius:16px;
+  border:1px solid #cfe8cf;
+  background:#ecf6ec;
+  color:#124d16;
+
+  /* NEW – force vertical stacking */
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:4px;
+}
+
 </style>
 
 <div class="main-content">
@@ -189,22 +204,21 @@ require_once __DIR__ . '/includes/sidebar.php';
         <span class="pill">Color Category: <?= htmlspecialchars($att['level_name']) ?></span>
       <?php endif; ?>
     </section>
-
 <?php if ($did_pass): ?>
-  <!-- Big Congratulations banner (English) -->
   <div class="banner">
-    <div class="congrats">
-      🎉 CONGRATULATIONS!<br>
-      <span style="font-size:1rem; font-weight:700;">
-        You passed the <b>Rate Builder Final Test</b>.
-      </span>
+    <div class="congrats">🎉 CONGRATULATIONS!</div>
+
+    <div class="sub">
+      You passed the <b>Rate Builder Final Test</b>.
     </div>
+
     <div class="sub">
       Overall Accuracy: <b><?= (int)$overall_pct ?>%</b>
       (Passing grade: <?= (int)$pass_threshold ?>%)
     </div>
   </div>
 <?php endif; ?>
+
 
     <!-- Metrics -->
     <div class="grid">
