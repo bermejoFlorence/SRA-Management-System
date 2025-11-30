@@ -31,24 +31,26 @@ try {
 
     if (!$att) throw new RuntimeException('attempt_not_found');
 
-    // 2) Kunin ang FIRST UNFINISHED story ng attempt (kasama ang author)
-    $st = $conn->prepare("
-        SELECT ast.attempt_story_id,
-               ast.story_id,
-               ast.sequence,
-               s.title,
-               s.passage_html,
-               s.image_path,
-               s.time_limit_seconds,
-               s.notes,
-               s.author AS story_author
-        FROM attempt_stories ast
-        JOIN stories s ON s.story_id = ast.story_id
-        WHERE ast.attempt_id = ?
-          AND ast.score IS NULL
-        ORDER BY ast.sequence ASC, ast.attempt_story_id ASC
-        LIMIT 1
-    ");
+// 2) Kunin ang FIRST UNFINISHED *PUBLISHED* story ng attempt (kasama ang author)
+$st = $conn->prepare("
+    SELECT ast.attempt_story_id,
+           ast.story_id,
+           ast.sequence,
+           s.title,
+           s.passage_html,
+           s.image_path,
+           s.time_limit_seconds,
+           s.notes,
+           s.author AS story_author
+    FROM attempt_stories ast
+    JOIN stories s ON s.story_id = ast.story_id
+    WHERE ast.attempt_id = ?
+      AND ast.score IS NULL
+      AND s.status = 'published'      -- ⬅️ ito ang dagdag
+    ORDER BY ast.sequence ASC, ast.attempt_story_id ASC
+    LIMIT 1
+");
+
     $st->bind_param('i', $attempt_id);
     $st->execute();
     $row = $st->get_result()->fetch_assoc();
