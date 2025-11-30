@@ -878,6 +878,45 @@ $storyNext.addEventListener('click', async () => {
   // sa STEP 3, para hiwalay na feature at hindi ka malito sa debugging.
 })();
 </script>
+<script>
+// === Rate Builder: tab switch logging (reuse slt_tab_switch_log.php) ===
+(function() {
+  const attemptId = <?= json_encode($attemptId) ?>;
+  if (!attemptId) return; // safety
+
+  let lastState = (document.visibilityState === 'hidden') ? 'hidden' : 'visible';
+
+  function logTabState(state) {
+    try {
+      fetch('slt_tab_switch_log.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          attempt_id: attemptId,
+          state: state
+        })
+      }).catch(() => {});
+    } catch (e) {
+      // tahimik lang pag may error
+    }
+  }
+
+  // initial state (usually 'visible')
+  logTabState(lastState);
+
+  document.addEventListener('visibilitychange', () => {
+    const now = (document.visibilityState === 'hidden') ? 'hidden' : 'visible';
+    if (now === lastState) return; // walang pagbabago, wag mag-log ulit
+    lastState = now;
+    logTabState(now);
+
+    // optional: pwede kang mag-warning pag balik nila sa tab
+    // if (now === 'visible') {
+    //   alert('Note: This test tab was hidden. Please stay on this tab while taking the test.');
+    // }
+  });
+})();
+</script>
 
 </body>
 </html>
