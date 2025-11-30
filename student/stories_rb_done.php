@@ -190,22 +190,21 @@ require_once __DIR__ . '/includes/sidebar.php';
       <?php endif; ?>
     </section>
 
-    <?php if ($did_pass): ?>
+<?php if ($did_pass): ?>
   <!-- Big Congratulations banner (English) -->
   <div class="banner">
-    <div class="congrats">🎉 CONGRATULATIONS!</div>
-    <!-- ⬇️ bagong linya kaagad sa ilalim ng "CONGRATULATIONS!" -->
-    <div class="sub" style="margin-bottom:4px;">
-      You passed the <b>Rate Builder Final Test</b>.
+    <div class="congrats">
+      🎉 CONGRATULATIONS!<br>
+      <span style="font-size:1rem; font-weight:700;">
+        You passed the <b>Rate Builder Final Test</b>.
+      </span>
     </div>
-    <!-- ⬇️ hiwalay na linya para sa accuracy / passing grade -->
     <div class="sub">
       Overall Accuracy: <b><?= (int)$overall_pct ?>%</b>
       (Passing grade: <?= (int)$pass_threshold ?>%)
     </div>
   </div>
 <?php endif; ?>
-
 
     <!-- Metrics -->
     <div class="grid">
