@@ -17,7 +17,7 @@
     <div class="left-content">
       <div class="logos" aria-hidden="true">
         <img src="l.png" alt="Logo"/>
-        <img src="o.webp" alt="CBSUA Logo"/>
+        <img src="1.png" alt="CBSUA Logo"/>
       </div>
 
       <div class="title-block">
@@ -27,7 +27,7 @@
 
       <div class="reading-center">
         <strong>READING CENTER</strong>
-        <span>Central Bicol State University of Agriculture</span>
+        <span>Central Bicol State University of Agriculture - Sipocot</span>
       </div>
     </div>
   </section>
@@ -153,19 +153,33 @@
   const goRegister = document.getElementById('goRegister');
   const goLogin = document.getElementById('goLogin');
 
-  function setActive(which) {
-    const isLogin = which === 'login';
-    track.style.transform = isLogin ? 'translateX(0%)' : 'translateX(-50%)';
-    tabLogin.classList.toggle('active', isLogin);
-    tabRegister.classList.toggle('active', !isLogin);
-    tabLogin.setAttribute('aria-selected', isLogin ? 'true' : 'false');
-    tabRegister.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
-    requestAnimationFrame(() => {
-      const activePanel = document.getElementById(isLogin ? 'panelLogin' : 'panelRegister');
-      slider.style.height = activePanel.offsetHeight + 'px';
-    });
-    history.replaceState(null, '', isLogin ? '#login' : '#register');
-  }
+function setActive(which) {
+  const isLogin = which === 'login';
+
+  // slide animation
+  track.style.transform = isLogin ? 'translateX(0%)' : 'translateX(-50%)';
+
+  // tab active state
+  tabLogin.classList.toggle('active', isLogin);
+  tabRegister.classList.toggle('active', !isLogin);
+  tabLogin.setAttribute('aria-selected', isLogin ? 'true' : 'false');
+  tabRegister.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
+
+  // panel fade/slide animation (IMPORTANT PART)
+  const loginPanel    = document.getElementById('panelLogin');
+  const registerPanel = document.getElementById('panelRegister');
+  loginPanel.classList.toggle('active-panel', isLogin);
+  registerPanel.classList.toggle('active-panel', !isLogin);
+
+  // adjust card height
+  requestAnimationFrame(() => {
+    const activePanel = isLogin ? loginPanel : registerPanel;
+    slider.style.height = activePanel.offsetHeight + 'px';
+  });
+
+  // update hash
+  history.replaceState(null, '', isLogin ? '#login' : '#register');
+}
 
   tabLogin.addEventListener('click', () => setActive('login'));
   tabRegister.addEventListener('click', () => setActive('register'));
