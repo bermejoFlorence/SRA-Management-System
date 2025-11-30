@@ -1,9 +1,10 @@
-/* ========== BASE ========== */
+/* ===================== ROOT & RESET ===================== */
 :root{
-  --g:#003b24;
+  --g:#003300;
   --acc:#1e8fa2;
+  --acc-soft:rgba(30,143,162,.14);
   --card-bg:#ffffff;
-  --field-bg:#f5f6fb;
+  --field-bg:#f6f7fb;
   --text-main:#1f2532;
   --text-muted:#7b8190;
 }
@@ -17,24 +18,23 @@
 body{
   margin:0;
   font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:#e4eaef;
+  background:#dfe6ee;
+  min-height:100vh;
+}
+
+/* ===================== MAIN LAYOUT ===================== */
+.container{
+  width:100%;
+  max-width:1320px;
+  margin:0 auto;
   min-height:100vh;
   display:flex;
   align-items:stretch;
   justify-content:center;
-}
-
-/* ========== LAYOUT ========== */
-.container{
-  width:100%;
-  max-width:1320px;
-  margin:auto;
-  display:flex;
-  min-height:100vh;
   background:#ffffff;
 }
 
-/* LEFT SIDE (image + overlay) */
+/* ---------- LEFT (campus photo + overlay) ---------- */
 .left-section{
   flex:1.1;
   position:relative;
@@ -42,6 +42,7 @@ body{
   overflow:hidden;
 }
 
+/* Kung may sarili kang background image, palitan mo lang 'bg-campus.jpg' */
 .left-section::before{
   content:"";
   position:absolute;
@@ -54,36 +55,76 @@ body{
 .overlay{
   position:absolute;
   inset:0;
-  background:linear-gradient(135deg, rgba(0,60,32,0.95), rgba(0,120,75,0.82));
+  background:linear-gradient(135deg, rgba(0,51,0,0.96), rgba(0,102,51,0.88));
 }
 
 .left-content{
   position:relative;
-  z-index:2;
+  z-index:1;
   height:100%;
-  padding:2.5rem 3rem;
+  padding:2.6rem 3rem;
   display:flex;
   flex-direction:column;
   justify-content:space-between;
 }
 
-/* RIGHT SIDE (card with tabs + forms) */
+.logos{
+  display:flex;
+  gap:1rem;
+  align-items:center;
+}
+.logos img{
+  height:52px;
+  width:auto;
+  border-radius:12px;
+  background:rgba(255,255,255,0.1);
+  padding:.3rem .5rem;
+}
+
+.title-block{
+  margin-top:2.2rem;
+}
+.main-title{
+  font-size:2.4rem;
+  line-height:1.05;
+  margin:0 0 .5rem;
+  letter-spacing:.03em;
+}
+.subtitle{
+  margin:0;
+  font-size:1rem;
+  opacity:.9;
+}
+
+.reading-center{
+  font-size:.9rem;
+}
+.reading-center strong{
+  display:block;
+  letter-spacing:.15em;
+  font-size:.8rem;
+}
+.reading-center span{
+  opacity:.9;
+}
+
+/* ---------- RIGHT (auth card) ---------- */
 .right-section{
   flex:0.9;
-  background:#f3f5f9;
+  background:#f3f6fb;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:2.5rem 2.25rem;
+  padding:2.5rem 2rem;
 }
 
-/* ========== AUTH CARD & TABS ========== */
+/* ===================== AUTH CARD & TABS ===================== */
 .auth-slider{
   width:100%;
-  max-width:480px;
+  max-width:460px;
   background:var(--card-bg);
   border-radius:22px;
-  box-shadow:0 18px 45px rgba(8,27,51,0.22);
+  box-shadow:0 20px 50px rgba(12,26,52,0.28);
   overflow:hidden;
   transition:height .3s ease;
 }
@@ -92,10 +133,10 @@ body{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  background:#f1f3f8;
-  padding:.25rem;
+  padding:.35rem;
+  margin:1rem 1.6rem 0.4rem;
+  background:#edf0f7;
   border-radius:999px;
-  margin:1.1rem 1.5rem 0.25rem;
 }
 
 .tab-btn{
@@ -106,103 +147,89 @@ body{
   padding:.55rem 0.75rem;
   font-size:.9rem;
   font-weight:600;
-  color:#6a707f;
+  color:#747c8e;
   cursor:pointer;
   transition:background .2s ease, box-shadow .2s ease, color .2s ease, transform .1s ease;
 }
-
 .tab-btn.active{
   background:#ffffff;
   color:var(--text-main);
-  box-shadow:0 6px 18px rgba(25,45,74,0.22);
+  box-shadow:0 7px 20px rgba(32,51,89,0.25);
   transform:translateY(-1px);
 }
 
-/* ========== SLIDER PANELS ========== */
+/* ===================== SLIDER ANIMATION ===================== */
+.auth-slider,
+.auth-track,
+.auth-panel{
+  will-change:transform, opacity;
+}
+
 .auth-track{
   display:flex;
   width:200%;
-  transition:transform .4s cubic-bezier(0.19, 1, 0.22, 1);
+  transition:transform .48s cubic-bezier(0.22,0.61,0.36,1);
 }
 
 .auth-panel{
+  position:relative;
   width:50%;
-  padding:1.75rem 1.9rem 2rem;
+  padding:1.7rem 1.9rem 2rem;
   opacity:0;
-  transform:translateX(16px);
+  transform:translateX(24px) scale(.97);
   pointer-events:none;
-  transition:opacity .22s ease, transform .22s ease;
+  transition:
+    opacity .25s ease-out,
+    transform .28s cubic-bezier(0.22,0.61,0.36,1);
 }
 
 .auth-panel.active-panel{
   opacity:1;
-  transform:translateX(0);
+  transform:translateX(0) scale(1);
   pointer-events:auto;
 }
 
-.form-title{
-  margin:0 0 1.1rem;
-  font-size:1.35rem;
-  font-weight:700;
-  color:var(--text-main);
-  text-align:center;
+/* small colored bar for top accent */
+.auth-panel::before{
+  content:"";
+  position:absolute;
+  left:1.9rem;
+  right:1.9rem;
+  top:1.1rem;
+  height:3px;
+  border-radius:999px;
+  background:linear-gradient(90deg, #f7b733, #1e8fa2);
+  opacity:.08;
 }
 
-/* ========== FORM ELEMENTS ========== */
+/* ===================== TITLES ===================== */
+.form-title{
+  margin:0 0 1.25rem;
+  font-size:1.25rem;
+  font-weight:700;
+  color:var(--text-main);
+}
+
+/* ===================== GENERIC FORM STYLES ===================== */
 label{
   display:flex;
   flex-direction:column;
   gap:.35rem;
-  font-size:.82rem;
+  font-size:.8rem;
   font-weight:500;
-  color:#4a4f5b;
+  color:#555c6d;
 }
 
 input{
-  border-radius:999px;
-  border:1px solid #d4d8e3;
-  padding:.55rem .9rem;
-  font-size:.9rem;
-  background:var(--field-bg);
-  transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  font-family:inherit;
 }
 
-input::placeholder{
-  color:#a0a6b8;
-}
-
-input:focus{
-  outline:none;
-  background:#ffffff;
-  border-color:var(--acc);
-  box-shadow:0 0 0 3px rgba(30,143,162,0.22);
-}
-
-/* Login form = vertical stack */
-.form-stack{
-  display:flex;
-  flex-direction:column;
-  gap:1.05rem;
-}
-
-/* Register form = 2-column grid */
-.form-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:1rem 1.25rem;
-}
-
-/* Make buttons row span full width in grid */
-.form-grid .buttons{
-  grid-column:1 / -1;
-}
-
-/* ========== BUTTONS & TEXT ========== */
+/* ---------- Buttons ---------- */
 .buttons{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:.85rem;
+  gap:.9rem;
   margin-top:1rem;
 }
 
@@ -213,7 +240,7 @@ input:focus{
   font-size:.9rem;
   font-weight:600;
   cursor:pointer;
-  transition:transform .1s ease, box-shadow .2s ease, background .2s ease;
+  transition:transform .08s ease, box-shadow .2s ease, background .2s ease;
 }
 
 .btn:active{
@@ -222,53 +249,153 @@ input:focus{
 }
 
 .login-btn{
-  background:var(--acc);
+  background:#146c60;
   color:#fff;
-  box-shadow:0 10px 22px rgba(30,143,162,0.4);
+  width:100%;
+  box-shadow:0 12px 24px rgba(20,108,96,0.4);
+}
+.login-btn:hover{
+  background:#10574d;
 }
 
-.login-btn:hover{
-  background:#18758a;
+.login-alt{
+  background:#494c55;
+  color:#fff;
+  box-shadow:0 10px 20px rgba(12,12,20,0.45);
+}
+.login-alt:hover{
+  background:#373a41;
 }
 
 .register-btn{
   background:#1e8fa2;
   color:#fff;
-  box-shadow:0 10px 22px rgba(30,143,162,0.45);
+  box-shadow:0 12px 26px rgba(30,143,162,0.5);
 }
-
 .register-btn:hover{
   background:#18758a;
 }
 
-.login-alt{
-  background:#44464d;
-  color:#fff;
-  box-shadow:0 10px 20px rgba(16,16,23,0.45);
-}
-
-.login-alt:hover{
-  background:#32343a;
-}
-
+/* text hints / links */
 .switch-hint{
-  margin-top:1rem;
-  font-size:.83rem;
+  margin-top:.9rem;
+  font-size:.8rem;
   text-align:center;
   color:var(--text-muted);
 }
-
 .switch-hint a{
-  color:var(--acc);
+  color:#6a5acd;
   font-weight:600;
   text-decoration:none;
 }
-
 .switch-hint a:hover{
   text-decoration:underline;
 }
 
-/* ========== RESPONSIVE ========== */
+/* ===================== LOGIN PANEL (like sample screenshot) ===================== */
+#panelLogin .form-title{
+  text-align:left;
+}
+
+/* vertical layout */
+.form-stack{
+  display:flex;
+  flex-direction:column;
+  gap:.9rem;
+  max-width:340px;
+  margin:0 auto .4rem;
+}
+
+/* labels & underline input style */
+#panelLogin label{
+  font-size:.8rem;
+  color:#5c6478;
+}
+
+#panelLogin input{
+  border:none;
+  border-bottom:1px solid #d4d8e5;
+  border-radius:0;
+  background:transparent;
+  padding:.45rem 0;
+  font-size:.9rem;
+  transition:border-color .2s ease;
+}
+
+#panelLogin input::placeholder{
+  color:#a4a9ba;
+}
+
+#panelLogin input:focus{
+  outline:none;
+  border-bottom-color:var(--acc);
+  box-shadow:none;
+}
+
+/* optional "forgot password" */
+.forgot-link{
+  display:inline-block;
+  margin-top:.15rem;
+  font-size:.78rem;
+  color:#6a5acd;
+  text-decoration:none;
+}
+.forgot-link:hover{
+  text-decoration:underline;
+}
+
+/* slight icon feel via left padding */
+#panelLogin input[type="email"],
+#panelLogin input[type="password"]{
+  padding-left:0;
+}
+
+/* ===================== REGISTER PANEL (student friendly) ===================== */
+#panelRegister .form-title{
+  text-align:left;
+}
+
+/* 2-column grid for fields */
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:.9rem 1.2rem;
+}
+
+#panelRegister label{
+  font-size:.78rem;
+  color:#5a6072;
+}
+
+/* rounded, soft inputs */
+#panelRegister input{
+  border-radius:999px;
+  border:1px solid #d7dbea;
+  background:var(--field-bg);
+  padding:.5rem .95rem;
+  font-size:.88rem;
+  transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+#panelRegister input::placeholder{
+  color:#a2a7bc;
+}
+
+#panelRegister input:focus{
+  outline:none;
+  background:#ffffff;
+  border-color:var(--acc);
+  box-shadow:0 0 0 3px var(--acc-soft);
+}
+
+/* Buttons row spans full width */
+#panelRegister .buttons{
+  grid-column:1 / -1;
+  margin-top:.4rem;
+  justify-content:flex-end;
+}
+
+/* ===================== RESPONSIVE ===================== */
 @media (max-width: 960px){
   .container{
     flex-direction:column;
@@ -278,9 +405,21 @@ input:focus{
   }
   .right-section{
     flex:1;
-    padding:1.5rem 1rem;
+    padding:1.5rem 1.1rem;
   }
   .auth-slider{
     max-width:100%;
+  }
+}
+
+@media (max-width: 480px){
+  .auth-panel{
+    padding:1.5rem 1.3rem 1.7rem;
+  }
+  .auth-tabs{
+    margin:0.9rem 1.1rem 0.4rem;
+  }
+  .form-grid{
+    grid-template-columns:1fr;
   }
 }
