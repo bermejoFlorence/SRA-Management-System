@@ -424,9 +424,6 @@ function msToClock(sec){
     $readPassage.scrollTop = 0; updateReadProgress();
     readingStart = Date.now();
 
-    // header time pill is idle until quiz starts (shows "--:--")
-    $elapsed.textContent = '--:--';
-    $elapsed.classList.remove('warn','danger');
   }
 
   function renderChunk(){
@@ -574,8 +571,9 @@ async function apiStartQuiz(){
   // data.time_left is in SECONDS (null/0 => unlimited)
   return Number(data.time_left || 0);
 }
+function goQuiz(secondsLeft, options = {}){
+  const skipTimer = options.skipTimer === true;
 
-function goQuiz(secondsLeft){
   // finalize reading time (reading-only duration)
   if (readingStart){
     const secs = Math.floor((Date.now() - readingStart)/1000);
@@ -590,14 +588,14 @@ function goQuiz(secondsLeft){
   $quizView.style.display  = 'block';
   $doneView.style.display  = 'none';
 
-  // secondsLeft: authoritative from server (0/undefined => unlimited/stopwatch)
-  startCountdown(Number(secondsLeft || 0));
+  // secondsLeft: authoritative from server
+  if (!skipTimer){
+    startCountdown(Number(secondsLeft || 0));
+  }
+
   qIdx = 0;
   renderChunk();
 }
-
-
-
   /* ----- Load one story (RB fetch returns first unsubmitted) ----- */
   async function loadNextStory(){
     // reset state
@@ -617,15 +615,20 @@ return;
 story = data.story || null;
 items = Array.isArray(data.items) ? data.items : [];
 
-refreshHeader();
+// refreshHeader(); // kung nagawa mo na ito sa previous step
+$title.textContent = story?.title || 'Story';
+// setLimitLabel(); // kung pinalitan na natin si setCrumb dati
 
 if (story?.quiz_started) {
-  // If user refreshed mid-quiz, continue with server-left seconds
+  // REFRESH SA GITNA NG QUIZ → gamitin remaining time galing server
   const left = Number(story.time_left || story.time_limit || 0);
-  goQuiz(left);
+  goQuiz(left); // may timer sa loob nito
 } else {
-  showReading(); // fresh story
+  // BAGONG STORY → start full countdown agad (reading + quiz)
+  startCountdown(Number(story?.time_limit || 0));
+  showReading();
 }
+
 
     }catch(e){
       alert('Could not load story: ' + e.message);
