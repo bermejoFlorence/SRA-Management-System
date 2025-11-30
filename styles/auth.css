@@ -388,46 +388,12 @@ input{
   box-shadow:0 0 0 3px var(--acc-soft);
 }
 
-/* REGISTER BUTTONS: stacked at the bottom */
+/* Buttons row spans full width */
 #panelRegister .buttons{
   grid-column:1 / -1;
-  margin-top:1.4rem;
-  display:flex;
-  flex-direction:column;       /* vertical: Go to Login, then Register */
-  align-items:stretch;
-  gap:.6rem;
-  max-width:260px;             /* para hindi sobrang lapad */
-  margin-inline:auto;          /* center sa loob ng card */
+  margin-top:.4rem;
+  justify-content:flex-end;
 }
-
-/* Go to Login button – light / secondary */
-#panelRegister .login-alt{
-  background:#ffffff;
-  color:#33373f;
-  border:1px solid #c8cddc;
-  box-shadow:0 6px 14px rgba(0,0,0,0.12);
-  text-align:center;
-  width:100%;
-}
-
-/* Register button – primary / blue */
-#panelRegister .register-btn{
-  background:#1e8fa2;
-  color:#ffffff;
-  border:none;
-  box-shadow:0 10px 22px rgba(30,143,162,0.45);
-  text-align:center;
-  width:100%;
-}
-
-#panelRegister .login-alt:hover{
-  background:#f5f6fb;
-}
-
-#panelRegister .register-btn:hover{
-  background:#18758a;
-}
-
 
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 960px){
