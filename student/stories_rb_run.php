@@ -277,6 +277,17 @@ require_once __DIR__ . '/includes/sidebar.php';
   const $author  = document.getElementById('storyAuthor');   // NEW
   const $crumb   = document.getElementById('crumb');
   const $elapsed = document.getElementById('elapsed');
+function applyAuthor(){
+  if (!$author) return;
+  const name = story?.author || story?.author_name || '';
+  if (name){
+    $author.textContent = 'by ' + name;
+    $author.style.display = '';
+  } else {
+    $author.textContent = '';
+    $author.style.display = 'none';
+  }
+}
 
   const $readView = document.getElementById('readView');
   const $readPassage = document.getElementById('readPassage');
@@ -334,7 +345,8 @@ function setLimitLabel(){
 }
 function refreshHeader(){
   $title.textContent = story?.title || 'Story';
-
+    applyAuthor();       // <-- dito na natin ina-apply si author
+  setLimitLabel();     // okay lang kahit walang #crumb, may guard na
   if ($author){
     const name = story?.author || '';
     if (name){
@@ -478,7 +490,7 @@ function ensureReadingSeconds(){
 
   /* ----- Rendering ----- */
   function showReading(){
-    $title.textContent = story?.title || 'Story';
+  refreshHeader();   // para title + author sabay na-update
 
     // Trusted admin HTML
     $readPassage.innerHTML = story?.passage_html || '';
@@ -667,8 +679,7 @@ function goQuiz(secondsLeft, options = {}){
 story = data.story || null;
 items = Array.isArray(data.items) ? data.items : [];
 
-// refreshHeader(); // kung nagawa mo na ito sa previous step
-$title.textContent = story?.title || 'Story';
+refreshHeader();   // <-- ACTIVATE na
 // setLimitLabel(); // kung pinalitan na natin si setCrumb dati
 
 if (story?.quiz_started) {
