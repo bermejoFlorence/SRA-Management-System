@@ -152,7 +152,6 @@ require_once __DIR__ . '/includes/sidebar.php';
     <div id="storyAuthor" class="rb-story-author" style="display:none;"></div>
   </div>
   <div class="rb-meta">
-    <span id="crumb" class="pill pill-muted">No time limit</span>
     <span id="elapsed" class="pill" title="Remaining time">--:--</span>
   </div>
 </section>
@@ -229,19 +228,27 @@ require_once __DIR__ . '/includes/sidebar.php';
       </div>
     </section>
 
-    <!-- Story complete modal (Step 1: preview-only; Step 2 will save) -->
+        <!-- Story complete modal (uniform with SLT) -->
     <div id="storyDone" class="modal" role="dialog" aria-modal="true" style="display:none;">
       <div class="modal-card">
-        <h3>Story ready to submit</h3>
-        <p class="modal-text" id="storySummary">
-          Your answers are ready. In the next step, we’ll save and score this on the server.
+        <h3>Story complete</h3>
+        <p class="modal-text">
+          Your answers for this story have been saved.
+          <span id="storySummary" style="display:block;margin-top:6px;color:#6b7c6b;"></span>
         </p>
+        <div id="storySummaryDetails" class="modal-text" style="margin-top:-8px;color:#213421;"></div>
         <div class="modal-actions">
-          <button id="storyClose" class="btn">OK</button>
+          <button id="storyNext" class="btn" type="button">Continue</button>
         </div>
       </div>
     </div>
-
+        <!-- Time-up modal (uniform name with SLT) -->
+    <div id="timeUpModal" class="modal" style="display:none;" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <h3>Time is up</h3>
+        <p class="modal-text">We’re saving your answers for this story. Please wait…</p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -264,7 +271,7 @@ require_once __DIR__ . '/includes/sidebar.php';
   // timer (per-story)
   let timerHandle = null;
   let quizDeadline = null;
-
+  let timeAlreadyUp = false; // NEW: para once lang tumakbo ang time-up logic
   /* ----- DOM ----- */
   const $title   = document.getElementById('storyTitle');
   const $author  = document.getElementById('storyAuthor');   // NEW
@@ -299,8 +306,9 @@ require_once __DIR__ . '/includes/sidebar.php';
   const $btnThemeLight= document.getElementById('btnThemeLight');
   const $btnThemeSepia= document.getElementById('btnThemeSepia');
 
-  const $storyDone = document.getElementById('storyDone');
-  const $storyClose= document.getElementById('storyClose');
+  const $storyDone  = document.getElementById('storyDone');
+  const $storyNext  = document.getElementById('storyNext');   // NEW
+  const $timeUpModal= document.getElementById('timeUpModal'); // NEW
 
   function escapeHtml(s){ return String(s ?? '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
@@ -361,33 +369,94 @@ function refreshHeader(){
     if (name === 'sepia') document.body.classList.add('theme-sepia');
     localStorage.setItem('rb_theme', theme);
   }
+async function onTimeUpRB(){
+  if (timeAlreadyUp) return;
+  timeAlreadyUp = true;
+
+  // compute reading time kung nasa reading pa siya
+  ensureReadingSeconds();
+
+  try {
+    if ($timeUpModal) $timeUpModal.style.display = 'flex';
+
+    // gamitin existing submitStoryAndNotify, pero hindi natin kailangan
+    // hintayin ang "Continue" ng user – gagawa tayo ng separate silent save
+    const flat = Object.entries(answers).map(([itemId, letter]) => ({
+      item_id: Number(itemId),
+      choice_label: String(letter || '').toUpperCase()
+    }));
+
+    const r = await fetch('rb_submit_story.php', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        attempt_id: <?= json_encode($attemptId) ?>,
+        attempt_story_id: story?.attempt_story_id ?? null,
+        story_id: story?.story_id,
+        answers: flat,
+        reading_seconds: Number(window.__rbLastReadingSecs || 0)
+      })
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'Save failed');
+
+    // tapos na yung story – kunin next, or done na
+    if ($timeUpModal) $timeUpModal.style.display = 'none';
+
+    // try load next unsubmitted story; kapag wala na, RB attempt complete
+    await loadNextStory();
+  } catch (e) {
+    if ($timeUpModal) $timeUpModal.style.display = 'none';
+    alert('Time is up but we could not save your work.\nPlease contact your teacher.\n\n' + e.message);
+    // fallback: balik overview
+    window.location.href = 'stories_rb.php';
+  }
+}
 
   function startCountdown(seconds){
     clearInterval(timerHandle);
     quizDeadline = null;
+    timeAlreadyUp = false; // reset every story
+
     if (!seconds || seconds <= 0){
-      $elapsed.title = 'Elapsed time'; // stopwatch
+      $elapsed.title = 'Elapsed time'; // stopwatch mode
       const t0 = Date.now();
-      timerHandle = setInterval(()=>{ $elapsed.textContent = fmt((Date.now()-t0)/1000); }, 1000);
+      timerHandle = setInterval(()=>{
+        $elapsed.textContent = fmt((Date.now()-t0)/1000);
+      }, 1000);
       return;
     }
+
     $elapsed.title = 'Remaining time';
     quizDeadline = Math.floor(Date.now()/1000) + seconds;
     timerHandle = setInterval(()=>{
       const left = quizDeadline - Math.floor(Date.now()/1000);
-      $elapsed.classList.toggle('warn', left <= 120 && left > 30);
+      $elapsed.classList.toggle('warn',   left <= 120 && left > 30);
       $elapsed.classList.toggle('danger', left <= 30);
       $elapsed.textContent = fmt(left);
-      if (left <= 0){ clearInterval(timerHandle); $btnNext.click(); }
+
+      if (left <= 0){
+        clearInterval(timerHandle);
+        onTimeUpRB();   // ⬅️ IMBES NA $btnNext.click()
+      }
     }, 300);
   }
+
 function msToClock(sec){
   sec = Math.max(0, Math.floor(sec));
   const m = String(Math.floor(sec/60)).padStart(2,'0');
   const s = String(sec%60).padStart(2,'0');
   return `${m}:${s}`;
 }
-
+function ensureReadingSeconds(){
+  if (typeof window.__rbLastReadingSecs === 'number') return;
+  if (readingStart){
+    const secs = Math.floor((Date.now() - readingStart)/1000);
+    window.__rbLastReadingSecs = secs;
+  } else {
+    window.__rbLastReadingSecs = 0;
+  }
+}
   /* ----- Chunk helpers (like SLT) ----- */
   function chunkInfo() {
     const total = items.length;
@@ -480,12 +549,7 @@ async function submitStoryAndNotify(){
     choice_label: String(letter || '').toUpperCase()
   }));
 
-  // reading time = time spent in reading view only
-  const readingSeconds = (() => {
-    // We started counting at showReading(); we cut it when goQuiz() fired.
-    // If you want, store the computed secs in a per-story map.
-    return Number(window.__rbLastReadingSecs || 0);
-  })();
+  const readingSeconds = Number(window.__rbLastReadingSecs || 0);
 
   const r = await fetch('rb_submit_story.php', {
     method:'POST',
@@ -501,21 +565,12 @@ async function submitStoryAndNotify(){
   const data = await r.json();
   if (!data.ok) throw new Error(data.error || 'Save failed');
 
-  
-// alisin ang guard bago mag-navigate
-window.removeEventListener('beforeunload', onBeforeUnload);
-window.location.replace(`stories_rb_done.php?attempt_id=${attemptId}`);
-return;
-
-
-
-  // Build summary line like your screenshot
+  // Build summary (uniform with SLT style)
   const total = Number(data.total ?? 0);
   const score = Number(data.score ?? 0);
   const pct   = total ? Math.round((score/total)*100) : 0;
-  const readS = Number(data.read_secs ?? 0);
+  const readS = Number(data.read_secs ?? readingSeconds ?? 0);
 
-  // WPM line
   let wpmLine = 'WPM: N/A (reading too short)';
   if (data.wpm != null && data.wpm !== false) {
     wpmLine = `WPM: ${Number(data.wpm)}`;
@@ -523,16 +578,10 @@ return;
 
   const $sum = document.getElementById('storySummary');
   $sum.innerHTML = `
-    Your answers for this story have been saved.<br><br>
-    <span style="color:#6b7c6b;">
-      Score: <b>${score}/${total} (${pct}%)</b> • ${wpmLine} • Reading time: ${msToClock(readS)}
-    </span>
+    Score: <b>${score}/${total}</b> (${pct}%) • ${wpmLine} • Reading time: ${msToClock(readS)}
   `;
 
-  // Wrong items list (Q1…)
-  const $det = document.getElementById('storySummaryDetails') || (() => {
-    const p = document.createElement('p'); p.id='storySummaryDetails'; p.className='modal-text'; $sum.after(p); return p;
-  })();
+  const $det = document.getElementById('storySummaryDetails');
   $det.innerHTML = '';
   const wrong = Array.isArray(data.wrong_items) ? data.wrong_items : [];
   if (wrong.length) {
@@ -540,7 +589,7 @@ return;
     ul.style.margin = '8px 0 0';
     ul.style.paddingLeft = '18px';
     wrong.forEach(w => {
-      const qno = w.q_no ?? '?';
+      const qno  = w.q_no ?? '?';
       const pick = (w.picked_label || '—').toString().toUpperCase();
       const corr = (w.correct_label || '—').toString().toUpperCase();
       const li = document.createElement('li');
@@ -548,10 +597,12 @@ return;
       ul.appendChild(li);
     });
     $det.appendChild(ul);
+  } else if (score === total && total > 0) {
+    $det.textContent = 'Great job! All correct.';
   }
 
-  // open modal
-  document.getElementById('storyDone').style.display = 'flex';
+  // show modal
+  $storyDone.style.display = 'flex';
 }
 
 async function apiStartQuiz(){
@@ -599,17 +650,18 @@ function goQuiz(secondsLeft, options = {}){
   /* ----- Load one story (RB fetch returns first unsubmitted) ----- */
   async function loadNextStory(){
     // reset state
-    story = null; items = []; answers = {}; qIdx = 0;
-    clearInterval(timerHandle); $elapsed.textContent = '--:--';
+      story = null; items = []; answers = {}; qIdx = 0;
+    clearInterval(timerHandle);
+    $elapsed.textContent = '--:--';
+    timeAlreadyUp = false;
+
     try{
       const r = await fetch(`rb_fetch.php?attempt_id=${encodeURIComponent(attemptId)}`, { credentials:'same-origin' });
       const data = await r.json();
-      if (!data || data.ok !== true){
-window.removeEventListener('beforeunload', onBeforeUnload);
-window.location.replace(`stories_rb_done.php?attempt_id=${attemptId}`);
-return;
-
-
+        if (!data || data.ok !== true){
+        window.removeEventListener('beforeunload', onBeforeUnload);
+        window.location.replace(`stories_rb_done.php?attempt_id=${attemptId}`);
+        return;
   throw new Error(data && data.error ? data.error : 'Load failed');
 }
 story = data.story || null;
@@ -696,12 +748,11 @@ $btnNext.addEventListener('click', async () => {
   }
 });
 
-document.getElementById('storyClose').addEventListener('click', async () => {
+$storyNext.addEventListener('click', async () => {
   $storyDone.style.display = 'none';
-  await loadNextStory();                    // fetch next unsubmitted story (or show Completed)
+  await loadNextStory(); // next unsubmitted story, or done
   window.scrollTo({ top: 0, behavior: 'instant' });
 });
-
   // guard on refresh/leave during quiz
   function onBeforeUnload(e){
     if ($quizView.style.display === 'block'){ e.preventDefault(); e.returnValue = ''; }
@@ -735,6 +786,96 @@ document.getElementById('storyClose').addEventListener('click', async () => {
 
   /* ----- Boot ----- */
   loadNextStory();
+})();
+</script>
+<script>
+// Exam protection script – Rate Builder (same as SLT, minus tab-logging for now)
+(function() {
+  // 1) Disable right-click
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  });
+
+  // 2) Disable text selection globally (backup, in case CSS is bypassed)
+  document.addEventListener('selectstart', function(e) {
+    const tag = (e.target.tagName || '').toLowerCase();
+    // allow selection sa input/textarea
+    if (tag === 'input' || tag === 'textarea') return;
+    e.preventDefault();
+  });
+
+  // 3) Try to clear clipboard (for PrintScreen / copy)
+  function tryClearClipboard() {
+    // Modern API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText('Screenshots and copying are not allowed during the test.')
+        .catch(function() {
+          // ignore errors silently
+        });
+    } else {
+      // Legacy fallback
+      const inp = document.createElement('input');
+      inp.value = '.';
+      inp.style.position = 'fixed';
+      inp.style.opacity = '0';
+      document.body.appendChild(inp);
+      inp.select();
+      try { document.execCommand('copy'); } catch (err) {}
+      document.body.removeChild(inp);
+    }
+  }
+
+  // 4) Block important keys / shortcuts
+  document.addEventListener('keydown', function(e) {
+    const key = (e.key || '').toLowerCase();
+
+    // F12 (DevTools)
+    if (key === 'f12') {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    // PrintScreen key
+    if (key === 'printscreen' || e.keyCode === 44) {
+      e.preventDefault();
+      e.stopPropagation();
+      tryClearClipboard();
+      alert('Screenshots are not allowed during the test.');
+      return;
+    }
+
+    // Ctrl + something
+    if (e.ctrlKey) {
+      const blocked = ['c','x','s','p','u','a']; // copy, cut, save, print, view source, select all
+      if (blocked.includes(key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      // Ctrl+Shift+I / J / C (DevTools)
+      if (e.shiftKey && ['i','j','c'].includes(key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    }
+  });
+
+  // 5) Extra PrintScreen detection on keyup (ibang OS/browsers)
+  document.addEventListener('keyup', function(e) {
+    const key = (e.key || '').toLowerCase();
+    if (key === 'printscreen' || e.keyCode === 44) {
+      e.preventDefault();
+      tryClearClipboard();
+      alert('Screenshots are not allowed during the test.');
+    }
+  });
+
+  // NOTE:
+  // Yung pag-monitor ng tab switching (visibilitychange + fetch) ilalagay natin
+  // sa STEP 3, para hiwalay na feature at hindi ka malito sa debugging.
 })();
 </script>
 
