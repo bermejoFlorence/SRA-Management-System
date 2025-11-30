@@ -72,70 +72,76 @@
           </form>
         </div>
 
-        <!-- REGISTER PANEL -->
+               <!-- REGISTER PANEL -->
         <div class="auth-panel" id="panelRegister" role="tabpanel" aria-labelledby="tabRegister">
           <h2 class="form-title">Register Form</h2>
-          <form id="registerForm" class="form-grid" novalidate>
-            <label>Firstname
-              <input type="text" name="firstname" required autocomplete="given-name"/>
-            </label>
 
-            <label>Middlename
-              <input type="text" name="middlename" autocomplete="additional-name"/>
-            </label>
+          <form id="registerForm" class="register-form" novalidate>
+            <!-- grid ng fields -->
+            <div class="field-grid">
+              <label>Firstname
+                <input type="text" name="firstname" required autocomplete="given-name"/>
+              </label>
 
-            <label>Lastname
-              <input type="text" name="lastname" required autocomplete="family-name"/>
-            </label>
+              <label>Middlename
+                <input type="text" name="middlename" autocomplete="additional-name"/>
+              </label>
 
-            <label>Extension Name
-              <input type="text" name="extensionname" placeholder="e.g., Jr., II, Sr." />
-            </label>
+              <label>Lastname
+                <input type="text" name="lastname" required autocomplete="family-name"/>
+              </label>
 
-            <label>Student ID No.
-              <input type="text" name="studentid" required />
-            </label>
+              <label>Extension Name
+                <input type="text" name="extensionname" placeholder="e.g., Jr., II, Sr." />
+              </label>
 
-            <label>Email
-              <input
-                type="email"
-                name="email"
-                placeholder="name@cbsua.edu.ph"
-                required
-                autocomplete="email"
-                inputmode="email"
-                pattern="^[a-zA-Z0-9._%+\-]+@cbsua\.edu\.ph$"
-                title="Use your @cbsua.edu.ph email"
-                oninput="this.value=this.value.toLowerCase()"
-              />
-            </label>
+              <label>Student ID No.
+                <input type="text" name="studentid" required />
+              </label>
 
-            <label>Password
-              <input type="password" name="password" required autocomplete="new-password"/>
-            </label>
+              <label>Email
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="name@cbsua.edu.ph"
+                  required
+                  autocomplete="email"
+                  inputmode="email"
+                  pattern="^[a-zA-Z0-9._%+\-]+@cbsua\.edu\.ph$"
+                  title="Use your @cbsua.edu.ph email"
+                  oninput="this.value=this.value.toLowerCase()"
+                />
+              </label>
 
-            <label>Course
-              <input type="text" name="course" required />
-            </label>
+              <label>Password
+                <input type="password" name="password" required autocomplete="new-password"/>
+              </label>
 
-            <label>Major
-              <input type="text" name="major" />
-            </label>
+              <label>Course
+                <input type="text" name="course" required />
+              </label>
 
-            <label>Year Level
-              <input type="number" name="yearlevel" min="1" max="10" required />
-            </label>
+              <label>Major
+                <input type="text" name="major" />
+              </label>
 
-            <label>Section
-              <input type="text" name="section" required />
-            </label>
+              <label>Year Level
+                <input type="number" name="yearlevel" min="1" max="10" required />
+              </label>
 
-            <div class="buttons">
+              <label>Section
+                <input type="text" name="section" required />
+              </label>
+            </div>
+
+            <!-- buttons sa pinakababa -->
+            <div class="form-actions">
               <button type="button" class="btn login-alt" id="goLogin">Go to Login</button>
               <button type="submit" class="btn register-btn" id="registerBtn">Register</button>
             </div>
           </form>
         </div>
+
       </div>
     </div>
   </section>
