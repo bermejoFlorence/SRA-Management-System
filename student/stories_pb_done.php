@@ -89,9 +89,11 @@ if (!empty($att['level_id'])) {
   $th->execute();
   $row = $th->get_result()->fetch_assoc();
   $th->close();
-  if ($row && $row['min_percent'] !== null) $pass_threshold = (int)round((float)$row['min_percent']);
+  if ($row && $row['min_percent'] !== null) {
+    $pass_threshold = (int)round((float)$row['min_percent']);
+  }
 }
-$did_pass = ($overall_pct >= $pass_threshold);
+$did_pass = ($overall_pct >= $pass_threshold && $overall_pct <= 100);
 
 /* Check if may in-progress attempt pa para sa retake link */
 $pbAidInProgress = 0;
@@ -146,10 +148,28 @@ while ($p = $pr->fetch_assoc()) {
 }
 $pq->close();
 
-/* 7) UI */
+/* 7) UI + randomized messages (same idea as Rate Builder) */
 $PAGE_TITLE  = 'Power Builder — Summary';
 $ACTIVE_MENU = 'learn';
 $ACTIVE_SUB  = 'pb';
+
+/* Random motivational lines */
+$passMessages = [
+  "Amazing work! Your practice in Power Builder is really paying off.",
+  "Great job—you handled those stories very well!",
+  "Nice! You’re building solid reading muscles.",
+  "Well done! Your Power Builder results show real improvement."
+];
+$failMessages = [
+  "Don’t give up—every story you finish makes you stronger.",
+  "It’s okay not to pass yet. Use this result as practice for next time.",
+  "Progress, not perfection. Review your mistakes and try again.",
+  "You’re learning each time you read. Rest a bit, then come back stronger."
+];
+
+$passMsg = $passMessages[array_rand($passMessages)];
+$failMsg = $failMessages[array_rand($failMessages)];
+
 require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/includes/sidebar.php';
 ?>
@@ -164,18 +184,15 @@ require_once __DIR__ . '/includes/sidebar.php';
 .wrap{ max-width:1320px; margin:0 auto; padding:16px 24px; padding-top:12px; }
 
 .hero{
-  display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
-  margin:8px 0 16px; padding:18px 22px;
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  margin:8px 0 10px; padding:18px 22px;
   background:linear-gradient(180deg,#fff,#fefefe);
   border:1px solid #eef2ee; border-radius:14px; box-shadow:var(--shadow);
 }
-.hero-main{ display:flex; flex-direction:column; gap:6px; }
 .hero-title{
   margin:0; color:#003300; font-weight:900; letter-spacing:.2px;
   font-size:clamp(1.25rem,1.05rem + 1vw,1.7rem);
 }
-.hero-sub{ margin:0; color:var(--ink); font-size:1rem; font-weight:700; }
-.hero-sub2{ margin:0; color:var(--muted); font-size:.95rem; }
 
 .hero-right{
   display:flex; flex-direction:column; gap:6px; align-items:flex-end;
@@ -188,6 +205,26 @@ require_once __DIR__ . '/includes/sidebar.php';
 }
 .pill-status{
   background:#e6f6ea; border-color:#b2dfb5; color:#1b5e20;
+}
+
+/* Banner (same look as RB summary) */
+.banner{
+  margin:10px 0 16px; padding:18px 20px;
+  border-radius:16px; border:1px solid #cfe8cf;
+  background:#ecf6ec; color:#124d16;
+}
+.banner-fail{
+  background:#fff5e6;
+  border-color:#f3d7a6;
+  color:#734000;
+}
+.banner .congrats{
+  font-weight:1000; letter-spacing:.5px;
+  font-size:clamp(1.6rem,1.2rem + 1.6vw,2.2rem);
+  margin:0 0 6px;
+}
+.banner .sub{
+  font-weight:700; opacity:.9;
 }
 
 .grid{
@@ -233,13 +270,9 @@ require_once __DIR__ . '/includes/sidebar.php';
 <div class="main-content">
   <div class="wrap">
 
-    <!-- HEADER: same feel as SLT summary -->
+    <!-- HEADER -->
     <section class="hero">
-      <div class="hero-main">
-        <h1 class="hero-title">Power Builder Test</h1>
-        <p class="hero-sub">You’ve completed the Power Builder Test.</p>
-        <p class="hero-sub2">Your results are ready. Here’s a quick summary.</p>
-      </div>
+      <h1 class="hero-title">Power Builder Test</h1>
 
       <div class="hero-right">
         <?php if (!empty($att['level_name'])): ?>
@@ -248,6 +281,27 @@ require_once __DIR__ . '/includes/sidebar.php';
         <span class="pill pill-status">Completed</span>
       </div>
     </section>
+
+    <!-- PASS / FAIL BANNER (same feel as RB) -->
+    <?php if ($did_pass): ?>
+      <div class="banner">
+        <div class="congrats">🎉 CONGRATULATIONS!</div>
+        <div class="sub"><?= htmlspecialchars($passMsg) ?></div>
+        <div class="sub" style="margin-top:4px;">
+          Overall Accuracy: <b><?= (int)$overall_pct ?>%</b>
+          (Passing grade: <?= (int)$pass_threshold ?>%)
+        </div>
+      </div>
+    <?php else: ?>
+      <div class="banner banner-fail">
+        <div class="congrats">Keep going, Reader!</div>
+        <div class="sub"><?= htmlspecialchars($failMsg) ?></div>
+        <div class="sub" style="margin-top:4px;">
+          Overall Accuracy: <b><?= (int)$overall_pct ?>%</b>
+          (Passing grade: <?= (int)$pass_threshold ?>%)
+        </div>
+      </div>
+    <?php endif; ?>
 
     <!-- TOP METRICS (4 cards) -->
     <div class="grid">

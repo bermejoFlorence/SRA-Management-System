@@ -85,6 +85,41 @@ if (!empty($att['level_id'])) {
   if ($row && $row['min_percent'] !== null) $pass_threshold = (int)round((float)$row['min_percent']);
 }
 $did_pass = ($overall_pct >= $pass_threshold && $overall_pct <= 100);
+// Random motivational messages kapag hindi pumasa
+$failMessages = [
+  [
+    'title' => 'Keep Going — You Can Do It!',
+    'line1' => 'You didn’t reach the passing score this time, but you’re getting closer.',
+    'line2' => 'Review your strategies and try again when you’re ready.'
+  ],
+  [
+    'title' => 'Don’t Give Up!',
+    'line1' => 'Every great reader improves through practice.',
+    'line2' => 'Keep practicing and you will surely pass the test.'
+  ],
+  [
+    'title' => 'You’re on the Right Track!',
+    'line1' => 'This attempt is part of your progress.',
+    'line2' => 'Learn from your mistakes and try again.'
+  ],
+  [
+    'title' => 'Almost There!',
+    'line1' => 'A little more practice will help you reach the passing score.',
+    'line2' => 'You can do this — try again soon.'
+  ],
+  [
+    'title' => 'Believe in Yourself!',
+    'line1' => 'Challenges help us grow and improve.',
+    'line2' => 'Keep going and you’ll see better results next time.'
+  ],
+  [
+    'title' => 'Great Effort!',
+    'line1' => 'Learning takes time, and this attempt matters.',
+    'line2' => 'Review your reading strategies and take the test again.'
+  ],
+];
+
+$failPick = $failMessages[array_rand($failMessages)];
 
 /* 5) Per-story breakdown (title + score) */
 $rows = [];
@@ -191,6 +226,11 @@ require_once __DIR__ . '/includes/sidebar.php';
   align-items:flex-start;
   gap:4px;
 }
+.banner-fail{
+  border-color:#f3b1b1;
+  background:#fdeaea;
+  color:#7a0d0d;
+}
 
 </style>
 
@@ -205,20 +245,33 @@ require_once __DIR__ . '/includes/sidebar.php';
       <?php endif; ?>
     </section>
 <?php if ($did_pass): ?>
+  <!-- PASS banner -->
   <div class="banner">
     <div class="congrats">🎉 CONGRATULATIONS!</div>
-
-    <div class="sub">
+    <div class="sub" style="margin-bottom:4px;">
       You passed the <b>Rate Builder Final Test</b>.
     </div>
-
     <div class="sub">
       Overall Accuracy: <b><?= (int)$overall_pct ?>%</b>
       (Passing grade: <?= (int)$pass_threshold ?>%)
     </div>
   </div>
+<?php else: ?>
+  <!-- FAIL banner with random motivational message -->
+  <div class="banner banner-fail">
+    <div class="congrats">
+      <?= htmlspecialchars($failPick['title']) ?>
+    </div>
+    <div class="sub" style="margin-bottom:4px;">
+      <?= htmlspecialchars($failPick['line1']) ?>
+    </div>
+    <div class="sub">
+      <?= htmlspecialchars($failPick['line2']) ?><br>
+      Your Accuracy: <b><?= (int)$overall_pct ?>%</b>
+      (Passing grade: <?= (int)$pass_threshold ?>%)
+    </div>
+  </div>
 <?php endif; ?>
-
 
     <!-- Metrics -->
     <div class="grid">
