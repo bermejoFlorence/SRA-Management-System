@@ -1,3 +1,6 @@
+ganito ang naging output
+
+tama ba itong login page ko?
 <?php /* Login <-> Register sliding panels on one page (with backend hooks) */ ?>
 <!DOCTYPE html>
 <html lang="en">
