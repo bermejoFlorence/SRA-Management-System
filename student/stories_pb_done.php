@@ -265,6 +265,16 @@ require_once __DIR__ . '/includes/sidebar.php';
   padding:12px 14px; border:1px solid #eef2ee; border-radius:12px; background:#fff;
 }
 .prev-meta{ color:#6b7c6b; font-size:.9rem; }
+.banner{
+  margin:10px 0 16px;
+  padding:18px 20px;
+  border-radius:16px;
+  border:1px solid #cfe8cf;
+  background:#ecf6ec;
+  color:#124d16;
+  display:block;          /* ⬅ ito ang importante */
+}
+
 </style>
 
 <div class="main-content">
