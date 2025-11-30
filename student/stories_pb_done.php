@@ -286,8 +286,10 @@ require_once __DIR__ . '/includes/sidebar.php';
     <?php if ($did_pass): ?>
       <div class="banner">
         <div class="congrats">🎉 CONGRATULATIONS!</div>
-        <div class="sub"><?= htmlspecialchars($passMsg) ?></div>
-        <div class="sub" style="margin-top:4px;">
+        <div class="sub">
+          You passed the <b>Power Builder Test.</b>
+        </div>
+        <div class="sub">
           Overall Accuracy: <b><?= (int)$overall_pct ?>%</b>
           (Passing grade: <?= (int)$pass_threshold ?>%)
         </div>
@@ -296,12 +298,13 @@ require_once __DIR__ . '/includes/sidebar.php';
       <div class="banner banner-fail">
         <div class="congrats">Keep going, Reader!</div>
         <div class="sub"><?= htmlspecialchars($failMsg) ?></div>
-        <div class="sub" style="margin-top:4px;">
+        <div class="sub">
           Overall Accuracy: <b><?= (int)$overall_pct ?>%</b>
           (Passing grade: <?= (int)$pass_threshold ?>%)
         </div>
       </div>
     <?php endif; ?>
+
 
     <!-- TOP METRICS (4 cards) -->
     <div class="grid">
