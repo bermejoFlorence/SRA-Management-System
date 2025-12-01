@@ -80,10 +80,20 @@ body.nav-open .hamburger span:nth-child(3){ transform:translateY(-7px) rotate(-4
 
 /* Overlay (mobile only) */
 .nav-overlay{
-  position:fixed; inset:0; background:var(--overlay);
-  opacity:0; pointer-events:none; transition:opacity .25s;
+  position:fixed;
+  inset:0;
+  background:var(--overlay);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s;
+  z-index:900;          /* mas mababa kaysa .nav */
 }
-body.nav-open .nav-overlay{ opacity:1; pointer-events:auto; }
+
+body.nav-open .nav-overlay{
+  opacity:1;
+  pointer-events:auto;  /* clickable pa rin para ma-close */
+}
+
 
 /* ====== Sections ====== */
 section{ padding:60px 10%; }
@@ -160,23 +170,39 @@ footer a{ color:var(--mint); margin:0 5px; }
 @media (max-width: 900px){
   /* Show hamburger, hide desktop nav style */
   .hamburger{ display:block; }
+
   /* Mobile nav: slide-in panel */
   .nav{
     position:fixed;
-    top:0; right:0; height:100vh; width:260px;
+    top:0;
+    right:0;
+    height:100vh;
+    width:260px;
     background:var(--green);
     box-shadow:-8px 0 24px rgba(0,0,0,.2);
     padding:80px 20px 20px;
-    display:flex; flex-direction:column; gap:8px;
-    transform:translateX(100%); transition:transform .25s ease;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    transform:translateX(100%);
+    transition:transform .25s ease;
+    z-index:1000;        /* MAS MATAAS KAY .nav-overlay (900) */
   }
+
   body.nav-open .nav{ transform:translateX(0%); }
 
   .nav a{
-    display:block; color:#fff; padding:12px 10px; border-radius:8px;
-    font-weight:600; font-size:1rem;
+    display:block;
+    color:#fff;
+    padding:12px 10px;
+    border-radius:8px;
+    font-weight:600;
+    font-size:1rem;
   }
-  .nav a:hover{ background:rgba(255,255,255,.08); color:yellow; }
+  .nav a:hover{
+    background:rgba(255,255,255,.08);
+    color:yellow;
+  }
 
   /* Keep header compact */
   header{ padding:8px 12px; }
