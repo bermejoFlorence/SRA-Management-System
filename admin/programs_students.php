@@ -358,6 +358,30 @@ $res->free();
 .modal-footer .btn-accent.pill:hover {
   filter: brightness(0.95);
 }
+/* Header "Add Course" button – white + green pill */
+.header-actions .btn-add-course {
+  border-radius: 999px;
+  padding: 10px 24px;
+  border: 1px solid rgba(6, 77, 0, 0.22); /* soft green border */
+  background: #ffffff;
+  color: #064d00;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(6, 77, 0, 0.12);
+  transition: background 0.15s, transform 0.12s, box-shadow 0.12s;
+}
+
+.header-actions .btn-add-course:hover {
+  background: #e5f3da; /* light green */
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(6, 77, 0, 0.18);
+}
+
+.header-actions .btn-add-course:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(6, 77, 0, 0.18);
+}
 
 </style>
 
@@ -371,9 +395,10 @@ $res->free();
         </p>
       </div>
       <div class="header-actions">
-        <button type="button" class="btn btn-accent" id="btnAddCourse">
-          + Add Course
-        </button>
+       <button type="button" class="btn btn-add-course" id="btnAddCourse">
+  + Add Course
+</button>
+
       </div>
     </div>
 
