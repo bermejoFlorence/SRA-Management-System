@@ -328,6 +328,36 @@ if (isset($conn) && $conn instanceof mysqli) {
 }
 
 /* reuse existing .btn-accent style */
+/* tweak modal buttons para mas soft look */
+.modal-footer .btn {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.modal-footer .btn-ghost {
+  border-radius: 999px;
+  padding: 8px 20px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #111827;
+}
+
+.modal-footer .btn-ghost:hover {
+  background: #f3f4f6;
+}
+
+.modal-footer .btn-accent.pill {
+  border-radius: 999px;
+  padding: 8px 22px;
+  border: none;
+  background: linear-gradient(135deg, #f5a425, #f6c445);
+  color: #1f2327;
+  box-shadow: 0 10px 24px rgba(245, 164, 37, 0.35);
+}
+
+.modal-footer .btn-accent.pill:hover {
+  filter: brightness(0.95);
+}
 
 </style>
 
@@ -402,39 +432,46 @@ if (isset($conn) && $conn instanceof mysqli) {
         &times;
       </button>
     </div>
+<form id="addCourseForm" class="modal-body">
+  <p class="modal-text">
+    Create a new course/program students can register under. You can add majors later.
+  </p>
 
-    <form id="addCourseForm" class="modal-body">
-      <p class="modal-text">
-        Create a new course/program students can register under. You can add majors later.
-      </p>
+  <div class="form-row">
+    <label for="program_code">Course Code <span class="req">*</span></label>
+    <input type="text" id="program_code" name="program_code"
+           placeholder="e.g. BSED, BSIT"
+           maxlength="20" required />
+  </div>
 
-      <div class="form-row">
-        <label for="program_code">Course Code <span class="req">*</span></label>
-        <input type="text" id="program_code" name="program_code"
-               placeholder="e.g. BSED, BSIT"
-               maxlength="20" required />
-      </div>
+  <div class="form-row">
+    <label for="program_name">Course Title <span class="req">*</span></label>
+    <input type="text" id="program_name" name="program_name"
+           placeholder="e.g. Bachelor of Secondary Education"
+           maxlength="191" required />
+  </div>
 
-      <div class="form-row">
-        <label for="program_name">Course Title <span class="req">*</span></label>
-        <input type="text" id="program_name" name="program_name"
-               placeholder="e.g. Bachelor of Secondary Education"
-               maxlength="191" required />
-      </div>
+  <!-- NEW: optional first major -->
+  <div class="form-row">
+    <label for="first_major">First Major <span style="font-weight:400; font-size:12px; color:#6b7280;">(optional)</span></label>
+    <input type="text" id="first_major" name="first_major"
+           placeholder="e.g. Mathematics, English, Electronics" />
+  </div>
 
-      <div class="form-row">
-        <label for="status">Status</label>
-        <select id="status" name="status">
-          <option value="active" selected>Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-      </div>
+  <div class="form-row">
+    <label for="status">Status</label>
+    <select id="status" name="status">
+      <option value="active" selected>Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-ghost" id="addCourseCancel">Cancel</button>
-        <button type="submit" class="btn btn-accent" id="addCourseSave">Save Course</button>
-      </div>
-    </form>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-ghost" id="addCourseCancel">Cancel</button>
+    <button type="submit" class="btn btn-accent pill" id="addCourseSave">Save Course</button>
+  </div>
+</form>
+
   </div>
 </div>
 
