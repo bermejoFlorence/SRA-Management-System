@@ -1,4 +1,45 @@
-<?php /* Login <-> Register sliding panels on one page (with backend hooks) */ ?>
+<?php
+// login.php – Login / Register
+
+require_once __DIR__ . '/db_connect.php';
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$conn->set_charset('utf8mb4');
+
+// ---- Load active courses/programs ----
+$programs = [];
+$majorsByProgram = [];
+
+// Programs
+$res = $conn->query("
+    SELECT program_id, program_code, program_name
+    FROM sra_programs
+    WHERE status = 'active'
+    ORDER BY program_code ASC, program_name ASC
+");
+while ($row = $res->fetch_assoc()) {
+    $programs[] = $row;
+}
+$res->free();
+
+// Majors grouped by program_id
+$res = $conn->query("
+    SELECT major_id, program_id, major_name
+    FROM sra_majors
+    WHERE status = 'active'
+    ORDER BY major_name ASC
+");
+while ($row = $res->fetch_assoc()) {
+    $pid = (int)$row['program_id'];
+    if (!isset($majorsByProgram[$pid])) {
+        $majorsByProgram[$pid] = [];
+    }
+    $majorsByProgram[$pid][] = [
+        'major_id'   => (int)$row['major_id'],
+        'major_name' => $row['major_name'],
+    ];
+}
+$res->free();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -72,7 +113,7 @@
           </form>
         </div>
 
-               <!-- REGISTER PANEL -->
+        <!-- REGISTER PANEL -->
         <div class="auth-panel" id="panelRegister" role="tabpanel" aria-labelledby="tabRegister">
           <h2 class="form-title">Register Form</h2>
 
@@ -117,16 +158,39 @@
                 <input type="password" name="password" required autocomplete="new-password"/>
               </label>
 
+              <!-- COURSE (dropdown from sra_programs) -->
               <label>Course
-                <input type="text" name="course" required />
+                <select name="program_id" id="programSelect" required>
+                  <option value="">Select course</option>
+                  <?php foreach ($programs as $p): ?>
+                    <?php
+                      $pid   = (int)$p['program_id'];
+                      $code  = htmlspecialchars($p['program_code']);
+                      $name  = htmlspecialchars($p['program_name']);
+                    ?>
+                    <option value="<?php echo $pid; ?>">
+                      <?php echo $code . ' – ' . $name; ?>
+                    </option>
+                  <?php endforeach; ?>
+                </select>
               </label>
 
+              <!-- MAJOR (depends on course, may be disabled) -->
               <label>Major
-                <input type="text" name="major" />
+                <select name="major_id" id="majorSelect" disabled>
+                  <option value="">Select course first</option>
+                </select>
               </label>
 
+              <!-- YEAR LEVEL (1st–4th as dropdown) -->
               <label>Year Level
-                <input type="number" name="yearlevel" min="1" max="10" required />
+                <select name="yearlevel" id="yearLevelSelect" required>
+                  <option value="">Select year level</option>
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                </select>
               </label>
 
               <label>Section
@@ -148,6 +212,9 @@
 </div>
 
 <script>
+// PHP → JS majors map
+const MAJORS_BY_PROGRAM = <?php echo json_encode($majorsByProgram, JSON_UNESCAPED_UNICODE); ?>;
+
 (() => {
   const ALLOWED_DOMAIN = 'cbsua.edu.ph';
   const confirmColor   = '#1e8fa2';
@@ -159,33 +226,36 @@
   const goRegister = document.getElementById('goRegister');
   const goLogin = document.getElementById('goLogin');
 
-function setActive(which) {
-  const isLogin = which === 'login';
+  const programSelect = document.getElementById('programSelect');
+  const majorSelect   = document.getElementById('majorSelect');
 
-  // slide animation
-  track.style.transform = isLogin ? 'translateX(0%)' : 'translateX(-50%)';
+  function setActive(which) {
+    const isLogin = which === 'login';
 
-  // tab active state
-  tabLogin.classList.toggle('active', isLogin);
-  tabRegister.classList.toggle('active', !isLogin);
-  tabLogin.setAttribute('aria-selected', isLogin ? 'true' : 'false');
-  tabRegister.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
+    // slide animation
+    track.style.transform = isLogin ? 'translateX(0%)' : 'translateX(-50%)';
 
-  // panel fade/slide animation (IMPORTANT PART)
-  const loginPanel    = document.getElementById('panelLogin');
-  const registerPanel = document.getElementById('panelRegister');
-  loginPanel.classList.toggle('active-panel', isLogin);
-  registerPanel.classList.toggle('active-panel', !isLogin);
+    // tab active state
+    tabLogin.classList.toggle('active', isLogin);
+    tabRegister.classList.toggle('active', !isLogin);
+    tabLogin.setAttribute('aria-selected', isLogin ? 'true' : 'false');
+    tabRegister.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
 
-  // adjust card height
-  requestAnimationFrame(() => {
-    const activePanel = isLogin ? loginPanel : registerPanel;
-    slider.style.height = activePanel.offsetHeight + 'px';
-  });
+    // panel fade/slide animation
+    const loginPanel    = document.getElementById('panelLogin');
+    const registerPanel = document.getElementById('panelRegister');
+    loginPanel.classList.toggle('active-panel', isLogin);
+    registerPanel.classList.toggle('active-panel', !isLogin);
 
-  // update hash
-  history.replaceState(null, '', isLogin ? '#login' : '#register');
-}
+    // adjust card height
+    requestAnimationFrame(() => {
+      const activePanel = isLogin ? loginPanel : registerPanel;
+      slider.style.height = activePanel.offsetHeight + 'px';
+    });
+
+    // update hash
+    history.replaceState(null, '', isLogin ? '#login' : '#register');
+  }
 
   tabLogin.addEventListener('click', () => setActive('login'));
   tabRegister.addEventListener('click', () => setActive('register'));
@@ -213,6 +283,52 @@ function setActive(which) {
     const parts = email.split('@');
     return parts.length === 2 && parts[1] === ALLOWED_DOMAIN;
   };
+
+  // ---------- Major dropdown logic ----------
+  function refreshMajors() {
+    const pid = programSelect.value;
+    const majors = MAJORS_BY_PROGRAM[pid] || [];
+
+    majorSelect.innerHTML = '';
+
+    if (!pid) {
+      majorSelect.disabled = true;
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Select course first';
+      majorSelect.appendChild(opt);
+      return;
+    }
+
+    if (majors.length === 0) {
+      majorSelect.disabled = true;
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No major for this course';
+      majorSelect.appendChild(opt);
+    } else {
+      majorSelect.disabled = false;
+
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Select major';
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      majorSelect.appendChild(placeholder);
+
+      majors.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.major_id;
+        opt.textContent = m.major_name;
+        majorSelect.appendChild(opt);
+      });
+    }
+  }
+
+  if (programSelect && majorSelect) {
+    programSelect.addEventListener('change', refreshMajors);
+    refreshMajors(); // initial state
+  }
 
   // ---------- REGISTER HANDLER ----------
   const registerForm = document.getElementById('registerForm');
@@ -243,6 +359,7 @@ function setActive(which) {
           confirmButtonColor: confirmColor
         }).then(() => {
           registerForm.reset();
+          refreshMajors(); // reset majors dropdown state
           document.getElementById('tabLogin').click();
         });
       } else {
