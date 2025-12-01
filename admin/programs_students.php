@@ -197,6 +197,138 @@ if (isset($conn) && $conn instanceof mysqli) {
     padding: 10px 12px;
   }
 }
+/* ---------- ADD COURSE MODAL ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: none; /* hidden by default */
+  align-items: center;
+  justify-content: center;
+  z-index: 1300;
+  padding: 16px;
+}
+
+.modal-backdrop.show {
+  display: flex;
+}
+
+.modal-dialog {
+  background: #ffffff;
+  border-radius: 20px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+  animation: modalFadeIn 0.18s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #064d00;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.modal-close:hover {
+  color: #111827;
+}
+
+.modal-body {
+  padding: 12px 18px 16px;
+}
+
+.modal-text {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 10px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.form-row label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.form-row .req {
+  color: #dc2626;
+}
+
+.form-row input,
+.form-row select {
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form-row input:focus,
+.form-row select:focus {
+  border-color: #1e8fa2;
+  box-shadow: 0 0 0 2px rgba(30, 143, 162, 0.25);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn.btn-ghost {
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: #f3f4f6;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  cursor: pointer;
+}
+
+.btn.btn-ghost:hover {
+  background: #e5e7eb;
+}
+
+/* reuse existing .btn-accent style */
+
 </style>
 
 <div class="main-content">
@@ -261,5 +393,50 @@ if (isset($conn) && $conn instanceof mysqli) {
     </div>
   </section>
 </div>
+<!-- Add Course Modal -->
+<div class="modal-backdrop" id="addCourseBackdrop" aria-hidden="true">
+  <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="addCourseTitle">
+    <div class="modal-header">
+      <h2 id="addCourseTitle">Add Course / Program</h2>
+      <button type="button" class="modal-close" id="addCourseClose" aria-label="Close">
+        &times;
+      </button>
+    </div>
+
+    <form id="addCourseForm" class="modal-body">
+      <p class="modal-text">
+        Create a new course/program students can register under. You can add majors later.
+      </p>
+
+      <div class="form-row">
+        <label for="program_code">Course Code <span class="req">*</span></label>
+        <input type="text" id="program_code" name="program_code"
+               placeholder="e.g. BSED, BSIT"
+               maxlength="20" required />
+      </div>
+
+      <div class="form-row">
+        <label for="program_name">Course Title <span class="req">*</span></label>
+        <input type="text" id="program_name" name="program_name"
+               placeholder="e.g. Bachelor of Secondary Education"
+               maxlength="191" required />
+      </div>
+
+      <div class="form-row">
+        <label for="status">Status</label>
+        <select id="status" name="status">
+          <option value="active" selected>Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="addCourseCancel">Cancel</button>
+        <button type="submit" class="btn btn-accent" id="addCourseSave">Save Course</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 </body>
 </html>
