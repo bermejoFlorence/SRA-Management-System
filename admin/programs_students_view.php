@@ -72,22 +72,29 @@ $res2->close();
 $sub_slt = "
     SELECT student_id, MAX(percent) AS best_percent
     FROM assessment_attempts
-    WHERE set_type = 'SLT' AND status = 'scored'
-    GROUP BY student_id
-";
-$sub_pb = "
-    SELECT student_id, MAX(percent) AS best_percent
-    FROM assessment_attempts
-    WHERE set_type = 'PB' AND status = 'scored'
-    GROUP BY student_id
-";
-$sub_rb = "
-    SELECT student_id, MAX(percent) AS best_percent
-    FROM assessment_attempts
-    WHERE set_type = 'RB' AND status = 'scored'
+    WHERE set_type = 'SLT'
+      AND percent IS NOT NULL
+      AND status <> 'invalidated'
     GROUP BY student_id
 ";
 
+$sub_pb = "
+    SELECT student_id, MAX(percent) AS best_percent
+    FROM assessment_attempts
+    WHERE set_type = 'PB'
+      AND percent IS NOT NULL
+      AND status <> 'invalidated'
+    GROUP BY student_id
+";
+
+$sub_rb = "
+    SELECT student_id, MAX(percent) AS best_percent
+    FROM assessment_attempts
+    WHERE set_type = 'RB'
+      AND percent IS NOT NULL
+      AND status <> 'invalidated'
+    GROUP BY student_id
+";
 // ---- Main students query with dynamic filters ----
 $sql = "
     SELECT 
@@ -229,11 +236,14 @@ require_once __DIR__ . '/includes/sidebar.php';
 
 .course-students-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   border-radius: 18px;
   overflow: hidden;
   margin-top: 10px;
+  border: 1px solid #e5e7eb; /* outer border */
 }
+
 .course-students-table th,
 .course-students-table td {
   padding: 10px 12px;
@@ -346,6 +356,28 @@ require_once __DIR__ . '/includes/sidebar.php';
     font-size: 12px;
   }
 }
+/* lines between cells */
+.course-students-table th,
+.course-students-table td {
+  padding: 10px 12px;
+  font-size: 13px;
+  vertical-align: middle;
+  border-bottom: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+}
+
+/* alisin lang yung right border sa last column para malinis */
+.course-students-table th:last-child,
+.course-students-table td:last-child {
+  border-right: none;
+}
+
+/* alisin bottom border sa last row */
+.course-students-table tbody tr:last-child th,
+.course-students-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
 </style>
 
 <div class="main-content">
