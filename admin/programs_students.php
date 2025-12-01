@@ -5,37 +5,37 @@ require_role('admin', '../login.php#login');
 $PAGE_TITLE  = 'Programs and Students';
 $ACTIVE_MENU = 'prog_students';
 
-require_once __DIR__ . '/includes/header.php';  // navbar + hamburger + backdrop + JS
-require_once __DIR__ . '/includes/sidebar.php'; // sidebar (with id="sidebar")
+require_once __DIR__ . '/../db_connect.php';        // ✅ siguradong may $conn
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$conn->set_charset('utf8mb4');
+
+require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/includes/sidebar.php';
 
 // --- Load courses/programs with student count ---
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-if (isset($conn) && $conn instanceof mysqli) {
-    $conn->set_charset('utf8mb4');
-}
-
 $courses = [];
-if (isset($conn) && $conn instanceof mysqli) {
-    $sql = "
-        SELECT 
-            p.program_id,
-            p.program_code,
-            p.program_name,
-            COUNT(CASE WHEN u.role = 'student' THEN u.user_id END) AS student_count
-        FROM sra_programs p
-        LEFT JOIN users u 
-            ON u.program_id = p.program_id
-           AND u.role = 'student'
-        WHERE p.status = 'active'
-        GROUP BY p.program_id, p.program_code, p.program_name
-        ORDER BY student_count DESC, p.program_code ASC
-    ";
-    $res = $conn->query($sql);
-    while ($row = $res->fetch_assoc()) {
-        $courses[] = $row;
-    }
-    $res->free();
+
+$sql = "
+    SELECT 
+        p.program_id,
+        p.program_code,
+        p.program_name,
+        COUNT(CASE WHEN u.role = 'student' THEN u.user_id END) AS student_count
+    FROM sra_programs p
+    LEFT JOIN users u 
+        ON u.program_id = p.program_id
+       AND u.role = 'student'
+    WHERE p.status = 'active'
+    GROUP BY p.program_id, p.program_code, p.program_name
+    ORDER BY student_count DESC, p.program_code ASC
+";
+
+$res = $conn->query($sql);
+while ($row = $res->fetch_assoc()) {
+    $courses[] = $row;
 }
+$res->free();
+
 ?>
 
 <style>
