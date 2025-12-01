@@ -234,12 +234,25 @@ require_once __DIR__ . '/includes/sidebar.php';
   overflow: hidden;
   margin-top: 10px;
 }
-
 .course-students-table th,
 .course-students-table td {
   padding: 10px 12px;
   font-size: 13px;
+  vertical-align: middle;
 }
+
+/* mas makapal ang header font */
+.course-students-table th {
+  color: #064d00;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* medyo makapal din ang body text */
+.course-students-table td {
+  font-weight: 500;
+}
+
 
 .course-students-table thead tr:first-child {
   background: #f4f8f0;
@@ -386,26 +399,22 @@ require_once __DIR__ . '/includes/sidebar.php';
       </p>
     <?php else: ?>
       <table class="course-students-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Student ID</th>
-            <th>Name of Student</th>
-            <th class="center">Year Level &amp; Section</th>
-            <th class="center" colspan="3">Test Results</th>
-            <th class="center">Actions</th>
-          </tr>
-          <tr>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th class="center"></th>
-            <th class="center">Starting Level</th>
-            <th class="center">Power Builder</th>
-            <th class="center">Rate Builder</th>
-            <th class="center"></th>
-          </tr>
-        </thead>
+       <thead>
+  <tr>
+    <th rowspan="2" class="center">#</th>
+    <th rowspan="2" class="center">Student ID</th>
+    <th rowspan="2">Name of Student</th>
+    <th rowspan="2" class="center">Year Level &amp; Section</th>
+    <th class="center" colspan="3">Test Results</th>
+    <th rowspan="2" class="center">Actions</th>
+  </tr>
+  <tr>
+    <th class="center">Starting Level</th>
+    <th class="center">Power Builder</th>
+    <th class="center">Rate Builder</th>
+  </tr>
+</thead>
+
         <tbody>
         <?php
         $i = 1;
