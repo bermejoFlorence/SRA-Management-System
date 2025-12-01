@@ -84,15 +84,16 @@ body.nav-open .hamburger span:nth-child(3){ transform:translateY(-7px) rotate(-4
   inset:0;
   background:var(--overlay);
   opacity:0;
-  pointer-events:none;
+  pointer-events:none !important;   /* HINDI na pwedeng humarang */
   transition:opacity .25s;
-  z-index:900;          /* mas mababa kaysa .nav */
+  z-index:900;                      /* nasa ilalim ng .nav */
 }
 
 body.nav-open .nav-overlay{
   opacity:1;
-  pointer-events:auto;  /* clickable pa rin para ma-close */
+  pointer-events:none !important;   /* kahit open, visual lang */
 }
+
 
 
 /* ====== Sections ====== */
