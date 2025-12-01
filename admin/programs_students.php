@@ -453,7 +453,7 @@ if (isset($conn) && $conn instanceof mysqli) {
 
   <!-- NEW: optional first major -->
   <div class="form-row">
-    <label for="first_major">First Major <span style="font-weight:400; font-size:12px; color:#6b7280;">(optional)</span></label>
+    <label for="first_major">Major <span style="font-weight:400; font-size:12px; color:#6b7280;">(optional)</span></label>
     <input type="text" id="first_major" name="first_major"
            placeholder="e.g. Mathematics, English, Electronics" />
   </div>
