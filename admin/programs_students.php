@@ -206,7 +206,7 @@ if (isset($conn) && $conn instanceof mysqli) {
   display: none; /* hidden by default */
   align-items: center;
   justify-content: center;
-  z-index: 1300;
+  z-index: 900;
   padding: 16px;
 }
 
@@ -506,56 +506,62 @@ if (isset($conn) && $conn instanceof mysqli) {
     if (e.target === backdrop) closeModal();
   });
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    btnSave.disabled = true;
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  btnSave.disabled = true;
 
-    const fd = new FormData(form);
+  const fd = new FormData(form);
 
-    try {
-      const res  = await fetch('ajax_add_program.php', { method: 'POST', body: fd });
-      const data = await res.json();
+  try {
+    const res  = await fetch('ajax_add_program.php', { method: 'POST', body: fd });
+    const data = await res.json();
 
-      if (data.success) {
-        if (window.Swal) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Course added',
-            text: data.message || 'The course has been created.',
-            confirmButtonColor: '#1e8fa2'
-          }).then(() => window.location.reload());
-        } else {
-          alert(data.message || 'Course added.');
-          window.location.reload();
-        }
+    if (data.success) {
+      // ✨ isara muna ang modal para walang nakaharang sa Swal
+      closeModal();
+
+      if (window.Swal) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Course added',
+          text: data.message || 'The course has been created.',
+          confirmButtonColor: '#1e8fa2'
+        }).then(() => {
+          window.location.reload();   // reload page para lumabas sa table
+        });
       } else {
-        if (window.Swal) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Unable to add',
-            text: data.message || 'Please check the form and try again.',
-            confirmButtonColor: '#1e8fa2'
-          });
-        } else {
-          alert(data.message || 'Unable to add course.');
-        }
+        alert(data.message || 'Course added.');
+        window.location.reload();
       }
-    } catch (err) {
-      console.error(err);
+    } else {
       if (window.Swal) {
         Swal.fire({
           icon: 'error',
-          title: 'Network error',
-          text: 'Please try again.',
+          title: 'Unable to add',
+          text: data.message || 'Please check the form and try again.',
           confirmButtonColor: '#1e8fa2'
         });
       } else {
-        alert('Network error. Please try again.');
+        alert(data.message || 'Unable to add course.');
       }
-    } finally {
-      btnSave.disabled = false;
     }
-  });
+  } catch (err) {
+    console.error(err);
+    if (window.Swal) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Network error',
+        text: 'Please try again.',
+        confirmButtonColor: '#1e8fa2'
+      });
+    } else {
+      alert('Network error. Please try again.');
+    }
+  } finally {
+    btnSave.disabled = false;
+  }
+});
+
 })();
 </script>
 
