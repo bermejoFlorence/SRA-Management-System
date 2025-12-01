@@ -21,9 +21,15 @@ body{
 
 /* Layout wrapper */
 .container{
-  display:flex; height:100vh; overflow:hidden;
-  border-radius:12px; background:#000;
+  display:flex;
+  height:100vh;
+  /* dati: overflow:hidden; */
+  overflow-x:hidden;   /* walang horizontal scroll */
+  overflow-y:auto;     /* pwede mag-scroll pababa kapag mahaba ang form */
+  border-radius:12px;
+  background:#000;
 }
+
 
 /* LEFT side */
 .left-section{
@@ -33,8 +39,16 @@ body{
   color:#fff; display:flex; flex-direction:column; justify-content:start;
   padding:40px 50px;
 }
-.overlay{ position:absolute; inset:0; background:var(--overlayGreen);
-  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(7px); z-index:1; }
+.overlay{
+  position:absolute;
+  inset:0;
+  background:var(--overlayGreen);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(7px);
+  z-index:1;
+  pointer-events:none;   /* IMPORTANT: huwag haharang sa pag-click / tap */
+}
+
 .left-content{ position:relative; z-index:2; max-width:420px; height:100%;
   display:flex; flex-direction:column; justify-content:center; }
 .logos{ display:flex; gap:8px; margin-bottom:10px; }
@@ -104,17 +118,57 @@ input:focus{ outline:none; box-shadow: inset 0 0 0 2px #000; background:#fff; }
 
 /* Responsive */
 @media (max-width: 900px){
-  .container{ flex-direction:column; height:auto; min-height:100vh; }
-  .left-section{ height:240px; padding:20px 24px; }
-  .left-content{ max-width:100%; height:auto; justify-content:flex-start; }
-  .title-block{ margin-top:24px; }
-  .right-section{ max-width:100%; padding:28px 16px 40px; box-shadow:none; }
-  .auth-tabs{ max-width:640px; }
-  .auth-slider{ max-width:640px; }
-  .auth-panel{ width:50%; }
-  .form-grid{ grid-template-columns:1fr; }
-  .buttons .btn{ min-width:100%; }
+  .container{
+    flex-direction:column;
+    height:auto;
+    min-height:100vh;
+    /* dagdag para di maputol ang form sa mobile */
+    overflow-y:auto;     /* scroll pababa kung mahaba */
+    overflow-x:hidden;   /* walang horizontal scroll */
+  }
+
+  .left-section{
+    height:240px;
+    padding:20px 24px;
+  }
+
+  .left-content{
+    max-width:100%;
+    height:auto;
+    justify-content:flex-start;
+  }
+
+  .title-block{
+    margin-top:24px;
+  }
+
+  .right-section{
+    max-width:100%;
+    padding:28px 16px 40px;
+    box-shadow:none;
+  }
+
+  .auth-tabs{
+    max-width:640px;
+  }
+
+  .auth-slider{
+    max-width:640px;
+  }
+
+  .auth-panel{
+    width:50%;
+  }
+
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .buttons .btn{
+    min-width:100%;
+  }
 }
+
 @media (max-width:520px){
   .main-title{ font-size:2.2rem; }
   .subtitle{ font-size:1rem; }
