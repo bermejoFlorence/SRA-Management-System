@@ -132,7 +132,7 @@ while ($r = $result->fetch_assoc()) {
 $stmt->close();
 
 // ====================
-// Build simple HTML
+// Build HTML w/ header
 // ====================
 $today = date('F d, Y h:i A');
 
@@ -144,30 +144,102 @@ ob_start();
   <meta charset="UTF-8">
   <title><?php echo htmlspecialchars($course_title); ?> – Passed Students</title>
   <style>
+    @page {
+      margin: 140px 30px 30px 30px; /* top, right, bottom, left */
+    }
+
     body {
       font-family: DejaVu Sans, Arial, Helvetica, sans-serif;
       font-size: 11px;
       color: #111827;
     }
-    h1 {
-      font-size: 16px;
-      margin: 0 0 4px;
+
+    /* Fixed header (repeats each page) */
+    #page-header {
+      position: fixed;
+      top: -120px;     /* just above body margin-top */
+      left: 0;
+      right: 0;
+      height: 110px;
+    }
+
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .header-table td {
+      vertical-align: middle;
+      font-size: 9px;
+    }
+
+    .header-left {
+      width: 160px;
+    }
+    .header-left img {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .header-center {
       text-align: center;
+      font-size: 10px;
+      line-height: 1.2;
+    }
+
+    .header-center .line1 {
+      font-weight: 600;
+      font-size: 9px;
+    }
+    .header-center .line2 {
+      font-weight: 800;
+      font-size: 11px;
+    }
+    .header-center .line3 {
+      font-size: 9px;
+    }
+    .header-center .line4 {
+      font-size: 9px;
+      font-style: italic;
+    }
+
+    .header-right {
+      width: 120px;
+      text-align: right;
+    }
+    .header-right img {
+      max-height: 60px;
+    }
+
+    .header-hr {
+      border: 0;
+      border-top: 1px solid #9ca3af;
+      margin-top: 4px;
+    }
+
+    h1 {
+      font-size: 14px;
+      margin: 0 0 2px;
+      text-align: center;
+      font-weight: 800;
     }
     h2 {
-      font-size: 13px;
+      font-size: 11px;
       margin: 0 0 10px;
       text-align: center;
+      font-weight: 700;
     }
+
     .meta {
-      font-size: 10px;
+      font-size: 9px;
       text-align: right;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 6px;
+      margin-top: 4px;
     }
     th, td {
       border: 1px solid #9ca3af;
@@ -186,6 +258,34 @@ ob_start();
 </head>
 <body>
 
+<!-- REPEATING HEADER -->
+<div id="page-header">
+  <table class="header-table">
+    <tr>
+      <td class="header-left">
+        <img src="../1.png" alt="Logo 1" style="height:40px;">
+        <img src="../2.png" alt="Logo 2" style="height:35px;">
+      </td>
+      <td class="header-center">
+        <div class="line1">Republic of the Philippines</div>
+        <div class="line2">CENTRAL BICOL STATE UNIVERSITY OF AGRICULTURE</div>
+        <div class="line3">Sipocot, Camarines Sur 4418</div>
+        <div class="line4">
+          Website: www.cbsua.edu.ph<br/>
+          Email Address: cbsua.sipocot@cbsua.edu.ph<br/>
+          Landline: (054) 881-6681
+        </div>
+      </td>
+      <td class="header-right">
+        <img src="../3.png" alt="Certification Logo">
+      </td>
+    </tr>
+  </table>
+  <hr class="header-hr" />
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="content">
   <h1><?php echo htmlspecialchars($course_title); ?></h1>
   <h2>List of Passed Students (Rate Builder ≥ 75%)</h2>
 
@@ -236,6 +336,7 @@ ob_start();
       </tbody>
     </table>
   <?php endif; ?>
+</div>
 
 </body>
 </html>
@@ -251,6 +352,10 @@ $options->set('isRemoteEnabled', true);
 $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
+
+// important: para ma-resolve nang tama ang ../1.png, ../2.png, ../3.png
+$dompdf->setBasePath(realpath(__DIR__ . '/..'));
+
 $dompdf->render();
 
 $filename = preg_replace('/\s+/', '_', $program_code . '_Passed_Students_' . date('Ymd_His')) . '.pdf';
