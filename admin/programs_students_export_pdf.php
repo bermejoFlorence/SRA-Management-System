@@ -65,7 +65,7 @@ $sub_rb = "
     GROUP BY student_id
 ";
 
-// ---- Main query (same base as view, pero PASSED ONLY) ----
+// ---- Main query (PASSED ONLY) ----
 // Rule: passed kung RB best_percent >= 75 (pwede mong baguhin itong threshold)
 $sql = "
     SELECT 
@@ -145,7 +145,7 @@ ob_start();
   <title><?php echo htmlspecialchars($course_title); ?> – Passed Students</title>
   <style>
     @page {
-      margin: 140px 30px 30px 30px; /* top, right, bottom, left */
+      margin: 135px 25px 30px 25px; /* top, right, bottom, left */
     }
 
     body {
@@ -157,34 +157,36 @@ ob_start();
     /* Fixed header (repeats each page) */
     #page-header {
       position: fixed;
-      top: -120px;     /* just above body margin-top */
+      top: -115px;     /* adjust to sit above body content */
       left: 0;
       right: 0;
-      height: 110px;
+      height: 105px;
     }
 
     .header-table {
       width: 100%;
       border-collapse: collapse;
     }
-
     .header-table td {
       vertical-align: middle;
       font-size: 9px;
+      border: none;
+      padding: 2px 4px;
     }
 
     .header-left {
-      width: 160px;
+      width: 180px;
+      text-align: left;
     }
     .header-left img {
-      display: block;
-      margin-bottom: 2px;
+      height: 45px;
+      margin-right: 4px;
     }
 
     .header-center {
       text-align: center;
       font-size: 10px;
-      line-height: 1.2;
+      line-height: 1.25;
     }
 
     .header-center .line1 {
@@ -204,7 +206,7 @@ ob_start();
     }
 
     .header-right {
-      width: 120px;
+      width: 130px;
       text-align: right;
     }
     .header-right img {
@@ -263,8 +265,8 @@ ob_start();
   <table class="header-table">
     <tr>
       <td class="header-left">
-        <img src="../1.png" alt="Logo 1" style="height:40px;">
-        <img src="../2.png" alt="Logo 2" style="height:35px;">
+        <img src="1.png" alt="Logo 1">
+        <img src="2.png" alt="Logo 2">
       </td>
       <td class="header-center">
         <div class="line1">Republic of the Philippines</div>
@@ -277,7 +279,7 @@ ob_start();
         </div>
       </td>
       <td class="header-right">
-        <img src="../3.png" alt="Certification Logo">
+        <img src="3.png" alt="Certification Logo">
       </td>
     </tr>
   </table>
@@ -351,10 +353,10 @@ $options->set('isRemoteEnabled', true);
 
 $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html);
-$dompdf->setPaper('A4', 'portrait');
+$dompdf->setPaper('A4', 'landscape'); // pwede mong ibalik sa portrait kung gusto
 
-// important: para ma-resolve nang tama ang ../1.png, ../2.png, ../3.png
-$dompdf->setBasePath(realpath(__DIR__ . '/..'));
+// Important: images 1.png, 2.png, 3.png are in the SAME folder as this PHP file
+$dompdf->setBasePath(__DIR__);
 
 $dompdf->render();
 
