@@ -66,7 +66,6 @@ $sub_rb = "
 ";
 
 // ---- Main query (PASSED ONLY) ----
-// Rule: passed kung RB best_percent >= 75 (pwede mong baguhin itong threshold)
 $sql = "
     SELECT 
       u.user_id,
@@ -145,7 +144,6 @@ ob_start();
   <title><?php echo htmlspecialchars($course_title); ?> – Passed Students</title>
   <style>
     @page {
-      /* Enough top margin for header */
       margin: 110px 25px 30px 25px; /* top, right, bottom, left */
     }
 
@@ -158,7 +156,7 @@ ob_start();
     /* Fixed header (repeats each page) */
     #page-header {
       position: fixed;
-      top: -95px;     /* sits just above body content */
+      top: -95px;
       left: 0;
       right: 0;
       height: 95px;
@@ -175,14 +173,18 @@ ob_start();
       padding: 2px 6px;
     }
 
-    .header-left {
-      width: 220px;
-      text-align: left;
+    /* left & right same width para balance */
+    .header-left,
+    .header-right {
+      width: 160px;
+      text-align: center;
       white-space: nowrap;
     }
-    .header-left img {
+    .header-left img,
+    .header-right img {
       height: 48px;
-      margin-right: 6px;
+      display: inline-block;
+      margin: 0 4px;
     }
 
     .header-center {
@@ -205,14 +207,6 @@ ob_start();
     .header-center .line4 {
       font-size: 9px;
       font-style: italic;
-    }
-
-    .header-right {
-      width: 140px;
-      text-align: right;
-    }
-    .header-right img {
-      max-height: 60px;
     }
 
     .header-hr {
@@ -272,7 +266,7 @@ ob_start();
   <table class="header-table">
     <tr>
       <td class="header-left">
-        <!-- 1.png, 2.png, 3.png are assumed to be in the ROOT folder -->
+        <!-- 1.png, 2.png, 3.png nasa PAREHONG folder ng PHP file na ito (admin/) -->
         <img src="1.png" alt="">
         <img src="2.png" alt="">
       </td>
@@ -364,10 +358,11 @@ $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
 
 /*
- * VERY IMPORTANT: base path is project ROOT,
- * so src="1.png" means {root}/1.png, same as layout na gusto mo.
+ * IMPORTANT:
+ *  - setBasePath(__DIR__) dahil nasa admin/ ang 1.png,2.png,3.png
+ *  - src="1.png" etc. sa HTML
  */
-$dompdf->setBasePath(realpath(__DIR__ . '/..'));
+$dompdf->setBasePath(__DIR__);
 
 $dompdf->render();
 
