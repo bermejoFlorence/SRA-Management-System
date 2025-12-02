@@ -145,7 +145,8 @@ ob_start();
   <title><?php echo htmlspecialchars($course_title); ?> – Passed Students</title>
   <style>
     @page {
-      margin: 135px 25px 30px 25px; /* top, right, bottom, left */
+      /* Enough top margin for header */
+      margin: 110px 25px 30px 25px; /* top, right, bottom, left */
     }
 
     body {
@@ -157,10 +158,10 @@ ob_start();
     /* Fixed header (repeats each page) */
     #page-header {
       position: fixed;
-      top: -115px;     /* adjust to sit above body content */
+      top: -95px;     /* sits just above body content */
       left: 0;
       right: 0;
-      height: 105px;
+      height: 95px;
     }
 
     .header-table {
@@ -171,16 +172,17 @@ ob_start();
       vertical-align: middle;
       font-size: 9px;
       border: none;
-      padding: 2px 4px;
+      padding: 2px 6px;
     }
 
     .header-left {
-      width: 180px;
+      width: 220px;
       text-align: left;
+      white-space: nowrap;
     }
     .header-left img {
-      height: 45px;
-      margin-right: 4px;
+      height: 48px;
+      margin-right: 6px;
     }
 
     .header-center {
@@ -206,7 +208,7 @@ ob_start();
     }
 
     .header-right {
-      width: 130px;
+      width: 140px;
       text-align: right;
     }
     .header-right img {
@@ -236,12 +238,17 @@ ob_start();
       font-size: 9px;
       text-align: right;
       margin-bottom: 6px;
+      width: 90%;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     table {
-      width: 100%;
+      width: 90%;
       border-collapse: collapse;
       margin-top: 4px;
+      margin-left: auto;
+      margin-right: auto;
     }
     th, td {
       border: 1px solid #9ca3af;
@@ -265,8 +272,9 @@ ob_start();
   <table class="header-table">
     <tr>
       <td class="header-left">
-        <img src="1.png" alt="Logo 1">
-        <img src="2.png" alt="Logo 2">
+        <!-- 1.png, 2.png, 3.png are assumed to be in the ROOT folder -->
+        <img src="1.png" alt="">
+        <img src="2.png" alt="">
       </td>
       <td class="header-center">
         <div class="line1">Republic of the Philippines</div>
@@ -279,7 +287,7 @@ ob_start();
         </div>
       </td>
       <td class="header-right">
-        <img src="3.png" alt="Certification Logo">
+        <img src="3.png" alt="">
       </td>
     </tr>
   </table>
@@ -296,7 +304,7 @@ ob_start();
   </div>
 
   <?php if (empty($rows)): ?>
-    <p>No passed students found for this course with the current filters.</p>
+    <p style="width:90%;margin:0 auto;">No passed students found for this course with the current filters.</p>
   <?php else: ?>
     <table>
       <thead>
@@ -353,10 +361,13 @@ $options->set('isRemoteEnabled', true);
 
 $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html);
-$dompdf->setPaper('A4', 'landscape'); // pwede mong ibalik sa portrait kung gusto
+$dompdf->setPaper('A4', 'portrait');
 
-// Important: images 1.png, 2.png, 3.png are in the SAME folder as this PHP file
-$dompdf->setBasePath(__DIR__);
+/*
+ * VERY IMPORTANT: base path is project ROOT,
+ * so src="1.png" means {root}/1.png, same as layout na gusto mo.
+ */
+$dompdf->setBasePath(realpath(__DIR__ . '/..'));
 
 $dompdf->render();
 
