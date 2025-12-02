@@ -3,6 +3,9 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/db_connect.php';
 
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$conn->set_charset('utf8mb4');
+
 // === PHPMailer ===
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -10,12 +13,12 @@ require_once __DIR__ . '/PHPMailer/src/Exception.php';
 require_once __DIR__ . '/PHPMailer/src/PHPMailer.php';
 require_once __DIR__ . '/PHPMailer/src/SMTP.php';
 
-// CBSUA email-only gate
-
 function jexit($ok, $msg, $extra = []) {
   echo json_encode(array_merge(['success'=>$ok, 'message'=>$msg], $extra));
   exit;
 }
+
+// ---------- INPUTS ----------
 
 $firstname     = trim($_POST['firstname']     ?? '');
 $middlename    = trim($_POST['middlename']    ?? '');
@@ -24,13 +27,21 @@ $extensionname = trim($_POST['extensionname'] ?? '');
 $studentid     = trim($_POST['studentid']     ?? '');
 $email         = trim($_POST['email']         ?? '');
 $password      = (string)($_POST['password']  ?? '');
-$course        = trim($_POST['course']        ?? '');
-$major         = trim($_POST['major']         ?? '');
-$yearlevel     = trim($_POST['yearlevel']     ?? '');
+
+// bago: galing sa login.php register form
+$program_id    = (int)($_POST['program_id']   ?? 0);      // FK → sra_programs.program_id
+$major_id_raw  = $_POST['major_id']           ?? '';      // optional
+$yearlevel_raw = trim($_POST['yearlevel']     ?? '');
 $section       = trim($_POST['section']       ?? '');
 
+$yearlevel_int = (int)$yearlevel_raw;
+$major_id      = ($major_id_raw !== '') ? (int)$major_id_raw : 0; // 0 = no major
+$role          = 'student';
+
+// ---------- BASIC VALIDATION ----------
+
 if ($firstname === '' || $lastname === '' || $email === '' || $password === '' ||
-    $studentid === '' || $course === '' || $yearlevel === '' || $section === '') {
+    $studentid === '' || $program_id <= 0 || $yearlevel_int <= 0 || $section === '') {
   jexit(false, 'Please complete all required fields.');
 }
 
@@ -42,46 +53,101 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 if (!preg_match('/@cbsua\.edu\.ph$/i', $email)) {
   jexit(false, 'Only @cbsua.edu.ph emails are allowed.');
 }
-// Optional: enforce school email domain
-// if (!preg_match('/@cbsua\.edu\.ph$/i', $email)) {
-//   jexit(false, 'Please use your @cbsua.edu.ph email.');
-// }
 
-// Uniqueness checks
+// year level sanity (adjust if may 5th year, etc.)
+if ($yearlevel_int < 1 || $yearlevel_int > 4) {
+  jexit(false, 'Invalid year level.');
+}
+
+// ---------- VALIDATE PROGRAM & MAJOR + GET TEXT LABELS ----------
+
+// 1) program_id → kunin program_code + program_name
+$stmt = $conn->prepare("
+  SELECT program_code, program_name
+  FROM sra_programs
+  WHERE program_id = ? AND status = 'active'
+");
+$stmt->bind_param('i', $program_id);
+$stmt->execute();
+$stmt->bind_result($p_code, $p_name);
+if (!$stmt->fetch()) {
+  $stmt->close();
+  jexit(false, 'Selected course is not available.');
+}
+$stmt->close();
+
+// Course text para sa lumang `course` column (para di mabasag ibang bahagi ng system)
+$course_text = trim($p_code . ' – ' . $p_name);
+
+// 2) major_id (optional) → kunin major_name kung meron
+$major_text = '';
+if ($major_id > 0) {
+  $stmt = $conn->prepare("
+    SELECT major_name
+    FROM sra_majors
+    WHERE major_id = ? AND program_id = ? AND status = 'active'
+  ");
+  $stmt->bind_param('ii', $major_id, $program_id);
+  $stmt->execute();
+  $stmt->bind_result($m_name);
+  if ($stmt->fetch()) {
+    $major_text = $m_name;
+  } else {
+    $stmt->close();
+    jexit(false, 'Selected major is not valid for this course.');
+  }
+  $stmt->close();
+}
+
+// ---------- UNIQUENESS CHECKS ----------
+
 $stmt = $conn->prepare("SELECT user_id FROM users WHERE email = ? LIMIT 1");
 $stmt->bind_param('s', $email);
 $stmt->execute();
 $stmt->store_result();
-if ($stmt->num_rows > 0) jexit(false, 'Email is already registered.');
+if ($stmt->num_rows > 0) {
+  $stmt->close();
+  jexit(false, 'Email is already registered.');
+}
 $stmt->close();
 
 $stmt = $conn->prepare("SELECT user_id FROM users WHERE student_id_no = ? LIMIT 1");
 $stmt->bind_param('s', $studentid);
 $stmt->execute();
 $stmt->store_result();
-if ($stmt->num_rows > 0) jexit(false, 'Student ID Number is already registered.');
+if ($stmt->num_rows > 0) {
+  $stmt->close();
+  jexit(false, 'Student ID Number is already registered.');
+}
 $stmt->close();
 
-$hash           = password_hash($password, PASSWORD_DEFAULT);
-$yearlevel_int  = (int)$yearlevel;
-$role           = 'student';
+// ---------- PREPARE VALUES ----------
+
+$hash     = password_hash($password, PASSWORD_DEFAULT);
 
 // Generate verification token (valid for 24h)
 $token   = bin2hex(random_bytes(32));
 $expires = date('Y-m-d H:i:s', time() + 60*60*24);
 
-// Insert (status = pending)
+// ---------- INSERT USER (WITH PROGRAM/MAJOR) ----------
+//
+// NOTE: dito ginamit pa rin natin ang `course` at `major` (text) columns
+// para hindi mabasag kung may ibang page na umaasa pa sa kanila,
+// pero sabay na rin tayong nagse-set ng FK: program_id, major_id.
+
 $sql = "INSERT INTO users
  (email, password_hash, role, first_name, middle_name, last_name, ext_name,
-  student_id_no, course, major, year_level, section,
+  student_id_no, course, major, program_id, major_id, year_level, section,
   status, email_verify_token, email_verify_expires_at, created_at, updated_at)
- VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'pending', ?, ?, NOW(), NOW())";
+ VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending', ?, ?, NOW(), NOW())";
 
 $stmt = $conn->prepare($sql);
-if (!$stmt) jexit(false, 'Prepare failed: '.$conn->error);
+if (!$stmt) {
+  jexit(false, 'Prepare failed: '.$conn->error);
+}
 
 $stmt->bind_param(
-  'ssssssssssisss',
+  'ssssssssssiiisss',
   $email,
   $hash,
   $role,
@@ -90,8 +156,10 @@ $stmt->bind_param(
   $lastname,
   $extensionname,
   $studentid,
-  $course,
-  $major,
+  $course_text,     // from sra_programs (code – name)
+  $major_text,      // from sra_majors (optional)
+  $program_id,      // FK
+  $major_id,        // 0 or FK
   $yearlevel_int,
   $section,
   $token,
@@ -104,7 +172,8 @@ if (!$stmt->execute()) {
 $user_id = $stmt->insert_id;
 $stmt->close();
 
-// === Send verification email ===
+// ---------- SEND VERIFICATION EMAIL (UNCHANGED LOGIC) ----------
+
 $verifyUrl = 'https://sra-management.com/verify_email.php?token=' . urlencode($token);
 
 $mail = new PHPMailer(true);
@@ -115,11 +184,9 @@ try {
   $mail->Host       = 'smtp.gmail.com';
   $mail->SMTPAuth   = true;
   $mail->Username   = 'kylaceline.pasamba@cbsua.edu.ph';   // TODO: change
-  $mail->Password   = 'qekl rncw kcye mzwz';       // TODO: change (App Password)
+  $mail->Password   = 'qekl rncw kcye mzwz';               // TODO: change (App Password)
   $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
   $mail->Port       = 587;
-
-  // If using Hostinger/other SMTP, replace Host/Port/Creds as needed.
   // ================================================
 
   $mail->setFrom('kylaceline.pasamba@cbsua.edu.ph', 'SRA Verification');
