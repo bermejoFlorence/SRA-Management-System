@@ -416,10 +416,23 @@ require_once __DIR__ . '/includes/sidebar.php';
 
       <button type="submit" class="btn-filter">Apply</button>
 
-      <!-- Placeholder export link (backend to be implemented later) -->
-      <button type="button" class="btn-export" onclick="alert('Export PDF not implemented yet.')">
-        Export PDF Results
-      </button>
+      <?php
+  // build export URL na may same filters
+  $exportUrl = 'programs_students_export_pdf.php?program_id=' . (int)$program_id;
+  if ($year_filter !== null) {
+      $exportUrl .= '&year_level=' . (int)$year_filter;
+  }
+  if ($section_filter !== '') {
+      $exportUrl .= '&section=' . urlencode($section_filter);
+  }
+  if ($search_query !== '') {
+      $exportUrl .= '&q=' . urlencode($search_query);
+  }
+?>
+<a href="<?php echo $exportUrl; ?>" class="btn-export" target="_blank">
+  Export PDF Results
+</a>
+
     </form>
   </div>
 
