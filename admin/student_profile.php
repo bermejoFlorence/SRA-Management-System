@@ -56,31 +56,18 @@ $full_name = trim(
 $program_label = trim(($student['program_code'] ?? '') . ' – ' . ($student['program_name'] ?? ''));
 $yl_sec = 'Year ' . (int)$student['year_level'] . ' – ' . htmlspecialchars((string)$student['section']);
 
-/* ---------------- Attendance (No. of Days Present) ----------------
-   Reuse idea from admin/students.php:
-   - Select month/year (with defaults)
+/* ---------------- Attendance (Total days present) ----------------
    - Count DISTINCT DATE(started_at) from assessment_attempts
+   - No month/year filtering: lifetime usage
 ------------------------------------------------------------------- */
-$now = new DateTime('now');
-$selMonth = isset($_GET['m']) ? max(1, min(12, (int)$_GET['m'])) : (int)$now->format('n');
-$selYear  = isset($_GET['y']) ? (int)$_GET['y'] : (int)$now->format('Y');
-
-$start = DateTime::createFromFormat('Y-n-j H:i:s', sprintf('%04d-%d-1 00:00:00', $selYear, $selMonth));
-$end   = (clone $start)->modify('first day of next month');
-
-$startStr = $start->format('Y-m-d H:i:s');
-$endStr   = $end->format('Y-m-d H:i:s');
-
 $present_days = 0;
 $sql = "
     SELECT COUNT(DISTINCT DATE(started_at)) AS present_days
     FROM assessment_attempts
     WHERE student_id = ?
-      AND started_at >= ?
-      AND started_at < ?
 ";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param('iss', $student_id, $startStr, $endStr);
+$stmt->bind_param('i', $student_id);
 $stmt->execute();
 $res = $stmt->get_result();
 if ($row = $res->fetch_assoc()) {
@@ -172,14 +159,6 @@ $ACTIVE_MENU = 'prog_students';
 
 require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/includes/sidebar.php';
-
-/* For attendance month names & year options */
-$months = [
-    1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
-    7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December'
-];
-$curY = (int)date('Y');
-$years = range($curY - 4, $curY + 1);
 ?>
 <style>
 .student-progress-header {
@@ -228,18 +207,6 @@ $years = range($curY - 4, $curY + 1);
   color: #064d00;
   border: 1px solid #d1e3c9;
 }
-.attendance-filters {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.attendance-filters select {
-  border-radius: 999px;
-  border: 1px solid #d1d5db;
-  padding: 6px 12px;
-  font-size: 13px;
-}
 .btn-small {
   display: inline-flex;
   align-items: center;
@@ -262,6 +229,12 @@ $years = range($curY - 4, $curY + 1);
   color: #b91c1c;
 }
 .btn-invalidate:hover { background: #fef2f2; }
+.btn-reset {
+  background: #ffffff;
+  border: 1px solid #f97316;
+  color: #c2410c;
+}
+.btn-reset:hover { background: #fff7ed; }
 
 /* Story table */
 .student-progress-table {
@@ -395,62 +368,44 @@ $years = range($curY - 4, $curY + 1);
       Attendance &amp; Admin Actions
     </h2>
     <p style="margin:0 0 10px; font-size:12px; color:#6b7280;">
-      Attendance is based on distinct days with at least one assessment started within the selected month. Use the actions to validate or invalidate the student&rsquo;s assessment results.
+      Attendance is based on the total number of distinct days where the student started at least one assessment. Use the actions to validate, invalidate, or reset the student&rsquo;s assessment results.
     </p>
 
     <div class="attendance-actions-layout">
       <div class="attendance-info">
         <div class="attendance-pill">
-          <span style="font-weight:600;">Selected month:</span>
-          &nbsp;<?php echo h($months[$selMonth] . ' ' . $selYear); ?>
-        </div>
-        <div class="attendance-pill">
-          <span style="font-weight:600;">No. of days present:</span>
+          <span style="font-weight:600;">Total days present in the system:</span>
           &nbsp;<?php echo (int)$present_days; ?>
         </div>
       </div>
 
-      <div class="attendance-actions">
-        <!-- Month/Year filter -->
-        <form class="attendance-filters" method="get" action="">
-          <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>"/>
-          <select name="m" aria-label="Month">
-            <?php foreach ($months as $num => $name): ?>
-              <option value="<?php echo (int)$num; ?>" <?php echo ($num === $selMonth ? 'selected' : ''); ?>>
-                <?php echo h($name); ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-          <select name="y" aria-label="Year">
-            <?php foreach ($years as $y): ?>
-              <option value="<?php echo (int)$y; ?>" <?php echo ($y === $selYear ? 'selected' : ''); ?>>
-                <?php echo (int)$y; ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-          <button type="submit" class="btn-small" style="border:1px solid #d1d5db; background:#ffffff;">
-            Apply
+      <div class="attendance-actions" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
+        <!-- Validate -->
+        <form method="post" action="student_validate.php" style="margin:0;">
+          <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
+          <button type="submit" class="btn-small btn-validate">
+            ✅ Validate Results
+          </button>
+        </form>
+
+        <!-- Mark as Invalid -->
+        <form method="post" action="student_invalidate.php" style="margin:0;"
+              onsubmit="return confirm('Mark this student\'s assessment as INVALID? This will prevent certificate generation until revalidated.');">
+          <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
+          <button type="submit" class="btn-small btn-invalidate">
+            ❌ Mark as Invalid
+          </button>
+        </form>
+
+        <!-- Reset All Tests -->
+        <form method="post" action="student_reset.php" style="margin:0;"
+              onsubmit="return confirm('Reset ALL tests for this student and send them back to the beginning? This cannot be undone.');">
+          <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
+          <button type="submit" class="btn-small btn-reset">
+            🔁 Reset All Tests
           </button>
         </form>
       </div>
-    </div>
-
-    <div style="margin-top:14px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end;">
-      <!-- NOTE: Hook these forms to your actual validation/reset scripts later -->
-      <form method="post" action="student_validate.php" style="margin:0;">
-        <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
-        <button type="submit" class="btn-small btn-validate">
-          ✅ Validate Results
-        </button>
-      </form>
-
-      <form method="post" action="student_invalidate_reset.php" style="margin:0;"
-            onsubmit="return confirm('Mark this student\'s assessment as INVALID and reset all tests? This cannot be undone.');">
-        <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
-        <button type="submit" class="btn-small btn-invalidate">
-          ❌ Mark as Invalid &amp; Reset
-        </button>
-      </form>
     </div>
   </section>
 
