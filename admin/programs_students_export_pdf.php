@@ -131,8 +131,18 @@ while ($r = $result->fetch_assoc()) {
 $stmt->close();
 
 // ====================
-// Build HTML w/ header
+// Embed logos as Base64 (PATHS DITO AAYUSIN MO KUNG NASA IBANG FOLDER)
 // ====================
+
+// dito ko ina-assume na nasa ROOT (isang folder taas) ang 1.png,2.png,3.png
+$logo1Path = realpath(__DIR__ . '/../1.png');
+$logo2Path = realpath(__DIR__ . '/../2.png');
+$logo3Path = realpath(__DIR__ . '/../3.png');
+
+$logo1Data = ($logo1Path && file_exists($logo1Path)) ? base64_encode(file_get_contents($logo1Path)) : null;
+$logo2Data = ($logo2Path && file_exists($logo2Path)) ? base64_encode(file_get_contents($logo2Path)) : null;
+$logo3Data = ($logo3Path && file_exists($logo3Path)) ? base64_encode(file_get_contents($logo3Path)) : null;
+
 $today = date('F d, Y h:i A');
 
 ob_start();
@@ -173,7 +183,6 @@ ob_start();
       padding: 2px 6px;
     }
 
-    /* left & right same width para balance */
     .header-left,
     .header-right {
       width: 160px;
@@ -266,9 +275,12 @@ ob_start();
   <table class="header-table">
     <tr>
       <td class="header-left">
-        <!-- 1.png, 2.png, 3.png nasa PAREHONG folder ng PHP file na ito (admin/) -->
-        <img src="1.png" alt="">
-        <img src="2.png" alt="">
+        <?php if ($logo1Data): ?>
+          <img src="data:image/png;base64,<?php echo $logo1Data; ?>" alt="">
+        <?php endif; ?>
+        <?php if ($logo2Data): ?>
+          <img src="data:image/png;base64,<?php echo $logo2Data; ?>" alt="">
+        <?php endif; ?>
       </td>
       <td class="header-center">
         <div class="line1">Republic of the Philippines</div>
@@ -281,7 +293,9 @@ ob_start();
         </div>
       </td>
       <td class="header-right">
-        <img src="3.png" alt="">
+        <?php if ($logo3Data): ?>
+          <img src="data:image/png;base64,<?php echo $logo3Data; ?>" alt="">
+        <?php endif; ?>
       </td>
     </tr>
   </table>
@@ -356,13 +370,6 @@ $options->set('isRemoteEnabled', true);
 $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
-
-/*
- * IMPORTANT:
- *  - setBasePath(__DIR__) dahil nasa admin/ ang 1.png,2.png,3.png
- *  - src="1.png" etc. sa HTML
- */
-$dompdf->setBasePath(__DIR__);
 
 $dompdf->render();
 
