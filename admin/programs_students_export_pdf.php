@@ -134,10 +134,11 @@ $stmt->close();
 // Embed logos as Base64 (PATHS DITO AAYUSIN MO KUNG NASA IBANG FOLDER)
 // ====================
 
-// dito ko ina-assume na nasa ROOT (isang folder taas) ang 1.png,2.png,3.png
-$logo1Path = realpath(__DIR__ . '/../1.png');
-$logo2Path = realpath(__DIR__ . '/../2.png');
-$logo3Path = realpath(__DIR__ . '/../3.png');
+// dahil nasa loob mismo ng admin/ ang 1.png,2.png,3.png
+$logo1Path = realpath(__DIR__ . '/1.png');
+$logo2Path = realpath(__DIR__ . '/2.png');
+$logo3Path = realpath(__DIR__ . '/3.png');
+
 
 $logo1Data = ($logo1Path && file_exists($logo1Path)) ? base64_encode(file_get_contents($logo1Path)) : null;
 $logo2Data = ($logo2Path && file_exists($logo2Path)) ? base64_encode(file_get_contents($logo2Path)) : null;
