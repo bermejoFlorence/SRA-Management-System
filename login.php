@@ -152,10 +152,6 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
           <?php else: ?>
             <!-- MAY google_pending → nakasign-in na sa Google, show email + form -->
             <div class="google-bound">
-              <?php if ($googlePhoto): ?>
-                <img src="<?php echo htmlspecialchars($googlePhoto); ?>" alt="Profile"
-                     class="google-avatar">
-              <?php endif; ?>
               <div class="google-info">
                 <div class="label">Signed in as</div>
                 <div class="email"><?php echo htmlspecialchars($googleEmail); ?></div>
