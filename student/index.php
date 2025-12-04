@@ -396,6 +396,7 @@ if (isset($_GET['debug'])) {
 }
 .card-box p{ margin:0; font-size: clamp(.9rem, .95rem + .15vw, 1rem); }
 .card-box button{
+  margin-top: auto;          /* 👉 ito ang magpapantay sa buttons sa ibaba */
   padding:12px 14px; border:none; background:var(--g);
   color:#fff; border-radius:10px; cursor:pointer; font-weight:800;
   transition: transform .06s ease, filter .2s ease;
