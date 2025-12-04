@@ -46,9 +46,9 @@ $openCls   = fn($k) => ($ACTIVE_MENU === $k) ? 'open' : '';
   <!-- <a class="<?php echo $active('assessments'); ?>" href="assessments.php">
     <i class="fas fa-pen-to-square"></i> Assessments
   </a> -->
-  <a class="<?php echo $active('students'); ?>" href="students.php">
+  <!-- <a class="<?php echo $active('students'); ?>" href="students.php">
     <i class="fas fa-user-graduate"></i> Students
-  </a>
+  </a> -->
   
    <!-- NEW: Programs & Students -->
   <a class="<?php echo $active('prog_students'); ?>" href="programs_students.php">
