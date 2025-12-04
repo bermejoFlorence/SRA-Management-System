@@ -234,6 +234,10 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
                 <label>Section
                   <input type="text" name="section" required />
                 </label>
+
+                <label>School Year
+                  <input type="text" name="school_year" required />
+                </label>
               </div>
 
               <div class="form-actions">
