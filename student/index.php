@@ -31,6 +31,29 @@ if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 $studentId   = (int)($_SESSION['user_id'] ?? 0);
 $studentName = htmlspecialchars($_SESSION['full_name'] ?? 'Student');
 
+/* ----- Assessment validation status (pending / validated / invalid) ----- */
+$validationStatus = null;
+$validationReason = null;
+
+if ($studentId > 0) {
+  if ($stmt = $conn->prepare("
+        SELECT status, reason
+          FROM assessment_validation
+         WHERE student_id = ?
+         LIMIT 1
+  ")) {
+    $stmt->bind_param('i', $studentId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($row = $res->fetch_assoc()) {
+      $validationStatus = $row['status'] ?? null;   // pending | validated | invalid
+      $validationReason = $row['reason'] ?? null;
+    }
+    $stmt->close();
+  }
+}
+
+
 /* ----- Current level (id + name + color) ----- */
 $level = null;
 if ($studentId > 0) {
@@ -135,6 +158,29 @@ $rbFrac = ($rbCardTotal > 0) ? ($rbCardDone / $rbCardTotal) : 0.0;
 $pbUnlocked   = $sltDone;  // PB still gated by SLT
 $rbUnlocked   = ($pbCardTotal > 0 && $pbCardDone >= $pbCardTotal);
 $certUnlocked = ($rbCardTotal > 0 && $rbCardDone >= $rbCardTotal);
+/* ----- Certificate state based on RB completion + validation ----- */
+$certState = 'locked'; // locked | pending | validated | invalid
+
+if ($certUnlocked) {
+  if ($validationStatus === 'validated') {
+    $certState = 'validated';
+  } elseif ($validationStatus === 'invalid') {
+    $certState = 'invalid';
+  } else {
+    // null or 'pending'
+    $certState = 'pending';
+  }
+}
+
+/* Message to show inside Certificate card */
+$certMessage = 'Download your certificate once you finish Rate Builder.';
+if ($certState === 'pending') {
+  $certMessage = 'You have completed all assessments. Your certificate is under review. Please allow 1–2 working days for validation.';
+} elseif ($certState === 'validated') {
+  $certMessage = 'Your results have been approved. You may now view and download your certificate.';
+} elseif ($certState === 'invalid') {
+  $certMessage = 'Your results were not approved. Please contact your SRA coordinator during office hours for assistance.';
+}
 
 /* Overall progress (10% SLT + 45% PB + 45% RB) */
 $overall   = 0.0;
@@ -166,29 +212,58 @@ if ($lvHex) { [$r,$g,$b]=hex_to_rgb($lvHex); $levelPillStyle = "background:rgba(
 
 /* ===== Next step (completion-based) ===== */
 $nextStepLabel = 'You’re all set! Review your results.';
-$ctaText = 'View Results'; $ctaHref = 'results.php';
+$ctaText = 'View Results';
+$ctaHref = 'results.php';
+$ctaEnabled = true; // para ma-disable natin kapag pending/invalid
 
 if ($isFirstTimer) {
+
   $nextStepLabel = 'Start your Starting Level Test';
-  $ctaText = 'Start SLT'; $ctaHref = 'stories_sl.php';
+  $ctaText = 'Start SLT';
+  $ctaHref = 'stories_sl.php';
+  $ctaEnabled = true;
 
 } elseif ($pbCardTotal > 0 && $pbCardDone < $pbCardTotal) {
+
   $nextStepLabel = ($pbCardDone === 0)
     ? 'Start Power Builder'
     : ('Continue Power Builder – Story ' . ($pbCardDone + 1));
   $ctaText = ($pbCardDone === 0) ? 'Start Power Builder' : 'Continue Power Builder';
   $ctaHref = 'stories_pb.php';
+  $ctaEnabled = true;
 
 } elseif ($rbCardTotal > 0 && $rbCardDone < $rbCardTotal) {
+
   $nextStepLabel = ($rbCardDone === 0)
     ? 'Start Rate Builder'
     : ('Continue Rate Builder – Story ' . ($rbCardDone + 1));
   $ctaText = ($rbCardDone === 0) ? 'Start Rate Builder' : 'Continue Rate Builder';
   $ctaHref = 'stories_rb.php';
+  $ctaEnabled = true;
 
 } elseif ($certUnlocked) {
-  $nextStepLabel = 'Congratulations! You can download your certificate.';
-  $ctaText = 'Download Certificate'; $ctaHref = 'certificates.php';
+
+  if ($certState === 'validated') {
+    // ✅ Approved – pwedeng mag-download
+    $nextStepLabel = 'Congratulations! Your certificate has been approved. You can now download it.';
+    $ctaText = 'Download Certificate';
+    $ctaHref = 'certificates.php';
+    $ctaEnabled = true;
+
+  } elseif ($certState === 'pending') {
+    // ⏳ Under review
+    $nextStepLabel = 'You’ve completed all tests. Your results are now under review. Please allow 1–2 working days for approval.';
+    $ctaText = 'Certificate under review';
+    $ctaHref = '#';
+    $ctaEnabled = false;
+
+  } elseif ($certState === 'invalid') {
+    // ❌ Not approved
+    $nextStepLabel = 'Your results were not approved. Please contact your SRA coordinator during office hours for assistance.';
+    $ctaText = 'Contact your coordinator';
+    $ctaHref = '#';
+    $ctaEnabled = false;
+  }
 }
 
 /* ===== (Optional) Debug panel: open page with ?debug=1 to see values ===== */
@@ -530,8 +605,16 @@ body, .main-content { border: 0 !important; }
       <div class="next-title"><?= $isFirstTimer ? 'Start your journey' : 'Continue where you left off'; ?></div>
       <div class="next-sub"><?= htmlspecialchars($nextStepLabel); ?></div>
     </div>
-    <a class="btn-primary" href="<?= htmlspecialchars($ctaHref); ?>"><?= htmlspecialchars($ctaText); ?></a>
-  </section>
+  <?php if ($ctaEnabled && $ctaHref): ?>
+  <a class="btn-primary" href="<?= htmlspecialchars($ctaHref); ?>">
+    <?= htmlspecialchars($ctaText); ?>
+  </a>
+<?php else: ?>
+  <button class="btn-primary" type="button" disabled aria-disabled="true" style="cursor:not-allowed;opacity:.75;">
+    <?= htmlspecialchars($ctaText); ?>
+  </button>
+<?php endif; ?>
+</section>
 
   <!-- Core Modules (with flow + arrows + locking) -->
   <div class="flow">
@@ -587,19 +670,40 @@ body, .main-content { border: 0 !important; }
     </div>
 
     <i class="fas fa-arrow-right flow-arrow" aria-hidden="true"></i>
+<!-- Certificate (now depends on validation status) -->
+<?php
+  $certTitle = 'Unlocks after you finish all published Rate Builder stories';
+  if ($certState === 'pending') {
+    $certTitle = 'Completed – waiting for teacher validation (1–2 working days).';
+  } elseif ($certState === 'validated') {
+    $certTitle = 'Approved – you can now view your certificate.';
+  } elseif ($certState === 'invalid') {
+    $certTitle = 'Results not approved – please contact your coordinator.';
+  }
+?>
+<div class="card-box <?= $certState === 'locked' ? 'locked' : '' ?>"
+     title="<?= htmlspecialchars($certTitle); ?>">
+  <h4>🎓 Certificate</h4>
+  <p><?= htmlspecialchars($certMessage); ?></p>
 
-    <!-- Certificate (unlocks when ALL RB published are completed) -->
-    <div class="card-box <?= $certUnlocked ? '' : 'locked' ?>"
-         title="<?= $certUnlocked ? '' : 'Unlocks after you finish all published Rate Builder stories' ?>">
-      <h4>🎓 Certificate</h4>
-      <p>Download your certificate once you finish Rate Builder.</p>
+  <?php if ($certState === 'validated'): ?>
+    <!-- ✅ Approved -->
+    <button type="button" onclick="location.href='certificates.php'">View Certificate</button>
 
-      <?php if ($certUnlocked): ?>
-        <button type="button" onclick="location.href='certificates.php'">View Certificate</button>
-      <?php else: ?>
-        <button type="button" disabled aria-disabled="true">Locked</button>
-      <?php endif; ?>
-    </div>
+  <?php elseif ($certState === 'pending'): ?>
+    <!-- ⏳ Under review -->
+    <button type="button" disabled aria-disabled="true">Under review</button>
+
+  <?php elseif ($certState === 'invalid'): ?>
+    <!-- ❌ Not approved -->
+    <button type="button" disabled aria-disabled="true">Not available</button>
+
+  <?php else: ?>
+    <!-- 🔒 RB not finished yet -->
+    <button type="button" disabled aria-disabled="true">Locked</button>
+  <?php endif; ?>
+</div>
+
   </div>
 
   <!-- Announcements + Reading Tips -->
