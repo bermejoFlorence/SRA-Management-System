@@ -52,6 +52,30 @@ require_once __DIR__ . '/includes/sidebar.php';
   display:grid; grid-template-columns:minmax(0, 2fr) minmax(240px, 1fr);
   gap:20px; align-items:start;
 }
+/* Small screens: image on top, text below */
+@media (max-width: 768px){
+  .read-grid{
+    display:flex;              /* override grid → flex */
+    flex-direction:column;     /* naka-stack */
+    gap:16px;
+  }
+
+  /* image wrapper sa taas */
+  #imgWrap{
+    order:1;
+    max-width:100%;
+  }
+
+  /* text block sa baba */
+  .read-grid > div:first-child{
+    order:2;
+  }
+
+  .read-passage{
+    max-width:100%;            /* huwag nang mag-65ch limit sa maliit na screen */
+  }
+}
+
 .read-passage{
   font-size:clamp(1.05rem, 0.95rem + 0.6vw, 1.35rem);
   line-height:1.7;
