@@ -216,6 +216,18 @@ $res->free();
               <button type="submit" class="btn register-btn" id="registerBtn">Register</button>
             </div>
           </form>
+          <h2 class="form-title">Register</h2>
+
+<div class="buttons" style="margin-bottom:1rem;">
+  <a href="google_login.php" class="btn login-google-btn">
+    Continue with Google (@cbsua.edu.ph)
+  </a>
+</div>
+
+<p class="small-hint">
+  We will use your CBSUA email and profile picture from Google.
+</p>
+
         </div>
 
       </div>
