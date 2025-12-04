@@ -60,14 +60,19 @@ body{
 .reading-center{ margin-top:auto; font-size:.95rem; font-style:italic; }
 .reading-center strong{ display:block; margin-bottom:4px; font-weight:700; }
 .reading-center span{ color:var(--accent); }
-
-/* RIGHT side */
 .right-section{
-  flex:.6; max-width:520px;
+  flex:.6;
+  max-width:520px;
   background:var(--panel);
-  display:flex; flex-direction:column; justify-content:center;
-  padding:40px 26px 46px;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  padding:32px 26px 32px;
   box-shadow:-8px 0 24px rgba(0,0,0,.18);
+
+  /* NEW: para hindi maputol ang register form */
+  max-height:100vh;
+  overflow-y:auto;
 }
 
 /* Tabs */
