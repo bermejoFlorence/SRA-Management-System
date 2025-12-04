@@ -574,18 +574,17 @@ require_once __DIR__ . '/includes/sidebar.php';
           </button>
         </form>
 
-        <!-- Reset All Tests -->
         <form method="post" action="student_reset.php" style="margin:0;" class="js-action-form">
-          <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
-          <button type="button"
-                  class="btn-small btn-reset js-open-confirm"
-                  data-title="Reset All Tests"
-                  data-message="Reset ALL tests for this student and send them back to the beginning? All existing scores, unlocks, and certificates will be removed. This cannot be undone."
-                  data-btn="Yes, reset all tests"
-                  data-style="danger">
-            🔁 Reset All Tests
-          </button>
-        </form>
+  <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
+  <button type="button"
+          class="btn-small btn-reset js-open-confirm"
+          data-title="Reset All Tests"
+          data-message="Reset ALL tests for this student and send them back to the beginning? All existing scores, unlocks, and certificates will be removed. This cannot be undone."
+          data-btn="Yes, reset all tests"
+          data-style="danger">
+    🔁 Reset All Tests
+  </button>
+</form>
       </div>
     </div>
   </section>
