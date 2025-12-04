@@ -962,9 +962,9 @@ function showCompleted(){
   $crumb.textContent = 'Completed';
 
   renderCompletedAnalytics();
-  applyColorCategory(finalAssign);   // NEW
-  updatePbLink(finalAssign);         // NEW
-  applyColorCategory(finalAssign)
+applyColorCategory(finalAssign);
+// wala nang updatePbLink – diretso na lang yung href sa HTML
+
   
   window.removeEventListener('beforeunload', onBeforeUnload);
   window.scrollTo({ top: 0, behavior: 'instant' });
