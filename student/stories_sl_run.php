@@ -112,17 +112,40 @@ require_once __DIR__ . '/includes/sidebar.php';
 .slt-meta{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;}
 .progress{ width:100%; height:10px; border-radius:999px; overflow:hidden; background:#ececec; }
 .progress > span{ display:block; height:100%; background:linear-gradient(90deg, var(--acc), #ffd37a); }
+/* Question text */
 .qtext{
-  position:relative; margin:16px 0 14px; padding:14px 16px 14px 56px;
-  font-weight:900; font-size:clamp(1.15rem, 1rem + 0.6vw, 1.6rem); color:#1b3a1b;
-  background:#fffef6; border:1px solid #f1e6b3; border-radius:12px; box-shadow:inset 0 0 0 3px rgba(236,163,5,.12);
+  position:relative;
+  margin:16px 0 14px;
+  padding:12px 14px 12px 52px; /* bahagyang bawas sa padding */
+  font-weight:800;
+  font-size:clamp(1rem, 0.95rem + 0.35vw, 1.3rem); /* mas maliit nang konti */
+  color:#1b3a1b;
+  background:#fffef6;
+  border:1px solid #f1e6b3;
+  border-radius:12px;
+  box-shadow:inset 0 0 0 3px rgba(236,163,5,.12);
 }
+
+/* Bilog ng Q1 / Q2… */
 .qtext::before{
   content: attr(data-qbadge);
-  position:absolute; left:12px; top:50%; transform:translateY(-50%);
-  width:32px; height:32px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center;
-  background:var(--acc); color:#000; font-weight:900; border:1px solid #e3c97a;
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--acc);
+  color:#000;
+  font-weight:800;
+  font-size:0.8rem;   /* mas maliit para hindi lumagpas */
+  border:1px solid #e3c97a;
 }
+
 .opts{ display:grid; gap:10px; margin-top:8px; }
 .opt{ position:relative; padding:12px 12px 12px 44px; background:#fff; border:1.5px solid #dfe6df; border-radius:12px; line-height:1.45; cursor:pointer; }
 .opt .letter{ position:absolute; left:12px; top:50%; transform:translateY(-50%); width:26px; height:26px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; font-weight:800; font-size:.9rem; border:1.5px solid #cfd9cf; background:#f9faf9; color:#1f3a1f; }
