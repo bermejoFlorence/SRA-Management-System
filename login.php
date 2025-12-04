@@ -134,122 +134,128 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
         </div>
 
         <!-- REGISTER PANEL -->
-        <div class="auth-panel" id="panelRegister" role="tabpanel" aria-labelledby="tabRegister">
-          <h2 class="form-title">Register</h2>
+<div class="auth-panel" id="panelRegister" role="tabpanel" aria-labelledby="tabRegister">
+  <h2 class="form-title">Register</h2>
 
-          <!-- Google button sa taas ng register form -->
-          <div class="buttons" style="margin-bottom:1rem;">
-            <a href="google_login.php" class="btn login-google-btn">
-              Continue with Google (@cbsua.edu.ph)
-            </a>
-          </div>
+  <?php if (!$googlePending): ?>
+    <!-- WALANG google_pending → Google button lang, walang form -->
+    <div class="buttons" style="margin-bottom:1rem;">
+      <a href="google_login.php" class="btn login-google-btn">
+        Continue with Google (@cbsua.edu.ph)
+      </a>
+    </div>
 
-          <?php if ($googlePending): ?>
-            <p class="small-hint">
-              We detected your Google account:
-              <strong><?php echo htmlspecialchars($googleEmail); ?></strong><br>
-              Please complete your student details below.
-            </p>
-          <?php else: ?>
-            <p class="small-hint">
-              You may also register using your CBSUA email and password.
-            </p>
-          <?php endif; ?>
+    <p class="small-hint">
+      To create an account, please sign in first using your CBSUA Google email.
+    </p>
 
-          <form id="registerForm" class="register-form" novalidate>
-            <?php if ($googlePending): ?>
-              <!-- Flag para alam ni register_student.php na galing Google -->
-              <input type="hidden" name="google_mode" value="1">
-            <?php endif; ?>
+  <?php else: ?>
+    <!-- MAY google_pending → naka-bind na si Google, wala nang button -->
 
-            <div class="field-grid">
-              <label>Firstname
-                <input type="text" name="firstname" required autocomplete="given-name"/>
-              </label>
+    <div class="google-bound-box" style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+      <?php if (!empty($googlePhoto)): ?>
+        <img src="<?php echo htmlspecialchars($googlePhoto); ?>"
+             alt="Profile photo"
+             style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+      <?php endif; ?>
 
-              <label>Middlename
-                <input type="text" name="middlename" autocomplete="additional-name"/>
-              </label>
+      <div>
+        <p class="small-hint" style="margin:0;">
+          Google account connected:
+          <strong><?php echo htmlspecialchars($googleEmail); ?></strong><br>
+          Please complete your student details below.
+        </p>
+      </div>
+    </div>
 
-              <label>Lastname
-                <input type="text" name="lastname" required autocomplete="family-name"/>
-              </label>
+    <form id="registerForm" class="register-form" novalidate>
+      <!-- Flag para alam ni register_student.php na galing Google -->
+      <input type="hidden" name="google_mode" value="1">
 
-              <label>Extension Name
-                <input type="text" name="extensionname" placeholder="e.g., Jr., II, Sr." />
-              </label>
+      <div class="field-grid">
+        <label>Firstname
+          <input type="text" name="firstname" required autocomplete="given-name"/>
+        </label>
 
-              <label>Student ID No.
-                <input type="text" name="studentid" required />
-              </label>
+        <label>Middlename
+          <input type="text" name="middlename" autocomplete="additional-name"/>
+        </label>
 
-              <label>Email
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="name@cbsua.edu.ph"
-                  required
-                  autocomplete="email"
-                  inputmode="email"
-                  pattern="^[a-zA-Z0-9._%+\-]+@cbsua\.edu\.ph$"
-                  title="Use your @cbsua.edu.ph email"
-                  oninput="this.value=this.value.toLowerCase()"
-                  value="<?php echo htmlspecialchars($googleEmail); ?>"
-                  <?php echo $googlePending ? 'readonly' : ''; ?>
-                />
-              </label>
+        <label>Lastname
+          <input type="text" name="lastname" required autocomplete="family-name"/>
+        </label>
 
-              <label>Password
-                <input type="password" name="password" required autocomplete="new-password"/>
-              </label>
+        <label>Extension Name
+          <input type="text" name="extensionname" placeholder="e.g., Jr., II, Sr." />
+        </label>
 
-              <!-- COURSE (dropdown from sra_programs) -->
-              <label>Course
-                <select name="program_id" id="programSelect" required>
-                  <option value="">Select course</option>
-                  <?php foreach ($programs as $p): ?>
-                    <?php
-                      $pid   = (int)$p['program_id'];
-                      $code  = htmlspecialchars($p['program_code']);
-                      $name  = htmlspecialchars($p['program_name']);
-                    ?>
-                    <option value="<?php echo $pid; ?>">
-                      <?php echo $code . ' – ' . $name; ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
-              </label>
+        <label>Student ID No.
+          <input type="text" name="studentid" required />
+        </label>
 
-              <!-- MAJOR (depends on course, may be disabled) -->
-              <label>Major
-                <select name="major_id" id="majorSelect" disabled>
-                  <option value="">Select course first</option>
-                </select>
-              </label>
+        <label>Email
+          <input
+            type="email"
+            name="email"
+            required
+            value="<?php echo htmlspecialchars($googleEmail); ?>"
+            readonly
+          />
+        </label>
 
-              <!-- YEAR LEVEL (1st–4th as dropdown) -->
-              <label>Year Level
-                <select name="yearlevel" id="yearLevelSelect" required>
-                  <option value="">Select year level</option>
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
-                </select>
-              </label>
+        <label>Password
+          <input type="password" name="password" required autocomplete="new-password"/>
+        </label>
 
-              <label>Section
-                <input type="text" name="section" required />
-              </label>
-            </div>
+        <!-- COURSE (dropdown from sra_programs) -->
+        <label>Course
+          <select name="program_id" id="programSelect" required>
+            <option value="">Select course</option>
+            <?php foreach ($programs as $p): ?>
+              <?php
+                $pid   = (int)$p['program_id'];
+                $code  = htmlspecialchars($p['program_code']);
+                $name  = htmlspecialchars($p['program_name']);
+              ?>
+              <option value="<?php echo $pid; ?>">
+                <?php echo $code . ' – ' . $name; ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </label>
 
-            <!-- buttons sa pinakababa -->
-            <div class="form-actions">
-              <button type="button" class="btn login-alt" id="goLogin">Go to Login</button>
-              <button type="submit" class="btn register-btn" id="registerBtn">Register</button>
-            </div>
-          </form>
-        </div>
+        <!-- MAJOR (depends on course, may be disabled) -->
+        <label>Major
+          <select name="major_id" id="majorSelect" disabled>
+            <option value="">Select course first</option>
+          </select>
+        </label>
+
+        <!-- YEAR LEVEL (1st–4th as dropdown) -->
+        <label>Year Level
+          <select name="yearlevel" id="yearLevelSelect" required>
+            <option value="">Select year level</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+          </select>
+        </label>
+
+        <label>Section
+          <input type="text" name="section" required />
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn login-alt" id="goLogin">Go to Login</button>
+        <button type="submit" class="btn register-btn" id="registerBtn">Register</button>
+      </div>
+    </form>
+
+  <?php endif; ?>
+</div>
+
 
       </div>
     </div>
