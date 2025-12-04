@@ -125,9 +125,10 @@ $pbCompleted = (int)(scalar(
   $conn,
   "SELECT COUNT(DISTINCT s.story_id)
      FROM attempt_stories s
-     JOIN assessment_attempts a ON a.attempt_id=s.attempt_id
-    WHERE a.student_id=? AND a.set_type='PB'
-      AND a.status IN ('submitted','scored')
+     JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
+    WHERE a.student_id = ?
+      AND a.set_type = 'PB'
+      AND a.status IN ('in_progress','submitted','scored')
       AND s.score IS NOT NULL",
   [$studentId],'i'
 ) ?? 0);
@@ -136,9 +137,10 @@ $rbCompleted = (int)(scalar(
   $conn,
   "SELECT COUNT(DISTINCT s.story_id)
      FROM attempt_stories s
-     JOIN assessment_attempts a ON a.attempt_id=s.attempt_id
-    WHERE a.student_id=? AND a.set_type='RB'
-      AND a.status IN ('submitted','scored')
+     JOIN assessment_attempts a ON a.attempt_id = s.attempt_id
+    WHERE a.student_id = ?
+      AND a.set_type = 'RB'
+      AND a.status IN ('in_progress','submitted','scored')
       AND s.score IS NOT NULL",
   [$studentId],'i'
 ) ?? 0);
