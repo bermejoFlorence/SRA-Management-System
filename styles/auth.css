@@ -274,3 +274,111 @@ input:focus{ outline:none; box-shadow: inset 0 0 0 2px #000; background:#fff; }
 .right-section{
   min-height:100vh;
 }
+/* Layout wrapper */
+.container{
+  min-height:100vh;
+  display:flex;
+  align-items:flex-start;      /* ok na 'to para medyo mataas */
+  justify-content:center;
+  padding-top:16px;           /* dati 40px – binabaan para di masyadong mababa */
+}
+
+/* RIGHT side */
+.right-section{
+  flex:.6;
+  max-width:520px;
+  background:var(--panel);
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;  /* dati center, para may extra space sa baba */
+  padding:24px 24px 28px;      /* binawasan padding top/bottom */
+  box-shadow:-8px 0 24px rgba(0,0,0,.18);
+
+  max-height:100vh;            /* important: huwag lalampas sa screen */
+  overflow-y:auto;             /* kung sakaling sumobra pa, scroll na lang sa loob */
+}
+
+/* Titles */
+.form-title{
+  font-weight:800;
+  font-size:1.5rem;
+  color:#333;
+  text-align:center;
+  margin:4px 0 10px 0;         /* mas maliit na margin-bottom */
+}
+
+/* maliit na hint text sa register */
+.small-hint{
+  font-size:0.9rem;
+  color:#555;
+  margin:0 0 10px 0;
+}
+
+/* REGISTER CARD LAYOUT */
+.auth-panel{
+  display:flex;
+  flex-direction:column;
+}
+
+/* mismong card ng register form */
+.register-form{
+  background:#f9fafb;
+  border-radius:18px;
+  padding:1.25rem 1.5rem 1.1rem;   /* lumiit ang padding */
+  box-shadow:0 18px 45px rgba(15,23,42,0.08);
+  display:flex;
+  flex-direction:column;
+  gap:0.75rem;
+  min-height:auto;                 /* REMOVE yung 420px para sumunod sa content */
+}
+
+/* two-column grid ng fields */
+.register-form .field-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:0.6rem 1rem;                 /* mas maliit na gap para kasya lahat */
+}
+
+/* actions sa pinakababa ng card */
+.register-form .form-actions{
+  margin-top:0.5rem;              /* dati auto – mas konting tulak pababa */
+  padding-top:0.75rem;
+  display:flex;
+  justify-content:flex-end;
+  gap:0.75rem;
+}
+
+/* pill style buttons like sa screenshot */
+.btn{
+  border-radius:999px;
+  padding:0.55rem 1.4rem;         /* konting liit */
+  font-weight:600;
+  border:none;
+  cursor:pointer;
+  font-size:0.9rem;
+}
+@media (max-width: 900px){
+  .container{
+    flex-direction:column;
+    height:auto;
+    min-height:100vh;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding-top:0;               /* para di madagdagan pa taas ang height */
+  }
+
+  .right-section{
+    max-width:100%;
+    padding:20px 16px 28px;
+    box-shadow:none;
+    max-height:none;
+  }
+
+  .register-form .field-grid{
+    grid-template-columns:1fr;
+  }
+
+  .buttons .btn{
+    min-width:100%;
+  }
+}
