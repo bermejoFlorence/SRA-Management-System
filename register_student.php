@@ -7,6 +7,8 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+session_start(); // kailangan para ma-access ang $_SESSION['google_pending']
+
 require_once __DIR__ . '/db_connect.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -28,6 +30,7 @@ function jexit(bool $ok, string $msg, array $extra = []): void {
 try {
 
     // ---------- INPUTS ----------
+
     $firstname     = trim($_POST['firstname']     ?? '');
     $middlename    = trim($_POST['middlename']    ?? '');
     $lastname      = trim($_POST['lastname']      ?? '');
@@ -36,11 +39,14 @@ try {
     $email         = trim($_POST['email']         ?? '');
     $password      = (string)($_POST['password']  ?? '');
 
-    // from register form
     $program_id    = (int)($_POST['program_id']   ?? 0);   // FK → sra_programs.program_id
     $major_id_raw  = $_POST['major_id']           ?? '';   // optional
     $yearlevel_raw = trim($_POST['yearlevel']     ?? '');
     $section       = trim($_POST['section']       ?? '');
+    $school_year   = trim($_POST['school_year']   ?? '');  // NEW: sa DB na rin
+
+    // flag kung galing Google registration
+    $google_mode   = (int)($_POST['google_mode']  ?? 0);
 
     $yearlevel_int = (int)$yearlevel_raw;
 
@@ -49,10 +55,21 @@ try {
 
     $role = 'student';
 
+    // Profile photo from Google (kung meron)
+    $googlePending   = $_SESSION['google_pending'] ?? null;
+    $profilePhotoUrl = '';
+    if ($google_mode === 1 && is_array($googlePending)) {
+        $profilePhotoUrl = trim((string)($googlePending['profile_photo'] ?? ''));
+    }
+    // Gawing NULL kapag empty
+    $profilePhoto = ($profilePhotoUrl !== '') ? $profilePhotoUrl : null;
+
     // ---------- BASIC VALIDATION ----------
+
     if (
         $firstname === '' || $lastname === '' || $email === '' || $password === '' ||
-        $studentid === '' || $program_id <= 0 || $yearlevel_int <= 0 || $section === ''
+        $studentid === '' || $program_id <= 0 || $yearlevel_int <= 0 ||
+        $section === '' || $school_year === ''
     ) {
         jexit(false, 'Please complete all required fields.');
     }
@@ -70,6 +87,13 @@ try {
     if ($yearlevel_int < 1 || $yearlevel_int > 4) {
         jexit(false, 'Invalid year level.');
     }
+
+    // Optional: simple check sa school_year format (pwede mong i-uncomment)
+    /*
+    if (!preg_match('/^\d{4}\s*-\s*\d{4}$/', $school_year)) {
+        jexit(false, 'Invalid school year format. Use e.g. 2024-2025.');
+    }
+    */
 
     // ---------- VALIDATE PROGRAM & MAJOR + GET TEXT LABELS ----------
 
@@ -111,7 +135,7 @@ try {
         $stmt->close();
     } else {
         // walang major (ok lang kung program na walang major)
-        $major_id  = null;
+        $major_id   = null;
         $major_text = '';
     }
 
@@ -140,6 +164,7 @@ try {
     $stmt->close();
 
     // ---------- PREPARE VALUES ----------
+
     $hash = password_hash($password, PASSWORD_DEFAULT);
 
     // verification token (for email link)
@@ -147,17 +172,24 @@ try {
     $expires = date('Y-m-d H:i:s', time() + 60 * 60 * 24); // +24h
 
     // ---------- INSERT USER ----------
+    //
+    // synced sa structure mo:
+    //  - gamit ang `profile_photo`
+    //  - may `school_year`
+    //  - `status` default 'pending'
+
     $sql = "INSERT INTO users
         (email, password_hash, role,
          first_name, middle_name, last_name, ext_name,
          student_id_no, course, major,
          program_id, major_id,
-         year_level, section,
+         year_level, section, school_year,
+         profile_photo,
          status,
          email_verify_token, email_verify_expires_at,
          created_at, updated_at)
         VALUES
-        (?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending', ?, ?, NOW(), NOW())";
+        (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending', ?, ?, NOW(), NOW())";
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
@@ -165,7 +197,7 @@ try {
     }
 
     $stmt->bind_param(
-        'ssssssssssiiisss',
+        'ssssssssssiiisssss',
         $email,
         $hash,
         $role,
@@ -180,6 +212,8 @@ try {
         $major_id,
         $yearlevel_int,
         $section,
+        $school_year,
+        $profilePhoto,
         $token,
         $expires
     );
@@ -188,7 +222,11 @@ try {
     $user_id = $stmt->insert_id;
     $stmt->close();
 
+    // ---------- CLEAR GOOGLE PENDING (kung meron) ----------
+    unset($_SESSION['google_pending']);
+
     // ---------- SEND VERIFICATION EMAIL ----------
+
     $verifyUrl = 'https://sra-management.com/verify_email.php?token=' . urlencode($token);
 
     $emailSent  = false;
@@ -202,7 +240,7 @@ try {
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
         $mail->Username   = 'kylaceline.pasamba@cbsua.edu.ph';   // TODO: change
-        $mail->Password   = 'qekl rncw kcye mzwz';       // TODO: change (App Password)
+        $mail->Password   = 'qekl rncw kcye mzwz';               // TODO: change (App Password)
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
         // ============================================================
