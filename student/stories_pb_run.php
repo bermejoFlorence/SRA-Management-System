@@ -77,6 +77,34 @@ require_once __DIR__ . '/includes/sidebar.php';
   border:1px solid #efe9da; border-radius:14px; padding:clamp(16px, 2.2vw, 22px); color:#1f2a1f;
   max-width:65ch; height:min(70vh, 720px); overflow:auto;
 }
+
+/* Small screens: image on top, text below */
+@media (max-width: 768px){
+  .read-grid{
+    display: flex;           /* override grid → flex */
+    flex-direction: column;  /* stack vertically */
+    gap: 16px;
+  }
+
+  /* image wrapper FIRST */
+  #imgWrap{
+    order: 1;
+    max-width: 100%;
+  }
+
+  /* text (passage + note) SECOND */
+  .read-grid > div:first-child{
+    order: 2;
+  }
+
+  /* allow passage to use full width & natural height */
+  .read-passage{
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+  }
+}
+
 .read-passage p{ margin:0 0 1em; }
 .read-passage p:last-child{ margin-bottom:0; }
 .read-note{ color:var(--muted); font-size:.95rem; margin-top:10px; }
