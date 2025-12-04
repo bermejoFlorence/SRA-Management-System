@@ -61,6 +61,13 @@ try {
     if ($google_mode === 1 && is_array($googlePending)) {
         $profilePhotoUrl = trim((string)($googlePending['profile_photo'] ?? ''));
     }
+
+    $googleId = null;
+if ($google_mode === 1 && is_array($googlePending)) {
+    $googleId = trim((string)($googlePending['google_id'] ?? ''));
+}
+$googleId = ($googleId !== '') ? $googleId : null;
+
     // Gawing NULL kapag empty
     $profilePhoto = ($profilePhotoUrl !== '') ? $profilePhotoUrl : null;
 
@@ -178,49 +185,57 @@ try {
     //  - may `school_year`
     //  - `status` default 'pending'
 
-    $sql = "INSERT INTO users
-        (email, password_hash, role,
-         first_name, middle_name, last_name, ext_name,
-         student_id_no, course, major,
-         program_id, major_id,
-         year_level, section, school_year,
-         profile_photo,
-         status,
-         email_verify_token, email_verify_expires_at,
-         created_at, updated_at)
-        VALUES
-        (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending', ?, ?, NOW(), NOW())";
+   // ---------- INSERT USER ----------
+//
+//  - gamit ang `profile_photo`
+//  - may `school_year`
+//  - may `google_id` (kung galing Google)
+//  - `is_profile_complete` = 1 (kumpleto na profile niya after form)
 
-    $stmt = $conn->prepare($sql);
-    if (!$stmt) {
-        jexit(false, 'Prepare failed: ' . $conn->error);
-    }
+$sql = "INSERT INTO users
+    (email, password_hash, role,
+     first_name, middle_name, last_name, ext_name,
+     student_id_no, course, major,
+     program_id, major_id,
+     year_level, section, school_year,
+     profile_photo, google_id,
+     status, is_profile_complete,
+     email_verify_token, email_verify_expires_at,
+     created_at, updated_at)
+    VALUES
+    (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending', 1, ?, ?, NOW(), NOW())";
 
-    $stmt->bind_param(
-        'ssssssssssiiisssss',
-        $email,
-        $hash,
-        $role,
-        $firstname,
-        $middlename,
-        $lastname,
-        $extensionname,
-        $studentid,
-        $course_text,
-        $major_text,
-        $program_id,
-        $major_id,
-        $yearlevel_int,
-        $section,
-        $school_year,
-        $profilePhoto,
-        $token,
-        $expires
-    );
+$stmt = $conn->prepare($sql);
+if (!$stmt) {
+    jexit(false, 'Prepare failed: ' . $conn->error);
+}
 
-    $stmt->execute();
-    $user_id = $stmt->insert_id;
-    $stmt->close();
+$stmt->bind_param(
+    'ssssssssssiiissssss',
+    $email,
+    $hash,
+    $role,
+    $firstname,
+    $middlename,
+    $lastname,
+    $extensionname,
+    $studentid,
+    $course_text,
+    $major_text,
+    $program_id,
+    $major_id,
+    $yearlevel_int,
+    $section,
+    $school_year,
+    $profilePhoto,
+    $googleId,
+    $token,
+    $expires
+);
+
+$stmt->execute();
+$user_id = $stmt->insert_id;
+$stmt->close();
 
     // ---------- CLEAR GOOGLE PENDING (kung meron) ----------
     unset($_SESSION['google_pending']);
@@ -245,7 +260,7 @@ try {
         $mail->Port       = 587;
         // ============================================================
 
-        $mail->setFrom('your_email@cbsua.edu.ph', 'SRA Verification');
+        $mail->setFrom('kylaceline.pasamba@cbsua.edu.ph', 'SRA Verification');
         $mail->addAddress($email, $firstname . ' ' . $lastname);
 
         $mail->isHTML(true);
