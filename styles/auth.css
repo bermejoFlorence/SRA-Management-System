@@ -21,14 +21,13 @@ body{
 
 /* Layout wrapper */
 .container{
+  min-height:100vh;
   display:flex;
-  height:100vh;
-  /* dati: overflow:hidden; */
-  overflow-x:hidden;   /* walang horizontal scroll */
-  overflow-y:auto;     /* pwede mag-scroll pababa kapag mahaba ang form */
-  border-radius:12px;
-  background:#000;
+  align-items:flex-start;   /* dati: center */
+  justify-content:center;
+  padding-top:40px;         /* adjust mo kung gusto mo mas mataas / mababa */
 }
+
 
 
 /* LEFT side */

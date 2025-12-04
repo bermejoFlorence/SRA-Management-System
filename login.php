@@ -133,128 +133,127 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
           </form>
         </div>
 
-        <!-- REGISTER PANEL -->
-<div class="auth-panel" id="panelRegister" role="tabpanel" aria-labelledby="tabRegister">
-  <h2 class="form-title">Register</h2>
+                <!-- REGISTER PANEL -->
+        <div class="auth-panel" id="panelRegister" role="tabpanel" aria-labelledby="tabRegister">
+          <h2 class="form-title">Register</h2>
 
-  <?php if (!$googlePending): ?>
-    <!-- WALANG google_pending → Google button lang, walang form -->
-    <div class="buttons" style="margin-bottom:1rem;">
-      <a href="google_login.php" class="btn login-google-btn">
-        Continue with Google (@cbsua.edu.ph)
-      </a>
-    </div>
+          <?php if (!$googlePending): ?>
+            <!-- WALANG google_pending → Google button lang, walang form -->
+            <div class="buttons" style="margin-bottom:1rem;">
+              <a href="google_login.php" class="btn login-google-btn">
+                Continue with Google (@cbsua.edu.ph)
+              </a>
+            </div>
 
-    <p class="small-hint">
-      To create an account, please sign in first using your CBSUA Google email.
-    </p>
+            <p class="small-hint">
+              To create an account, please sign in first using your CBSUA Google email.
+            </p>
 
-  <?php else: ?>
-    <!-- MAY google_pending → naka-bind na si Google, wala nang button -->
+          <?php else: ?>
+            <!-- MAY google_pending → nakasign-in na sa Google, show email + form -->
+            <div class="google-bound">
+              <?php if ($googlePhoto): ?>
+                <img src="<?php echo htmlspecialchars($googlePhoto); ?>" alt="Profile"
+                     class="google-avatar">
+              <?php endif; ?>
+              <div class="google-info">
+                <div class="label">Signed in as</div>
+                <div class="email"><?php echo htmlspecialchars($googleEmail); ?></div>
+              </div>
+            </div>
 
-    <div class="google-bound-box" style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
-      <?php if (!empty($googlePhoto)): ?>
-        <img src="<?php echo htmlspecialchars($googlePhoto); ?>"
-             alt="Profile photo"
-             style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-      <?php endif; ?>
+            <p class="small-hint">
+              Please complete your student details below to finish your registration.
+            </p>
 
-      <div>
-        <p class="small-hint" style="margin:0;">
-          Google account connected:
-          <strong><?php echo htmlspecialchars($googleEmail); ?></strong><br>
-          Please complete your student details below.
-        </p>
-      </div>
-    </div>
+            <form id="registerForm" class="register-form" novalidate>
+              <!-- Flag para alam ni register_student.php na galing Google -->
+              <input type="hidden" name="google_mode" value="1">
 
-    <form id="registerForm" class="register-form" novalidate>
-      <!-- Flag para alam ni register_student.php na galing Google -->
-      <input type="hidden" name="google_mode" value="1">
+              <div class="field-grid">
+                <label>Firstname
+                  <input type="text" name="firstname" required autocomplete="given-name"/>
+                </label>
 
-      <div class="field-grid">
-        <label>Firstname
-          <input type="text" name="firstname" required autocomplete="given-name"/>
-        </label>
+                <label>Middlename
+                  <input type="text" name="middlename" autocomplete="additional-name"/>
+                </label>
 
-        <label>Middlename
-          <input type="text" name="middlename" autocomplete="additional-name"/>
-        </label>
+                <label>Lastname
+                  <input type="text" name="lastname" required autocomplete="family-name"/>
+                </label>
 
-        <label>Lastname
-          <input type="text" name="lastname" required autocomplete="family-name"/>
-        </label>
+                <label>Extension Name
+                  <input type="text" name="extensionname" placeholder="e.g., Jr., II, Sr." />
+                </label>
 
-        <label>Extension Name
-          <input type="text" name="extensionname" placeholder="e.g., Jr., II, Sr." />
-        </label>
+                <label>Student ID No.
+                  <input type="text" name="studentid" required />
+                </label>
 
-        <label>Student ID No.
-          <input type="text" name="studentid" required />
-        </label>
+                <label>Email
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    autocomplete="email"
+                    inputmode="email"
+                    value="<?php echo htmlspecialchars($googleEmail); ?>"
+                    readonly
+                  />
+                </label>
 
-        <label>Email
-          <input
-            type="email"
-            name="email"
-            required
-            value="<?php echo htmlspecialchars($googleEmail); ?>"
-            readonly
-          />
-        </label>
+                <label>Password
+                  <input type="password" name="password" required autocomplete="new-password"/>
+                </label>
 
-        <label>Password
-          <input type="password" name="password" required autocomplete="new-password"/>
-        </label>
+                <!-- COURSE (dropdown from sra_programs) -->
+                <label>Course
+                  <select name="program_id" id="programSelect" required>
+                    <option value="">Select course</option>
+                    <?php foreach ($programs as $p): ?>
+                      <?php
+                        $pid   = (int)$p['program_id'];
+                        $code  = htmlspecialchars($p['program_code']);
+                        $name  = htmlspecialchars($p['program_name']);
+                      ?>
+                      <option value="<?php echo $pid; ?>">
+                        <?php echo $code . ' – ' . $name; ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                </label>
 
-        <!-- COURSE (dropdown from sra_programs) -->
-        <label>Course
-          <select name="program_id" id="programSelect" required>
-            <option value="">Select course</option>
-            <?php foreach ($programs as $p): ?>
-              <?php
-                $pid   = (int)$p['program_id'];
-                $code  = htmlspecialchars($p['program_code']);
-                $name  = htmlspecialchars($p['program_name']);
-              ?>
-              <option value="<?php echo $pid; ?>">
-                <?php echo $code . ' – ' . $name; ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </label>
+                <!-- MAJOR (depends on course, may be disabled) -->
+                <label>Major
+                  <select name="major_id" id="majorSelect" disabled>
+                    <option value="">Select course first</option>
+                  </select>
+                </label>
 
-        <!-- MAJOR (depends on course, may be disabled) -->
-        <label>Major
-          <select name="major_id" id="majorSelect" disabled>
-            <option value="">Select course first</option>
-          </select>
-        </label>
+                <!-- YEAR LEVEL (1st–4th as dropdown) -->
+                <label>Year Level
+                  <select name="yearlevel" id="yearLevelSelect" required>
+                    <option value="">Select year level</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                  </select>
+                </label>
 
-        <!-- YEAR LEVEL (1st–4th as dropdown) -->
-        <label>Year Level
-          <select name="yearlevel" id="yearLevelSelect" required>
-            <option value="">Select year level</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-          </select>
-        </label>
+                <label>Section
+                  <input type="text" name="section" required />
+                </label>
+              </div>
 
-        <label>Section
-          <input type="text" name="section" required />
-        </label>
-      </div>
-
-      <div class="form-actions">
-        <button type="button" class="btn login-alt" id="goLogin">Go to Login</button>
-        <button type="submit" class="btn register-btn" id="registerBtn">Register</button>
-      </div>
-    </form>
-
-  <?php endif; ?>
-</div>
+              <div class="form-actions">
+                <button type="button" class="btn login-alt" id="goLogin">Go to Login</button>
+                <button type="submit" class="btn register-btn" id="registerBtn">Register</button>
+              </div>
+            </form>
+          <?php endif; ?>
+        </div>
 
 
       </div>
@@ -265,8 +264,9 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
 <script>
 // PHP → JS majors map
 const MAJORS_BY_PROGRAM = <?php echo json_encode($majorsByProgram, JSON_UNESCAPED_UNICODE); ?>;
-
+const HAS_GOOGLE_PENDING = <?php echo $googlePending ? 'true' : 'false'; ?>;
 (() => {
+  
   const ALLOWED_DOMAIN = 'cbsua.edu.ph';
   const confirmColor   = '#1e8fa2';
 
@@ -314,8 +314,12 @@ const MAJORS_BY_PROGRAM = <?php echo json_encode($majorsByProgram, JSON_UNESCAPE
   if (goLogin) goLogin.addEventListener('click', ()=> setActive('login'));
 
   // default tab (kung galing Google, #register na yung hash)
-  const initial = (location.hash || '#login').replace('#','');
+  let initial = (location.hash || '').replace('#','');
+  if (!initial) {
+    initial = HAS_GOOGLE_PENDING ? 'register' : 'login';
+  }
   setActive(initial === 'register' ? 'register' : 'login');
+
 
   window.addEventListener('resize', () => {
     const isLogin = tabLogin.classList.contains('active');
@@ -382,59 +386,59 @@ const MAJORS_BY_PROGRAM = <?php echo json_encode($majorsByProgram, JSON_UNESCAPE
     refreshMajors(); // initial state
   }
 
-  // ---------- REGISTER HANDLER ----------
   const registerForm = document.getElementById('registerForm');
   const registerBtn  = document.getElementById('registerBtn');
-  registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    registerBtn.disabled = true;
 
-    const fd = new FormData(registerForm);
-    const email = String(fd.get('email') || '').trim().toLowerCase();
+  if (registerForm && registerBtn) {
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      registerBtn.disabled = true;
 
-    if (!emailAllowed(email)) {
-      await showDomainError();
-      registerBtn.disabled = false;
-      return;
-    }
-    fd.set('email', email);
+      const fd = new FormData(registerForm);
+      const email = String(fd.get('email') || '').trim().toLowerCase();
 
-    try {
-      const res = await fetch('register_student.php', { method: 'POST', body: fd });
-      const data = await res.json();
+      if (!emailAllowed(email)) {
+        await showDomainError();
+        registerBtn.disabled = false;
+        return;
+      }
+      fd.set('email', email);
 
-      if (data.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Registered!',
-          text: data.message || 'Please check your email to verify your account.',
-          confirmButtonColor: confirmColor
-        }).then(() => {
-          registerForm.reset();
-          refreshMajors(); // reset majors dropdown state
-          // OPTIONAL: i-clear ang google_pending kapag success
-          // (para hindi na prefilled sa next load)
-          window.location = 'login.php#login';
-        });
-      } else {
+      try {
+        const res = await fetch('register_student.php', { method: 'POST', body: fd });
+        const data = await res.json();
+
+        if (data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Registered!',
+            text: data.message || 'Please check your email to verify your account.',
+            confirmButtonColor: confirmColor
+          }).then(() => {
+            // clear form + balik sa login tab
+            window.location = 'login.php#login';
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Registration Failed',
+            text: data.message || 'Please try again.',
+            confirmButtonColor: confirmColor
+          });
+        }
+      } catch (err) {
         Swal.fire({
           icon: 'error',
-          title: 'Registration Failed',
-          text: data.message || 'Please try again.',
+          title: 'Network Error',
+          text: 'Please try again.',
           confirmButtonColor: confirmColor
         });
+      } finally {
+        registerBtn.disabled = false;
       }
-    } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Network Error',
-        text: 'Please try again.',
-        confirmButtonColor: confirmColor
-      });
-    } finally {
-      registerBtn.disabled = false;
-    }
-  });
+    });
+  }
+
 
   // ---------- LOGIN HANDLER ----------
   const loginForm = document.getElementById('loginForm');
