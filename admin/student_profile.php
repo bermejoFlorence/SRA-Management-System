@@ -56,6 +56,29 @@ $full_name = trim(
 $program_label = trim(($student['program_code'] ?? '') . ' – ' . ($student['program_name'] ?? ''));
 $yl_sec = 'Year ' . (int)$student['year_level'] . ' – ' . htmlspecialchars((string)$student['section']);
 
+/* ---------------- Validation status (pending / validated / invalid) ---------------- */
+$validation_status = 'pending';
+$sql = "SELECT status FROM assessment_validation WHERE student_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param('i', $student_id);
+$stmt->execute();
+$res = $stmt->get_result();
+if ($row = $res->fetch_assoc()) {
+    $validation_status = $row['status'] ?: 'pending';
+}
+$stmt->close();
+
+$status_label = 'Pending review';
+$status_class = 'status-pill-pending';
+
+if ($validation_status === 'validated') {
+    $status_label = 'Validated';
+    $status_class = 'status-pill-ok';
+} elseif ($validation_status === 'invalid') {
+    $status_label = 'Invalid';
+    $status_class = 'status-pill-bad';
+}
+
 /* ---------------- Attendance (Total days present) ----------------
    - Count DISTINCT DATE(started_at) from assessment_attempts
    - No month/year filtering: lifetime usage
@@ -75,12 +98,7 @@ if ($row = $res->fetch_assoc()) {
 }
 $stmt->close();
 
-/* ---------------- Story performance + tab logs ----------------
-   - One row per attempt_story
-   - Join assessment_attempts (for set_type, started_at)
-   - Join stories (for title)
-   - Join aggregated slt_tab_log (count of hidden events per attempt)
----------------------------------------------------------------- */
+/* ---------------- Story performance + tab logs ---------------- */
 $sql = "
     SELECT 
         ats.attempt_story_id,
@@ -154,6 +172,26 @@ function focusRating(int $hiddenCount): array {
     return ['label' => 'Frequent tab switching', 'class' => 'focus-low'];
 }
 
+/* ---------------- Flash message (optional) ---------------- */
+$msg_code = $_GET['msg'] ?? '';
+$flash_msg = '';
+$flash_class = '';
+
+switch ($msg_code) {
+    case 'validated':
+        $flash_msg = 'Student results successfully validated.';
+        $flash_class = 'flash-ok';
+        break;
+    case 'invalid':
+        $flash_msg = 'Student results marked as invalid.';
+        $flash_class = 'flash-warn';
+        break;
+    case 'reset_ok':
+        $flash_msg = 'All tests for this student were reset.';
+        $flash_class = 'flash-info';
+        break;
+}
+
 $PAGE_TITLE  = $full_name;
 $ACTIVE_MENU = 'prog_students';
 
@@ -163,17 +201,83 @@ require_once __DIR__ . '/includes/sidebar.php';
 <style>
 .student-progress-header {
   margin: 16px 16px 10px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
-.student-progress-header h1 {
+.student-header-left h1 {
   margin: 0;
   font-size: 24px;
   font-weight: 800;
   color: #064d00;
 }
-.student-progress-header p {
+.student-header-left p {
   margin: 2px 0;
   font-size: 13px;
   color: #4b5563;
+}
+
+/* status pill sa top-right */
+.student-header-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-label-text {
+  font-size: 12px;
+  color: #6b7280;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+.status-pill-pending {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #4b5563;
+}
+.status-pill-ok {
+  background: #dcfce7;
+  border-color: #16a34a;
+  color: #166534;
+}
+.status-pill-bad {
+  background: #fee2e2;
+  border-color: #b91c1c;
+  color: #991b1b;
+}
+
+/* flash message */
+.flash-banner {
+  margin: 4px 16px 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.flash-ok {
+  background: #ecfdf3;
+  color: #15803d;
+  border: 1px solid #16a34a;
+}
+.flash-warn {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fbbf24;
+}
+.flash-info {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #3b82f6;
 }
 
 .student-progress-card {
@@ -334,9 +438,12 @@ require_once __DIR__ . '/includes/sidebar.php';
   background: #fee2e2;
   color: #b91c1c;
 }
+
 @media (max-width: 900px) {
   .student-progress-header {
     margin: 12px 10px 6px;
+    flex-direction: column;
+    align-items: flex-start;
   }
   .student-progress-card {
     margin: 0 10px 18px;
@@ -352,15 +459,100 @@ require_once __DIR__ . '/includes/sidebar.php';
     align-items: flex-start;
   }
 }
+
+/* ---------- Confirmation modal ---------- */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+.confirm-overlay.show {
+  display: flex;
+}
+.confirm-dialog {
+  width: min(420px, 92vw);
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+.confirm-header {
+  padding: 10px 14px;
+  background: #064d00;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.confirm-header button {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 16px;
+}
+.confirm-body {
+  padding: 14px 16px 6px;
+  font-size: 13px;
+  color: #374151;
+}
+.confirm-footer {
+  padding: 10px 16px 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.confirm-btn {
+  padding: 7px 14px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+.confirm-btn-cancel {
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+.confirm-btn-primary {
+  background: #064d00;
+  color: #ffffff;
+}
+.confirm-btn-danger {
+  background: #b91c1c;
+  color: #ffffff;
+}
 </style>
 
 <div class="main-content">
 
   <div class="student-progress-header">
-    <h1><?php echo h($full_name); ?></h1>
-    <p><?php echo h($student['student_id_no']); ?> · <?php echo h($program_label); ?></p>
-    <p><?php echo h($yl_sec); ?></p>
+    <div class="student-header-left">
+      <h1><?php echo h($full_name); ?></h1>
+      <p><?php echo h($student['student_id_no']); ?> · <?php echo h($program_label); ?></p>
+      <p><?php echo h($yl_sec); ?></p>
+    </div>
+    <div class="student-header-status">
+      <span class="status-label-text">Overall status:</span>
+      <span class="status-pill <?php echo h($status_class); ?>">
+        <?php echo h($status_label); ?>
+      </span>
+    </div>
   </div>
+
+  <?php if ($flash_msg): ?>
+    <div class="flash-banner <?php echo h($flash_class); ?>">
+      <span><?php echo h($flash_msg); ?></span>
+    </div>
+  <?php endif; ?>
 
   <!-- Attendance + Admin Actions card -->
   <section class="student-progress-card">
@@ -381,27 +573,40 @@ require_once __DIR__ . '/includes/sidebar.php';
 
       <div class="attendance-actions" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
         <!-- Validate -->
-        <form method="post" action="student_validate.php" style="margin:0;">
+        <form method="post" action="student_validate.php" style="margin:0;" class="js-action-form">
           <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
-          <button type="submit" class="btn-small btn-validate">
+          <button type="button"
+                  class="btn-small btn-validate js-open-confirm"
+                  data-title="Validate Results"
+                  data-message="Are you sure you want to validate this student&rsquo;s assessment results? This will allow certificate printing if all requirements are met."
+                  data-btn="Yes, validate"
+                  data-style="primary">
             ✅ Validate Results
           </button>
         </form>
 
         <!-- Mark as Invalid -->
-        <form method="post" action="student_invalidate.php" style="margin:0;"
-              onsubmit="return confirm('Mark this student\'s assessment as INVALID? This will prevent certificate generation until revalidated.');">
+        <form method="post" action="student_invalidate.php" style="margin:0;" class="js-action-form">
           <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
-          <button type="submit" class="btn-small btn-invalidate">
+          <button type="button"
+                  class="btn-small btn-invalidate js-open-confirm"
+                  data-title="Mark as Invalid"
+                  data-message="Mark this student&rsquo;s assessment as INVALID? This will prevent certificate generation until you validate a new test run."
+                  data-btn="Yes, mark invalid"
+                  data-style="danger">
             ❌ Mark as Invalid
           </button>
         </form>
 
         <!-- Reset All Tests -->
-        <form method="post" action="student_reset.php" style="margin:0;"
-              onsubmit="return confirm('Reset ALL tests for this student and send them back to the beginning? This cannot be undone.');">
+        <form method="post" action="student_reset.php" style="margin:0;" class="js-action-form">
           <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
-          <button type="submit" class="btn-small btn-reset">
+          <button type="button"
+                  class="btn-small btn-reset js-open-confirm"
+                  data-title="Reset All Tests"
+                  data-message="Reset ALL tests for this student and send them back to the beginning? All existing scores, unlocks, and certificates will be removed. This cannot be undone."
+                  data-btn="Yes, reset all tests"
+                  data-style="danger">
             🔁 Reset All Tests
           </button>
         </form>
@@ -487,6 +692,94 @@ require_once __DIR__ . '/includes/sidebar.php';
     <?php endif; ?>
   </section>
 </div>
+
+<!-- Confirmation modal -->
+<div class="confirm-overlay" id="confirmOverlay" aria-hidden="true">
+  <div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="confirm-header">
+      <span id="confirmTitle">Confirm action</span>
+      <button type="button" id="confirmCloseTop" aria-label="Close">✕</button>
+    </div>
+    <div class="confirm-body">
+      <p id="confirmMessage"></p>
+    </div>
+    <div class="confirm-footer">
+      <button type="button" class="confirm-btn confirm-btn-cancel" id="confirmCancel">Cancel</button>
+      <button type="button" class="confirm-btn confirm-btn-primary" id="confirmOk">Proceed</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const overlay = document.getElementById('confirmOverlay');
+  const titleEl = document.getElementById('confirmTitle');
+  const msgEl   = document.getElementById('confirmMessage');
+  const btnOk   = document.getElementById('confirmOk');
+  const btnCancel = document.getElementById('confirmCancel');
+  const btnCloseTop = document.getElementById('confirmCloseTop');
+
+  let currentForm = null;
+
+  function openModal(form, opts){
+    currentForm = form;
+    titleEl.textContent = opts.title || 'Confirm action';
+    msgEl.innerHTML = opts.message || '';
+    btnOk.textContent = opts.buttonLabel || 'Proceed';
+
+    btnOk.classList.remove('confirm-btn-primary','confirm-btn-danger');
+    if (opts.style === 'danger') {
+      btnOk.classList.add('confirm-btn-danger');
+    } else {
+      btnOk.classList.add('confirm-btn-primary');
+    }
+
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden','false');
+  }
+
+  function closeModal(){
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden','true');
+    currentForm = null;
+  }
+
+  document.querySelectorAll('.js-open-confirm').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const form = btn.closest('form');
+      if (!form) return;
+      const opts = {
+        title: btn.getAttribute('data-title'),
+        message: btn.getAttribute('data-message'),
+        buttonLabel: btn.getAttribute('data-btn'),
+        style: btn.getAttribute('data-style') || 'primary'
+      };
+      openModal(form, opts);
+    });
+  });
+
+  btnOk.addEventListener('click', () => {
+    if (currentForm) {
+      currentForm.submit();
+    }
+  });
+
+  btnCancel.addEventListener('click', closeModal);
+  btnCloseTop.addEventListener('click', closeModal);
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      closeModal();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.classList.contains('show')) {
+      closeModal();
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
