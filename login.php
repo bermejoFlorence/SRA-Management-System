@@ -151,13 +151,6 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
 
           <?php else: ?>
             <!-- MAY google_pending → nakasign-in na sa Google, show email + form -->
-            <div class="google-bound">
-              <div class="google-info">
-                <div class="label">Signed in as</div>
-                <div class="email"><?php echo htmlspecialchars($googleEmail); ?></div>
-              </div>
-            </div>
-
             <p class="small-hint">
               Please complete your student details below to finish your registration.
             </p>
