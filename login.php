@@ -105,11 +105,23 @@ $res->free();
               <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password" />
             </label>
             <div class="buttons">
-              <button type="submit" class="btn login-btn" id="loginBtn">Login</button>
-            </div>
-            <p class="switch-hint">No account yet?
-              <a href="#" id="goRegister">Create one</a>
-            </p>
+  <button type="submit" class="btn login-btn" id="loginBtn">Login</button>
+</div>
+
+<div class="or-divider">
+  <span>or</span>
+</div>
+
+<div class="buttons">
+  <a href="google_login.php" class="btn login-google-btn">
+    Continue with Google (@cbsua.edu.ph)
+  </a>
+</div>
+
+<p class="switch-hint">No account yet?
+  <a href="#" id="goRegister">Create one</a>
+</p>
+
           </form>
         </div>
 
