@@ -10,7 +10,7 @@
 
 html, body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg);
 }
 html {
