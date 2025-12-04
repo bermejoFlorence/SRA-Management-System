@@ -79,10 +79,7 @@ if ($validation_status === 'validated') {
     $status_class = 'status-pill-bad';
 }
 
-/* ---------------- Attendance (Total days present) ----------------
-   - Count DISTINCT DATE(started_at) from assessment_attempts
-   - No month/year filtering: lifetime usage
-------------------------------------------------------------------- */
+/* ---------------- Attendance (Total days present) ---------------- */
 $present_days = 0;
 $sql = "
     SELECT COUNT(DISTINCT DATE(started_at)) AS present_days
@@ -172,23 +169,31 @@ function focusRating(int $hiddenCount): array {
     return ['label' => 'Frequent tab switching', 'class' => 'focus-low'];
 }
 
-/* ---------------- Flash message (optional) ---------------- */
+/* ---------------- SweetAlert config based on ?msg= ---------------- */
 $msg_code = $_GET['msg'] ?? '';
-$flash_msg = '';
-$flash_class = '';
+$swalConfig = null;
 
 switch ($msg_code) {
     case 'validated':
-        $flash_msg = 'Student results successfully validated.';
-        $flash_class = 'flash-ok';
+        $swalConfig = [
+            'icon'  => 'success',
+            'title' => 'Validated',
+            'text'  => 'Student results successfully validated.'
+        ];
         break;
     case 'invalid':
-        $flash_msg = 'Student results marked as invalid.';
-        $flash_class = 'flash-warn';
+        $swalConfig = [
+            'icon'  => 'warning',
+            'title' => 'Marked as invalid',
+            'text'  => 'Student results were marked as invalid.'
+        ];
         break;
     case 'reset_ok':
-        $flash_msg = 'All tests for this student were reset.';
-        $flash_class = 'flash-info';
+        $swalConfig = [
+            'icon'  => 'info',
+            'title' => 'Reset complete',
+            'text'  => 'All tests for this student were reset.'
+        ];
         break;
 }
 
@@ -208,8 +213,8 @@ require_once __DIR__ . '/includes/sidebar.php';
 }
 .student-header-left h1 {
   margin: 0;
-  font-size: 24px;
-  font-weight: 800;
+  font-size: 26px;
+  font-weight: 900;
   color: #064d00;
 }
 .student-header-left p {
@@ -218,25 +223,28 @@ require_once __DIR__ . '/includes/sidebar.php';
   color: #4b5563;
 }
 
-/* status pill sa top-right */
+/* status pill sa top-right (mas prominent) */
 .student-header-status {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .status-label-text {
-  font-size: 12px;
+  font-size: 13px;
   color: #6b7280;
+  font-weight: 600;
 }
 .status-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px;
+  padding: 6px 16px;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
   border: 1px solid transparent;
+  min-width: 110px;
+  text-align: center;
 }
 .status-pill-pending {
   background: #f9fafb;
@@ -252,32 +260,6 @@ require_once __DIR__ . '/includes/sidebar.php';
   background: #fee2e2;
   border-color: #b91c1c;
   color: #991b1b;
-}
-
-/* flash message */
-.flash-banner {
-  margin: 4px 16px 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.flash-ok {
-  background: #ecfdf3;
-  color: #15803d;
-  border: 1px solid #16a34a;
-}
-.flash-warn {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fbbf24;
-}
-.flash-info {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #3b82f6;
 }
 
 .student-progress-card {
@@ -548,12 +530,6 @@ require_once __DIR__ . '/includes/sidebar.php';
     </div>
   </div>
 
-  <?php if ($flash_msg): ?>
-    <div class="flash-banner <?php echo h($flash_class); ?>">
-      <span><?php echo h($flash_msg); ?></span>
-    </div>
-  <?php endif; ?>
-
   <!-- Attendance + Admin Actions card -->
   <section class="student-progress-card">
     <h2 style="margin:0 0 6px; font-size:16px; font-weight:700; color:#111827;">
@@ -710,6 +686,9 @@ require_once __DIR__ . '/includes/sidebar.php';
   </div>
 </div>
 
+<!-- SweetAlert2 (for success messages) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 (function(){
   const overlay = document.getElementById('confirmOverlay');
@@ -780,6 +759,17 @@ require_once __DIR__ . '/includes/sidebar.php';
   });
 })();
 </script>
+
+<?php if ($swalConfig): ?>
+<script>
+Swal.fire({
+  icon: '<?php echo h($swalConfig['icon']); ?>',
+  title: '<?php echo h($swalConfig['title']); ?>',
+  text: '<?php echo h($swalConfig['text']); ?>',
+  confirmButtonColor: '#064d00'
+});
+</script>
+<?php endif; ?>
 
 </body>
 </html>
