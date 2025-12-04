@@ -1,6 +1,8 @@
 <?php
 // login.php – Login / Register
 
+session_start(); // NEW: para magamit natin ang google_pending session
+
 require_once __DIR__ . '/db_connect.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset('utf8mb4');
@@ -39,6 +41,11 @@ while ($row = $res->fetch_assoc()) {
     ];
 }
 $res->free();
+
+// NEW: kunin kung may pending Google sign-in data
+$googlePending = $_SESSION['google_pending'] ?? null;
+$googleEmail   = $googlePending['email']         ?? '';
+$googlePhoto   = $googlePending['profile_photo'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -87,6 +94,7 @@ $res->free();
         <!-- LOGIN PANEL -->
         <div class="auth-panel" id="panelLogin" role="tabpanel" aria-labelledby="tabLogin">
           <h2 class="form-title">Login</h2>
+
           <form id="loginForm" class="form-stack" novalidate>
             <label>Email
               <input
@@ -104,9 +112,21 @@ $res->free();
             <label>Password
               <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password" />
             </label>
+
             <div class="buttons">
               <button type="submit" class="btn login-btn" id="loginBtn">Login</button>
             </div>
+
+            <div class="or-divider">
+              <span>or</span>
+            </div>
+
+            <div class="buttons">
+              <a href="google_login.php" class="btn login-google-btn">
+                Continue with Google (@cbsua.edu.ph)
+              </a>
+            </div>
+
             <p class="switch-hint">No account yet?
               <a href="#" id="goRegister">Create one</a>
             </p>
@@ -115,10 +135,33 @@ $res->free();
 
         <!-- REGISTER PANEL -->
         <div class="auth-panel" id="panelRegister" role="tabpanel" aria-labelledby="tabRegister">
-          <h2 class="form-title">Register Form</h2>
+          <h2 class="form-title">Register</h2>
+
+          <!-- Google button sa taas ng register form -->
+          <div class="buttons" style="margin-bottom:1rem;">
+            <a href="google_login.php" class="btn login-google-btn">
+              Continue with Google (@cbsua.edu.ph)
+            </a>
+          </div>
+
+          <?php if ($googlePending): ?>
+            <p class="small-hint">
+              We detected your Google account:
+              <strong><?php echo htmlspecialchars($googleEmail); ?></strong><br>
+              Please complete your student details below.
+            </p>
+          <?php else: ?>
+            <p class="small-hint">
+              You may also register using your CBSUA email and password.
+            </p>
+          <?php endif; ?>
 
           <form id="registerForm" class="register-form" novalidate>
-            <!-- grid ng fields -->
+            <?php if ($googlePending): ?>
+              <!-- Flag para alam ni register_student.php na galing Google -->
+              <input type="hidden" name="google_mode" value="1">
+            <?php endif; ?>
+
             <div class="field-grid">
               <label>Firstname
                 <input type="text" name="firstname" required autocomplete="given-name"/>
@@ -151,6 +194,8 @@ $res->free();
                   pattern="^[a-zA-Z0-9._%+\-]+@cbsua\.edu\.ph$"
                   title="Use your @cbsua.edu.ph email"
                   oninput="this.value=this.value.toLowerCase()"
+                  value="<?php echo htmlspecialchars($googleEmail); ?>"
+                  <?php echo $googlePending ? 'readonly' : ''; ?>
                 />
               </label>
 
@@ -262,6 +307,7 @@ const MAJORS_BY_PROGRAM = <?php echo json_encode($majorsByProgram, JSON_UNESCAPE
   if (goRegister) goRegister.addEventListener('click', (e)=>{ e.preventDefault(); setActive('register'); });
   if (goLogin) goLogin.addEventListener('click', ()=> setActive('login'));
 
+  // default tab (kung galing Google, #register na yung hash)
   const initial = (location.hash || '#login').replace('#','');
   setActive(initial === 'register' ? 'register' : 'login');
 
@@ -360,7 +406,9 @@ const MAJORS_BY_PROGRAM = <?php echo json_encode($majorsByProgram, JSON_UNESCAPE
         }).then(() => {
           registerForm.reset();
           refreshMajors(); // reset majors dropdown state
-          document.getElementById('tabLogin').click();
+          // OPTIONAL: i-clear ang google_pending kapag success
+          // (para hindi na prefilled sa next load)
+          window.location = 'login.php#login';
         });
       } else {
         Swal.fire({
