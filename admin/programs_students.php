@@ -457,10 +457,31 @@ $res->free();
         &times;
       </button>
     </div>
-<form id="addCourseForm" class="modal-body">
+          <form id="addCourseForm" class="modal-body">
   <p class="modal-text">
     Create a new course/program students can register under. You can add majors later.
   </p>
+
+  <!-- 🔽 DROPDOWN: existing codes + create new -->
+  <div class="form-row">
+    <label for="program_picker">Course Code / Program</label>
+    <select id="program_picker" name="program_picker">
+      <option value="__new" selected>+ Create new program</option>
+      <?php foreach ($courses as $c): ?>
+        <option
+          value="<?php echo (int)$c['program_id']; ?>"
+          data-code="<?php echo htmlspecialchars($c['program_code'], ENT_QUOTES); ?>"
+          data-title="<?php echo htmlspecialchars($c['program_name'], ENT_QUOTES); ?>"
+        >
+          <?php echo htmlspecialchars($c['program_code'] . ' – ' . $c['program_name']); ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+  </div>
+
+  <!-- hidden flags para alam ng backend kung new o existing -->
+  <input type="hidden" id="course_mode" name="course_mode" value="new">
+  <input type="hidden" id="existing_program_id" name="existing_program_id" value="">
 
   <div class="form-row">
     <label for="program_code">Course Code <span class="req">*</span></label>
@@ -476,7 +497,7 @@ $res->free();
            maxlength="191" required />
   </div>
 
-  <!-- NEW: optional first major -->
+  <!-- optional first major -->
   <div class="form-row">
     <label for="first_major">Major <span style="font-weight:400; font-size:12px; color:#6b7280;">(optional)</span></label>
     <input type="text" id="first_major" name="first_major"
@@ -497,6 +518,7 @@ $res->free();
   </div>
 </form>
 
+
   </div>
 </div>
 
@@ -509,86 +531,157 @@ $res->free();
   const form      = document.getElementById('addCourseForm');
   const btnSave   = document.getElementById('addCourseSave');
 
+  // bagong refs para sa dropdown + inputs
+  const picker          = document.getElementById('program_picker');
+  const codeInput       = document.getElementById('program_code');
+  const nameInput       = document.getElementById('program_name');
+  const modeInput       = document.getElementById('course_mode');
+  const existingIdInput = document.getElementById('existing_program_id');
+
   if (!btnOpen || !backdrop || !form) return;
+
+  // 🔁 apply state base sa dropdown (new vs existing)
+  function applyPickerState() {
+    if (!picker || !codeInput || !nameInput || !modeInput || !existingIdInput) return;
+
+    const v = picker.value;
+
+    if (v === '__new') {
+      // ➕ Create new program
+      modeInput.value       = 'new';
+      existingIdInput.value = '';
+
+      codeInput.readOnly = false;
+      nameInput.readOnly = false;
+
+      codeInput.required = true;
+      nameInput.required = true;
+
+      // placeholders for new
+      codeInput.placeholder = 'e.g. BSED, BSIT';
+      nameInput.placeholder = 'e.g. Bachelor of Secondary Education';
+
+      // optional: clear kapag balik sa new
+      codeInput.value = '';
+      nameInput.value = '';
+    } else {
+      // ✅ Existing program: auto-fill code + title
+      modeInput.value       = 'existing';
+      existingIdInput.value = v;
+
+      const opt   = picker.options[picker.selectedIndex];
+      const code  = opt.getAttribute('data-code')  || '';
+      const title = opt.getAttribute('data-title') || '';
+
+      codeInput.value = code;
+      nameInput.value = title;
+
+      // lock para di mabago master data
+      codeInput.readOnly = true;
+      nameInput.readOnly = true;
+
+      // hindi na kailangang required (existing na)
+      codeInput.required = false;
+      nameInput.required = false;
+
+      codeInput.placeholder = '';
+      nameInput.placeholder = '';
+    }
+  }
 
   const openModal = () => {
     backdrop.classList.add('show');
-    const codeInput = document.getElementById('program_code');
-    if (codeInput) codeInput.focus();
+    // reset form + balik sa "create new"
+    if (form) form.reset();
+    if (picker) picker.value = '__new';
+    applyPickerState();
+
+    if (codeInput && !codeInput.readOnly) {
+      codeInput.focus();
+    }
   };
 
   const closeModal = () => {
     backdrop.classList.remove('show');
-    form.reset();
+    if (form) form.reset();
+    if (picker) picker.value = '__new';
+    applyPickerState();
   };
 
   btnOpen.addEventListener('click', openModal);
   btnClose.addEventListener('click', closeModal);
   btnCancel.addEventListener('click', closeModal);
 
+  if (picker) {
+    picker.addEventListener('change', applyPickerState);
+  }
+  // initial state
+  applyPickerState();
+
   // close when clicking outside dialog
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) closeModal();
   });
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  btnSave.disabled = true;
+  // submit handler
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    btnSave.disabled = true;
 
-  const fd = new FormData(form);
+    const fd = new FormData(form);
 
-  try {
-    const res  = await fetch('ajax_add_program.php', { method: 'POST', body: fd });
-    const data = await res.json();
+    try {
+      const res  = await fetch('ajax_add_program.php', { method: 'POST', body: fd });
+      const data = await res.json();
 
-    if (data.success) {
-      // ✨ isara muna ang modal para walang nakaharang sa Swal
-      closeModal();
+      if (data.success) {
+        closeModal();
 
-      if (window.Swal) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Course added',
-          text: data.message || 'The course has been created.',
-          confirmButtonColor: '#1e8fa2'
-        }).then(() => {
-          window.location.reload();   // reload page para lumabas sa table
-        });
+        if (window.Swal) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Course saved',
+            text: data.message || 'The course/major has been saved.',
+            confirmButtonColor: '#1e8fa2'
+          }).then(() => {
+            window.location.reload();
+          });
+        } else {
+          alert(data.message || 'Saved.');
+          window.location.reload();
+        }
       } else {
-        alert(data.message || 'Course added.');
-        window.location.reload();
+        if (window.Swal) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Unable to save',
+            text: data.message || 'Please check the form and try again.',
+            confirmButtonColor: '#1e8fa2'
+          });
+        } else {
+          alert(data.message || 'Unable to save.');
+        }
       }
-    } else {
+    } catch (err) {
+      console.error(err);
       if (window.Swal) {
         Swal.fire({
           icon: 'error',
-          title: 'Unable to add',
-          text: data.message || 'Please check the form and try again.',
+          title: 'Network error',
+          text: 'Please try again.',
           confirmButtonColor: '#1e8fa2'
         });
       } else {
-        alert(data.message || 'Unable to add course.');
+        alert('Network error. Please try again.');
       }
+    } finally {
+      btnSave.disabled = false;
     }
-  } catch (err) {
-    console.error(err);
-    if (window.Swal) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Network error',
-        text: 'Please try again.',
-        confirmButtonColor: '#1e8fa2'
-      });
-    } else {
-      alert('Network error. Please try again.');
-    }
-  } finally {
-    btnSave.disabled = false;
-  }
-});
+  });
 
 })();
 </script>
+
 
 </body>
 </html>
