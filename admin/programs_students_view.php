@@ -17,9 +17,10 @@ if ($program_id <= 0) {
     exit;
 }
 
-$year_filter    = isset($_GET['year_level']) && $_GET['year_level'] !== '' ? (int)$_GET['year_level'] : null;
-$section_filter = trim($_GET['section'] ?? '');
-$search_query   = trim($_GET['q'] ?? '');
+$school_year_filter = trim($_GET['school_year'] ?? '');
+$year_filter        = isset($_GET['year_level']) && $_GET['year_level'] !== '' ? (int)$_GET['year_level'] : null;
+$section_filter     = trim($_GET['section'] ?? '');
+$search_query       = trim($_GET['q'] ?? '');
 
 // ---- Load program info ----
 $stmt = $conn->prepare("SELECT program_code, program_name FROM sra_programs WHERE program_id = ?");
@@ -35,7 +36,23 @@ $stmt->close();
 
 $course_title = trim($program_code . ' – ' . $program_name);
 
-// ---- Load filter options (year levels & sections for this program) ----
+// ---- Load filter options (school year, year levels & sections for this program) ----
+$school_years = [];
+$resSy = $conn->prepare("
+    SELECT DISTINCT school_year
+    FROM users
+    WHERE role = 'student' AND program_id = ?
+      AND school_year <> ''
+    ORDER BY school_year DESC
+");
+$resSy->bind_param('i', $program_id);
+$resSy->execute();
+$outSy = $resSy->get_result();
+while ($row = $outSy->fetch_assoc()) {
+    $school_years[] = $row['school_year'];
+}
+$resSy->close();
+
 $year_levels = [];
 $res = $conn->prepare("
     SELECT DISTINCT year_level 
@@ -121,14 +138,20 @@ $sql = "
 $params = [$program_id];
 $types  = 'i';
 
+if ($school_year_filter !== '') {
+    $sql     .= " AND u.school_year = ? ";
+    $params[] = $school_year_filter;
+    $types   .= 's';
+}
+
 if ($year_filter !== null) {
-    $sql   .= " AND u.year_level = ? ";
+    $sql     .= " AND u.year_level = ? ";
     $params[] = $year_filter;
     $types   .= 'i';
 }
 
 if ($section_filter !== '') {
-    $sql   .= " AND u.section = ? ";
+    $sql     .= " AND u.section = ? ";
     $params[] = $section_filter;
     $types   .= 's';
 }
@@ -192,20 +215,26 @@ require_once __DIR__ . '/includes/sidebar.php';
   color: #4b5563;
 }
 
-/* back button (right, kapantay ng title) */
+/* back button - mas obvious na pill button */
 .btn-back {
   border-radius: 999px;
-  padding: 8px 16px;
-  border: 1px solid rgba(15,23,42,0.15);
-  background: #ffffff;
+  padding: 8px 18px;
+  border: none;
+  background: #064d00;
+  color: #ffffff;
   font-size: 14px;
   font-weight: 600;
-  color: #111827;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 10px 24px rgba(6, 77, 0, 0.35);
+}
+.btn-back span.icon {
+  font-size: 16px;
 }
 .btn-back:hover {
-  background: #f3f4f6;
+  filter: brightness(1.05);
 }
 
 /* row 2: filters + export (top-right) */
@@ -281,7 +310,7 @@ require_once __DIR__ . '/includes/sidebar.php';
   border-right: 1px solid #e5e7eb;
 }
 
-/* alisin lang yung right border sa last column para malinis */
+/* alisin right border sa last col */
 .course-students-table th:last-child,
 .course-students-table td:last-child {
   border-right: none;
@@ -293,7 +322,7 @@ require_once __DIR__ . '/includes/sidebar.php';
   border-bottom: none;
 }
 
-/* mas makapal ang header font */
+/* header font */
 .course-students-table th {
   color: #064d00;
   font-weight: 800;
@@ -421,13 +450,25 @@ require_once __DIR__ . '/includes/sidebar.php';
       <button type="button"
               class="btn-back"
               onclick="window.location.href='programs_students.php';">
-        ← Back
+        <span class="icon">←</span>
+        <span>Back</span>
       </button>
     </div>
 
     <!-- Row 2: filters + Export PDF (top-right) -->
     <form class="course-header-filters" method="get" action="programs_students_view.php">
       <input type="hidden" name="program_id" value="<?php echo (int)$program_id; ?>"/>
+
+      <!-- NEW: School Year filter -->
+      <select name="school_year">
+        <option value="">All School Years</option>
+        <?php foreach ($school_years as $sy): ?>
+          <option value="<?php echo htmlspecialchars($sy); ?>"
+            <?php echo ($school_year_filter === $sy ? 'selected' : ''); ?>>
+            <?php echo htmlspecialchars($sy); ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
 
       <select name="year_level">
         <option value="">All Year Levels</option>
@@ -457,6 +498,9 @@ require_once __DIR__ . '/includes/sidebar.php';
       <?php
         // build export URL na may same filters
         $exportUrl = 'programs_students_export_pdf.php?program_id=' . (int)$program_id;
+        if ($school_year_filter !== '') {
+            $exportUrl .= '&school_year=' . urlencode($school_year_filter);
+        }
         if ($year_filter !== null) {
             $exportUrl .= '&year_level=' . (int)$year_filter;
         }
