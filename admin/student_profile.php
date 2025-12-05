@@ -27,6 +27,7 @@ $sql = "
         u.ext_name,
         u.year_level,
         u.section,
+        u.program_id,
         p.program_code,
         p.program_name
     FROM users u
@@ -55,6 +56,10 @@ $full_name = trim(
 
 $program_label = trim(($student['program_code'] ?? '') . ' – ' . ($student['program_name'] ?? ''));
 $yl_sec = 'Year ' . (int)$student['year_level'] . ' – ' . htmlspecialchars((string)$student['section']);
+$program_id_for_back = (int)($student['program_id'] ?? 0);
+$backUrl = $program_id_for_back > 0
+    ? "programs_students_view.php?program_id={$program_id_for_back}"
+    : "programs_students.php";
 
 /* ---------------- Validation status (pending / validated / invalid) ---------------- */
 $validation_status = 'pending';
@@ -223,7 +228,37 @@ require_once __DIR__ . '/includes/sidebar.php';
   color: #4b5563;
 }
 
-/* status pill sa top-right (mas prominent) */
+/* right side: back button + status */
+.student-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* back button (same look as list page) */
+.btn-back {
+  border-radius: 999px;
+  padding: 7px 16px;
+  border: none;
+  background: #064d00;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 10px 24px rgba(6, 77, 0, 0.35);
+}
+.btn-back span.icon {
+  font-size: 16px;
+}
+.btn-back:hover {
+  filter: brightness(1.05);
+}
+
+/* status pill sa top-right */
 .student-header-status {
   display: flex;
   align-items: center;
@@ -427,6 +462,9 @@ require_once __DIR__ . '/includes/sidebar.php';
     flex-direction: column;
     align-items: flex-start;
   }
+  .student-header-right {
+    align-items: flex-start;
+  }
   .student-progress-card {
     margin: 0 10px 18px;
     padding: 14px 12px 18px;
@@ -522,11 +560,23 @@ require_once __DIR__ . '/includes/sidebar.php';
       <p><?php echo h($student['student_id_no']); ?> · <?php echo h($program_label); ?></p>
       <p><?php echo h($yl_sec); ?></p>
     </div>
-    <div class="student-header-status">
-      <span class="status-label-text">Overall status:</span>
-      <span class="status-pill <?php echo h($status_class); ?>">
-        <?php echo h($status_label); ?>
-      </span>
+
+    <div class="student-header-right">
+      <!-- BACK BUTTON -->
+      <button type="button"
+              class="btn-back"
+              onclick="window.location.href='<?php echo h($backUrl); ?>';">
+        <span class="icon">←</span>
+        <span>Back</span>
+      </button>
+
+      <!-- STATUS PILL -->
+      <div class="student-header-status">
+        <span class="status-label-text">Overall status:</span>
+        <span class="status-pill <?php echo h($status_class); ?>">
+          <?php echo h($status_label); ?>
+        </span>
+      </div>
     </div>
   </div>
 
@@ -574,17 +624,18 @@ require_once __DIR__ . '/includes/sidebar.php';
           </button>
         </form>
 
+        <!-- Reset all tests -->
         <form method="post" action="student_reset.php" style="margin:0;" class="js-action-form">
-  <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
-  <button type="button"
-          class="btn-small btn-reset js-open-confirm"
-          data-title="Reset All Tests"
-          data-message="Reset ALL tests for this student and send them back to the beginning? All existing scores, unlocks, and certificates will be removed. This cannot be undone."
-          data-btn="Yes, reset all tests"
-          data-style="danger">
-    🔁 Reset All Tests
-  </button>
-</form>
+          <input type="hidden" name="user_id" value="<?php echo (int)$student_id; ?>">
+          <button type="button"
+                  class="btn-small btn-reset js-open-confirm"
+                  data-title="Reset All Tests"
+                  data-message="Reset ALL tests for this student and send them back to the beginning? All existing scores, unlocks, and certificates will be removed. This cannot be undone."
+                  data-btn="Yes, reset all tests"
+                  data-style="danger">
+            🔁 Reset All Tests
+          </button>
+        </form>
       </div>
     </div>
   </section>
