@@ -30,8 +30,17 @@ $cssVer = file_exists($cssFs) ? filemtime($cssFs) : time();
       <i class="fas fa-bars"></i>
     </button>
     <div style="margin-left:auto"></div>
-    <span class="user-name"><?php echo htmlspecialchars($_SESSION['full_name'] ?? 'Student'); ?></span>
-    <div class="user-icon"><img src="assets/user.png" alt="User"></div>
+   <?php
+  $fullName    = $_SESSION['full_name']      ?? 'Student';
+  $profilePhoto= $_SESSION['profile_photo']  ?? ''; // galing sa login_process
+  // fallback sa default icon kung wala sa DB
+  $profileSrc  = $profilePhoto !== '' ? $profilePhoto : 'assets/user.png';
+?>
+    <span class="user-name"><?php echo htmlspecialchars($fullName); ?></span>
+    <div class="user-icon">
+      <img src="<?php echo htmlspecialchars($profileSrc); ?>" alt="User profile">
+    </div>
+
   </div>
 
   <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
