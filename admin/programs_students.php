@@ -565,18 +565,6 @@ $res->free();
         </div>
       </div>
 
-      <!-- MAJOR (works for both modes) -->
-      <div class="form-row">
-        <label for="first_major">
-          Major
-          <span style="font-weight:400; font-size:12px; color:#6b7280;">
-            (optional – will be added to selected or new course)
-          </span>
-        </label>
-        <input type="text" id="first_major" name="first_major"
-               placeholder="e.g. Mathematics, English, Electronics" />
-      </div>
-
       <div class="modal-footer">
         <button type="button" class="btn btn-ghost" id="addCourseCancel">Cancel</button>
         <button type="submit" class="btn btn-accent pill" id="addCourseSave">Save</button>
