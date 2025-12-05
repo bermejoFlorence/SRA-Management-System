@@ -7,6 +7,12 @@ require_once __DIR__ . '/db_connect.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $conn->set_charset('utf8mb4');
 
+date_default_timezone_set('Asia/Manila'); // optional pero ok ilagay
+$currentYear = (int)date('Y');
+$syOptions = [
+    ($currentYear - 1) . '-' . $currentYear,
+    $currentYear . '-' . ($currentYear + 1),
+];
 // ---- Load active courses/programs ----
 $programs = [];
 $majorsByProgram = [];
@@ -232,12 +238,32 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
                 </label>
 
                 <label>Section
-                  <input type="text" name="section" required />
-                </label>
+  <select name="section" id="sectionSelect" required>
+    <option value="">Select section</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+    <option value="C">C</option>
+    <option value="D">D</option>
+    <option value="E">E</option>
+    <option value="F">F</option>
+    <option value="G">G</option>
+    <option value="H">H</option>
+    <option value="I">I</option>
+    <option value="J">J</option>
+  </select>
+</label>
 
-                <label>School Year
-                  <input type="text" name="school_year" required />
-                </label>
+<label>School Year
+  <select name="school_year" id="schoolYearSelect" required>
+    <option value="">Select school year</option>
+    <?php foreach ($syOptions as $sy): ?>
+      <option value="<?php echo htmlspecialchars($sy); ?>">
+        <?php echo htmlspecialchars($sy); ?>
+      </option>
+    <?php endforeach; ?>
+  </select>
+</label>
+
               </div>
 
               <div class="form-actions">
