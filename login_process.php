@@ -23,8 +23,15 @@ if (!preg_match('/^[a-z0-9._%+\-]+@cbsua\.edu\.ph$/', $email)) {
   jexit(false, 'Only @cbsua.edu.ph emails are allowed.');
 }
 
-$stmt = $conn->prepare("SELECT user_id, email, password_hash, role, first_name, last_name, status
-                        FROM users WHERE email = ? LIMIT 1");
+$stmt = $conn->prepare("
+  SELECT user_id, email, password_hash, role,
+         first_name, last_name, status,
+         profile_photo
+  FROM users
+  WHERE email = ?
+  LIMIT 1
+");
+
 if (!$stmt) jexit(false, 'DB error: '.$conn->error);
 $stmt->bind_param('s', $email);
 $stmt->execute();
@@ -55,6 +62,7 @@ $_SESSION['email']     = $user['email'];
 $_SESSION['role']      = $user['role'];
 $_SESSION['first_name']= $user['first_name'];
 $_SESSION['full_name'] = $user['first_name'].' '.$user['last_name'];
+$_SESSION['profile_photo'] = $user['profile_photo'] ?? null;
 
 // Update last login
 $upd = $conn->prepare("UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE user_id = ? LIMIT 1");

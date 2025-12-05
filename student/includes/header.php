@@ -31,10 +31,9 @@ $cssVer = file_exists($cssFs) ? filemtime($cssFs) : time();
     </button>
     <div style="margin-left:auto"></div>
    <?php
-  $fullName    = $_SESSION['full_name']      ?? 'Student';
-  $profilePhoto= $_SESSION['profile_photo']  ?? ''; // galing sa login_process
-  // fallback sa default icon kung wala sa DB
-  $profileSrc  = $profilePhoto !== '' ? $profilePhoto : 'assets/user.png';
+  $fullName     = $_SESSION['full_name']     ?? 'Student';
+  $profilePhoto = $_SESSION['profile_photo'] ?? '';
+  $profileSrc   = $profilePhoto !== '' ? $profilePhoto : 'assets/user.png';
 ?>
     <span class="user-name"><?php echo htmlspecialchars($fullName); ?></span>
     <div class="user-icon">
