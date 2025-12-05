@@ -494,19 +494,67 @@ $res->free();
 
       <!-- NEW COURSE FIELDS -->
       <div class="group-new-course">
-        <div class="form-row">
-          <label for="program_code">Course Code <span class="req">*</span></label>
-          <input type="text" id="program_code" name="program_code"
-                 placeholder="e.g. BSED, BSIT"
-                 maxlength="20" />
-        </div>
+        <form id="addCourseForm" class="modal-body">
+  <p class="modal-text">
+    Create a new course/program students can register under. You can add majors later.
+  </p>
 
-        <div class="form-row">
-          <label for="program_name">Course Title <span class="req">*</span></label>
-          <input type="text" id="program_name" name="program_name"
-                 placeholder="e.g. Bachelor of Secondary Education"
-                 maxlength="191" />
-        </div>
+  <!-- 🔽 NEW: Program picker (dropdown) -->
+  <div class="form-row">
+    <label for="program_picker">Course / Program</label>
+    <select id="program_picker" name="program_picker">
+      <option value="__new" selected>+ Create new program</option>
+      <?php foreach ($courses as $c): ?>
+        <option
+          value="<?php echo (int)$c['program_id']; ?>"
+          data-code="<?php echo htmlspecialchars($c['program_code'], ENT_QUOTES); ?>"
+          data-title="<?php echo htmlspecialchars($c['program_name'], ENT_QUOTES); ?>"
+        >
+          <?php echo htmlspecialchars($c['program_code'] . ' – ' . $c['program_name']); ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+  </div>
+
+  <!-- 🔁 HIDDEN: para alam ng backend kung new o existing -->
+  <input type="hidden" id="course_mode" name="course_mode" value="new">
+  <input type="hidden" id="existing_program_id" name="existing_program_id" value="">
+
+  <div class="form-row">
+    <label for="program_code">Course Code <span class="req">*</span></label>
+    <input type="text" id="program_code" name="program_code"
+           placeholder="e.g. BSED, BSIT"
+           maxlength="20" required />
+  </div>
+
+  <div class="form-row">
+    <label for="program_name">Course Title <span class="req">*</span></label>
+    <input type="text" id="program_name" name="program_name"
+           placeholder="e.g. Bachelor of Secondary Education"
+           maxlength="191" required />
+  </div>
+
+  <!-- existing Major + Status fields mo, unchanged -->
+  <div class="form-row">
+    <label for="first_major">Major <span style="font-weight:400; font-size:12px; color:#6b7280;">(optional)</span></label>
+    <input type="text" id="first_major" name="first_major"
+           placeholder="e.g. Mathematics, English, Electronics" />
+  </div>
+
+  <div class="form-row">
+    <label for="status">Status</label>
+    <select id="status" name="status">
+      <option value="active" selected>Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-ghost" id="addCourseCancel">Cancel</button>
+    <button type="submit" class="btn btn-accent pill" id="addCourseSave">Save Course</button>
+  </div>
+</form>
+
 
         <div class="form-row">
           <label for="status">Status</label>
@@ -595,6 +643,57 @@ $res->free();
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) closeModal();
   });
+  const picker          = document.getElementById('program_picker');
+  const codeInput       = document.getElementById('program_code');
+  const nameInput       = document.getElementById('program_name');
+  const modeInput       = document.getElementById('course_mode');
+  const existingIdInput = document.getElementById('existing_program_id');
+
+  function applyPickerState() {
+    if (!picker) return;
+    const v = picker.value;
+
+    if (v === '__new') {
+      // ➕ Create new program
+      modeInput.value       = 'new';
+      existingIdInput.value = '';
+
+      codeInput.readOnly = false;
+      nameInput.readOnly = false;
+
+      codeInput.required = true;
+      nameInput.required = true;
+
+      // optional: clear inputs pag nag-switch back to new
+      // codeInput.value = '';
+      // nameInput.value = '';
+    } else {
+      // ✅ Existing program: auto-fill code + title
+      modeInput.value       = 'existing';
+      existingIdInput.value = v;
+
+      const opt   = picker.options[picker.selectedIndex];
+      const code  = opt.getAttribute('data-code')  || '';
+      const title = opt.getAttribute('data-title') || '';
+
+      codeInput.value = code;
+      nameInput.value = title;
+
+      // lock fields so hindi ma-edit ang master data
+      codeInput.readOnly = true;
+      nameInput.readOnly = true;
+
+      // hindi na required as user is only adding a major
+      codeInput.required = false;
+      nameInput.required = false;
+    }
+  }
+
+  if (picker && codeInput && nameInput && modeInput && existingIdInput) {
+    picker.addEventListener('change', applyPickerState);
+    // initial state (Create new)
+    applyPickerState();
+  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
