@@ -555,22 +555,6 @@ $res->free();
   </div>
 </form>
 
-
-        <div class="form-row">
-          <label for="status">Status</label>
-          <select id="status" name="status">
-            <option value="active" selected>Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-ghost" id="addCourseCancel">Cancel</button>
-        <button type="submit" class="btn btn-accent pill" id="addCourseSave">Save</button>
-      </div>
-    </form>
-
   </div>
 </div>
 
