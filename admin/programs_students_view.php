@@ -17,7 +17,7 @@ if ($program_id <= 0) {
     exit;
 }
 
-$year_filter   = isset($_GET['year_level']) && $_GET['year_level'] !== '' ? (int)$_GET['year_level'] : null;
+$year_filter    = isset($_GET['year_level']) && $_GET['year_level'] !== '' ? (int)$_GET['year_level'] : null;
 $section_filter = trim($_GET['section'] ?? '');
 $search_query   = trim($_GET['q'] ?? '');
 
@@ -95,6 +95,7 @@ $sub_rb = "
       AND status <> 'invalidated'
     GROUP BY student_id
 ";
+
 // ---- Main students query with dynamic filters ----
 $sql = "
     SELECT 
@@ -162,12 +163,20 @@ require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/includes/sidebar.php';
 ?>
 <style>
+/* ====== HEADER LAYOUT ====== */
 .course-header-bar {
+  margin: 16px 16px 10px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* row 1: title + back button */
+.course-header-top {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin: 16px 16px 10px;
 }
 
 .course-header-bar h1 {
@@ -183,6 +192,23 @@ require_once __DIR__ . '/includes/sidebar.php';
   color: #4b5563;
 }
 
+/* back button (right, kapantay ng title) */
+.btn-back {
+  border-radius: 999px;
+  padding: 8px 16px;
+  border: 1px solid rgba(15,23,42,0.15);
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+}
+.btn-back:hover {
+  background: #f3f4f6;
+}
+
+/* row 2: filters + export (top-right) */
 .course-header-filters {
   display: flex;
   flex-wrap: wrap;
@@ -223,9 +249,10 @@ require_once __DIR__ . '/includes/sidebar.php';
   background: #ffffff;
   border: 1px solid #d1d5db;
   color: #111827;
+  text-decoration: none;
 }
 
-/* card + table */
+/* ====== CARD + TABLE ====== */
 .course-students-card {
   background: #ffffff;
   border-radius: 24px;
@@ -244,11 +271,26 @@ require_once __DIR__ . '/includes/sidebar.php';
   border: 1px solid #e5e7eb; /* outer border */
 }
 
+/* lines between cells */
 .course-students-table th,
 .course-students-table td {
   padding: 10px 12px;
   font-size: 13px;
   vertical-align: middle;
+  border-bottom: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+}
+
+/* alisin lang yung right border sa last column para malinis */
+.course-students-table th:last-child,
+.course-students-table td:last-child {
+  border-right: none;
+}
+
+/* alisin bottom border sa last row */
+.course-students-table tbody tr:last-child th,
+.course-students-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 /* mas makapal ang header font */
@@ -258,11 +300,9 @@ require_once __DIR__ . '/includes/sidebar.php';
   letter-spacing: 0.02em;
 }
 
-/* medyo makapal din ang body text */
 .course-students-table td {
   font-weight: 500;
 }
-
 
 .course-students-table thead tr:first-child {
   background: #f4f8f0;
@@ -270,12 +310,6 @@ require_once __DIR__ . '/includes/sidebar.php';
 
 .course-students-table thead tr:nth-child(2) {
   background: #ecf4e6;
-}
-
-.course-students-table th {
-  color: #064d00;
-  font-weight: 700;
-  text-align: left;
 }
 
 .course-students-table th.center,
@@ -340,57 +374,58 @@ require_once __DIR__ . '/includes/sidebar.php';
   filter: brightness(0.96);
 }
 
+/* ====== RESPONSIVE ====== */
 @media (max-width: 900px) {
   .course-header-bar {
-    flex-direction: column;
-    align-items: flex-start;
     margin: 12px 10px 6px;
   }
+
+  .course-header-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .course-header-filters {
+    justify-content: flex-start;
+  }
+
   .course-students-card {
     margin: 0 10px 18px;
     padding: 14px 12px 18px;
   }
+
   .course-students-table th,
   .course-students-table td {
     padding: 8px 8px;
     font-size: 12px;
   }
 }
-/* lines between cells */
-.course-students-table th,
-.course-students-table td {
-  padding: 10px 12px;
-  font-size: 13px;
-  vertical-align: middle;
-  border-bottom: 1px solid #e5e7eb;
-  border-right: 1px solid #e5e7eb;
-}
-
-/* alisin lang yung right border sa last column para malinis */
-.course-students-table th:last-child,
-.course-students-table td:last-child {
-  border-right: none;
-}
-
-/* alisin bottom border sa last row */
-.course-students-table tbody tr:last-child th,
-.course-students-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
 </style>
 
 <div class="main-content">
 
-  <!-- Top bar: course title + filters -->
+  <!-- HEADER AREA -->
   <div class="course-header-bar">
-    <div>
-      <h1><?php echo htmlspecialchars($course_title); ?></h1>
-      <p class="course-subtitle">
-        Students enrolled in this course and their SRA assessment results.
-      </p>
+
+    <!-- Row 1: title + back button -->
+    <div class="course-header-top">
+      <div>
+        <h1><?php echo htmlspecialchars($course_title); ?></h1>
+        <p class="course-subtitle">
+          Students enrolled in this course and their SRA assessment results.
+        </p>
+      </div>
+
+      <!-- Back button to list page -->
+      <button type="button"
+              class="btn-back"
+              onclick="window.location.href='programs_students.php';">
+        ← Back
+      </button>
     </div>
 
+    <!-- Row 2: filters + Export PDF (top-right) -->
     <form class="course-header-filters" method="get" action="programs_students_view.php">
       <input type="hidden" name="program_id" value="<?php echo (int)$program_id; ?>"/>
 
@@ -412,28 +447,31 @@ require_once __DIR__ . '/includes/sidebar.php';
         <?php endforeach; ?>
       </select>
 
-      <input type="text" name="q" placeholder="Search student..." value="<?php echo htmlspecialchars($search_query); ?>"/>
+      <input type="text"
+             name="q"
+             placeholder="Search student..."
+             value="<?php echo htmlspecialchars($search_query); ?>"/>
 
       <button type="submit" class="btn-filter">Apply</button>
 
       <?php
-  // build export URL na may same filters
-  $exportUrl = 'programs_students_export_pdf.php?program_id=' . (int)$program_id;
-  if ($year_filter !== null) {
-      $exportUrl .= '&year_level=' . (int)$year_filter;
-  }
-  if ($section_filter !== '') {
-      $exportUrl .= '&section=' . urlencode($section_filter);
-  }
-  if ($search_query !== '') {
-      $exportUrl .= '&q=' . urlencode($search_query);
-  }
-?>
-<a href="<?php echo $exportUrl; ?>" class="btn-export" target="_blank">
-  Export PDF Results
-</a>
-
+        // build export URL na may same filters
+        $exportUrl = 'programs_students_export_pdf.php?program_id=' . (int)$program_id;
+        if ($year_filter !== null) {
+            $exportUrl .= '&year_level=' . (int)$year_filter;
+        }
+        if ($section_filter !== '') {
+            $exportUrl .= '&section=' . urlencode($section_filter);
+        }
+        if ($search_query !== '') {
+            $exportUrl .= '&q=' . urlencode($search_query);
+        }
+      ?>
+      <a href="<?php echo $exportUrl; ?>" class="btn-export" target="_blank">
+        Export PDF Results
+      </a>
     </form>
+
   </div>
 
   <!-- Card with table -->
@@ -444,21 +482,21 @@ require_once __DIR__ . '/includes/sidebar.php';
       </p>
     <?php else: ?>
       <table class="course-students-table">
-       <thead>
-  <tr>
-    <th rowspan="2" class="center">#</th>
-    <th rowspan="2" class="center">Student ID</th>
-    <th rowspan="2">Name of Student</th>
-    <th rowspan="2" class="center">Year Level &amp; Section</th>
-    <th class="center" colspan="3">Test Results</th>
-    <th rowspan="2" class="center">Actions</th>
-  </tr>
-  <tr>
-    <th class="center">Starting Level</th>
-    <th class="center">Power Builder</th>
-    <th class="center">Rate Builder</th>
-  </tr>
-</thead>
+        <thead>
+          <tr>
+            <th rowspan="2" class="center">#</th>
+            <th rowspan="2" class="center">Student ID</th>
+            <th rowspan="2">Name of Student</th>
+            <th rowspan="2" class="center">Year Level &amp; Section</th>
+            <th class="center" colspan="3">Test Results</th>
+            <th rowspan="2" class="center">Actions</th>
+          </tr>
+          <tr>
+            <th class="center">Starting Level</th>
+            <th class="center">Power Builder</th>
+            <th class="center">Rate Builder</th>
+          </tr>
+        </thead>
 
         <tbody>
         <?php
