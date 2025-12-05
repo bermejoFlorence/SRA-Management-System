@@ -449,6 +449,7 @@ $res->free();
   </section>
 </div>
 <!-- Add Course Modal -->
+<!-- Add Course Modal -->
 <div class="modal-backdrop" id="addCourseBackdrop" aria-hidden="true">
   <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="addCourseTitle">
     <div class="modal-header">
@@ -457,45 +458,82 @@ $res->free();
         &times;
       </button>
     </div>
-<form id="addCourseForm" class="modal-body">
-  <p class="modal-text">
-    Create a new course/program students can register under. You can add majors later.
-  </p>
 
-  <div class="form-row">
-    <label for="program_code">Course Code <span class="req">*</span></label>
-    <input type="text" id="program_code" name="program_code"
-           placeholder="e.g. BSED, BSIT"
-           maxlength="20" required />
-  </div>
+    <form id="addCourseForm" class="modal-body">
+      <p class="modal-text">
+        Create a new course/program or attach a new major to an existing one.
+      </p>
 
-  <div class="form-row">
-    <label for="program_name">Course Title <span class="req">*</span></label>
-    <input type="text" id="program_name" name="program_name"
-           placeholder="e.g. Bachelor of Secondary Education"
-           maxlength="191" required />
-  </div>
+      <!-- MODE: new vs existing -->
+      <div class="form-row">
+        <label for="course_mode">Mode</label>
+        <select id="course_mode" name="course_mode">
+          <option value="new" selected>Create new course/program</option>
+          <?php if (!empty($courses)): ?>
+          <option value="existing">Use existing course/program</option>
+          <?php endif; ?>
+        </select>
+      </div>
 
-  <!-- NEW: optional first major -->
-  <div class="form-row">
-    <label for="first_major">Major <span style="font-weight:400; font-size:12px; color:#6b7280;">(optional)</span></label>
-    <input type="text" id="first_major" name="first_major"
-           placeholder="e.g. Mathematics, English, Electronics" />
-  </div>
+      <!-- EXISTING COURSE DROPDOWN -->
+      <?php if (!empty($courses)): ?>
+      <div class="form-row group-existing-course" style="display:none;">
+        <label for="existing_program_id">
+          Select Course / Program <span class="req">*</span>
+        </label>
+        <select id="existing_program_id" name="existing_program_id">
+          <option value="">-- Choose course/program --</option>
+          <?php foreach ($courses as $c): ?>
+            <option value="<?php echo (int)$c['program_id']; ?>">
+              <?php echo htmlspecialchars($c['program_code'] . ' – ' . $c['program_name']); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <?php endif; ?>
 
-  <div class="form-row">
-    <label for="status">Status</label>
-    <select id="status" name="status">
-      <option value="active" selected>Active</option>
-      <option value="inactive">Inactive</option>
-    </select>
-  </div>
+      <!-- NEW COURSE FIELDS -->
+      <div class="group-new-course">
+        <div class="form-row">
+          <label for="program_code">Course Code <span class="req">*</span></label>
+          <input type="text" id="program_code" name="program_code"
+                 placeholder="e.g. BSED, BSIT"
+                 maxlength="20" />
+        </div>
 
-  <div class="modal-footer">
-    <button type="button" class="btn btn-ghost" id="addCourseCancel">Cancel</button>
-    <button type="submit" class="btn btn-accent pill" id="addCourseSave">Save Course</button>
-  </div>
-</form>
+        <div class="form-row">
+          <label for="program_name">Course Title <span class="req">*</span></label>
+          <input type="text" id="program_name" name="program_name"
+                 placeholder="e.g. Bachelor of Secondary Education"
+                 maxlength="191" />
+        </div>
+
+        <div class="form-row">
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            <option value="active" selected>Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- MAJOR (works for both modes) -->
+      <div class="form-row">
+        <label for="first_major">
+          Major
+          <span style="font-weight:400; font-size:12px; color:#6b7280;">
+            (optional – will be added to selected or new course)
+          </span>
+        </label>
+        <input type="text" id="first_major" name="first_major"
+               placeholder="e.g. Mathematics, English, Electronics" />
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="addCourseCancel">Cancel</button>
+        <button type="submit" class="btn btn-accent pill" id="addCourseSave">Save</button>
+      </div>
+    </form>
 
   </div>
 </div>
@@ -509,83 +547,109 @@ $res->free();
   const form      = document.getElementById('addCourseForm');
   const btnSave   = document.getElementById('addCourseSave');
 
+  const modeSelect    = document.getElementById('course_mode');
+  const groupNew      = document.querySelector('.group-new-course');
+  const groupExisting = document.querySelector('.group-existing-course');
+
   if (!btnOpen || !backdrop || !form) return;
+
+  const syncModeUI = () => {
+    if (!modeSelect) return;
+    const mode = modeSelect.value;
+
+    if (mode === 'existing') {
+      if (groupNew)      groupNew.style.display = 'none';
+      if (groupExisting) groupExisting.style.display = '';
+    } else {
+      if (groupNew)      groupNew.style.display = '';
+      if (groupExisting) groupExisting.style.display = 'none';
+    }
+  };
 
   const openModal = () => {
     backdrop.classList.add('show');
+    syncModeUI();
     const codeInput = document.getElementById('program_code');
-    if (codeInput) codeInput.focus();
+    if (modeSelect && modeSelect.value === 'new' && codeInput) {
+      codeInput.focus();
+    }
   };
 
   const closeModal = () => {
     backdrop.classList.remove('show');
     form.reset();
+    syncModeUI();
   };
 
   btnOpen.addEventListener('click', openModal);
   btnClose.addEventListener('click', closeModal);
   btnCancel.addEventListener('click', closeModal);
 
+  if (modeSelect) {
+    modeSelect.addEventListener('change', syncModeUI);
+  }
+  // initial state
+  syncModeUI();
+
   // close when clicking outside dialog
   backdrop.addEventListener('click', (e) => {
     if (e.target === backdrop) closeModal();
   });
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  btnSave.disabled = true;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    btnSave.disabled = true;
 
-  const fd = new FormData(form);
+    const fd = new FormData(form);
 
-  try {
-    const res  = await fetch('ajax_add_program.php', { method: 'POST', body: fd });
-    const data = await res.json();
+    try {
+      const res  = await fetch('ajax_add_program.php', { method: 'POST', body: fd });
+      const data = await res.json();
 
-    if (data.success) {
-      // ✨ isara muna ang modal para walang nakaharang sa Swal
-      closeModal();
+      if (data.success) {
+        closeModal();
 
-      if (window.Swal) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Course added',
-          text: data.message || 'The course has been created.',
-          confirmButtonColor: '#1e8fa2'
-        }).then(() => {
-          window.location.reload();   // reload page para lumabas sa table
-        });
+        if (window.Swal) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Saved',
+            text: data.message || 'Changes have been saved.',
+            confirmButtonColor: '#1e8fa2'
+          }).then(() => {
+            window.location.reload();
+          });
+        } else {
+          alert(data.message || 'Saved.');
+          window.location.reload();
+        }
       } else {
-        alert(data.message || 'Course added.');
-        window.location.reload();
+        if (window.Swal) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Unable to save',
+            text: data.message || 'Please check the form and try again.',
+            confirmButtonColor: '#1e8fa2'
+          });
+        } else {
+          alert(data.message || 'Unable to save.');
+        }
       }
-    } else {
+    } catch (err) {
+      console.error(err);
       if (window.Swal) {
         Swal.fire({
           icon: 'error',
-          title: 'Unable to add',
-          text: data.message || 'Please check the form and try again.',
+          title: 'Network error',
+          text: 'Please try again.',
           confirmButtonColor: '#1e8fa2'
         });
       } else {
-        alert(data.message || 'Unable to add course.');
+        alert('Network error. Please try again.');
       }
+    } finally {
+      btnSave.disabled = false;
     }
-  } catch (err) {
-    console.error(err);
-    if (window.Swal) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Network error',
-        text: 'Please try again.',
-        confirmButtonColor: '#1e8fa2'
-      });
-    } else {
-      alert('Network error. Please try again.');
-    }
-  } finally {
-    btnSave.disabled = false;
-  }
-});
+  });
 
 })();
 </script>
