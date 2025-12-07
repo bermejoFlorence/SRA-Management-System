@@ -41,13 +41,13 @@ body{
   align-items:stretch;
   justify-content:stretch;
   margin:0;
-  padding:0;                 /* walang padding sa gilid */
+  padding:0;
 }
 
 /* ===================== LEFT SIDE ===================== */
 
 .left-section{
-  flex:0 0 60%;              /* 60% width (dati 70) */
+  flex:0 0 60%;              /* 60% width */
   position:relative;
   background:url('../picture.jpg') center/cover no-repeat;
   color:#fff;
@@ -137,20 +137,22 @@ body{
 /* ===================== RIGHT SIDE ===================== */
 
 .right-section{
-  flex:0 0 40%;              /* 40% width (dati 30) */
+  flex:0 0 40%;              /* 40% width */
   max-width:40%;
   background:var(--panel);
   display:flex;
   flex-direction:column;
-  justify-content:flex-start;
+  align-items:center;         /* center horizontally */
+  justify-content:center;     /* center vertically */
   padding:32px 26px 32px;
   box-shadow:-8px 0 24px rgba(0,0,0,.18);
 
-  max-height:100vh;          /* para sakto sa screen */
-  overflow-y:auto;           /* kung mahaba yung form, scroll sa panel lang */
+  max-height:100vh;          /* kung mas mahaba, scroll */
+  overflow-y:auto;
 }
 
 /* Tabs */
+
 .auth-tabs{
   display:flex;
   gap:6px;
@@ -159,7 +161,7 @@ body{
   border-radius:10px;
   margin:0 auto 18px;
   width:100%;
-  max-width:100%;            /* gamitin buong lapad ng right panel */
+  max-width:520px;
 }
 
 .tab-btn{
@@ -179,9 +181,10 @@ body{
 }
 
 /* Slider */
+
 .auth-slider{
   width:100%;
-  max-width:100%;            /* full width din */
+  max-width:520px;
   margin:0 auto;
   position:relative;
   overflow:hidden;
@@ -203,12 +206,13 @@ body{
 }
 
 /* Titles */
+
 .form-title{
   font-weight:800;
-  font-size:1.6rem;
+  font-size:1.7rem;
   color:#333;
   text-align:center;
-  margin:2px 0 10px 0;
+  margin:4px 0 14px 0;
 }
 
 /* ===================== FORMS ===================== */
@@ -233,6 +237,7 @@ label select{
 }
 
 /* inputs */
+
 input,
 select{
   padding:10px;
@@ -251,19 +256,17 @@ select:focus{
   background:#fff;
 }
 
-/* LOGIN: punuin ang vertical space */
+/* LOGIN: normal stacked layout (hindi space-between para di sobrang haba) */
+
 #panelLogin .form-stack{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;   /* fields sa taas, google + link pababa */
+  justify-content:flex-start;
+  gap:16px;
 }
 
-/* konting laki ng title sa login */
 #panelLogin .form-title{
   font-size:1.8rem;
   margin-top:8px;
-  margin-bottom:16px;
+  margin-bottom:18px;
 }
 
 /* ===================== REGISTER CARD ===================== */
@@ -275,10 +278,11 @@ select:focus{
   box-shadow:0 18px 45px rgba(15,23,42,0.08);
   display:flex;
   flex-direction:column;
-  gap:0.9rem;
+  gap:0.9rem;            /* hindi na flex:1 para sakto lang sa laman */
 }
 
 /* 12-column grid */
+
 .register-form .field-grid{
   display:grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -287,23 +291,45 @@ select:focus{
 }
 
 /* Column span helpers */
-.field-grid .col-3{  grid-column: span 3; }   /* 4 items per row (4x3=12) */
-.field-grid .col-4{  grid-column: span 4; }   /* 3 items per row (3x4=12) */
-.field-grid .col-6{  grid-column: span 6; }   /* 2 items per row (2x6=12) */
-.field-grid .col-12{ grid-column: span 12; }  /* full width */
+
+.field-grid .col-3{  grid-column: span 3; }
+.field-grid .col-4{  grid-column: span 4; }
+.field-grid .col-6{  grid-column: span 6; }
+.field-grid .col-12{ grid-column: span 12; }
 
 .register-form .form-actions{
-  margin-top:auto;              /* itulak pababa yung buttons */
+  margin-top:0.75rem;
   padding-top:0.75rem;
   display:flex;
   justify-content:flex-end;
   gap:0.75rem;
+  border-top:1px solid rgba(0,0,0,0.04);
 }
 
 .small-hint{
   font-size:0.9rem;
   color:#555;
   margin:0 0 10px 0;
+}
+
+/* Divider "or" */
+
+.or-divider{
+  margin:1.2rem 0 0.4rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  font-size:0.9rem;
+  color:#666;
+}
+
+.or-divider::before,
+.or-divider::after{
+  content:"";
+  flex:1;
+  height:1px;
+  background:#d0d0d0;
 }
 
 /* ===================== BUTTONS ===================== */
@@ -363,6 +389,7 @@ select:focus{
 }
 
 /* Google button – teal outline style */
+
 .login-google-btn {
   background:#ffffff;
   color:#111;
@@ -427,6 +454,7 @@ select:focus{
     box-shadow:none;
     max-height:none;
     overflow-y:visible;
+    justify-content:flex-start;   /* sa mobile, normal scroll na lang */
   }
 
   .auth-tabs,
@@ -434,10 +462,10 @@ select:focus{
     max-width:640px;
   }
 
-  /* Stack all fields on small screens */
   .register-form .field-grid{
-    grid-template-columns: 1fr;
+    grid-template-columns:1fr;
   }
+
   .field-grid .col-3,
   .field-grid .col-4,
   .field-grid .col-6,
@@ -453,11 +481,4 @@ select:focus{
 @media (max-width:520px){
   .main-title{ font-size:2.2rem; }
   .subtitle{ font-size:1rem; }
-}
-
-/* DESKTOP: center vertically ang login/register column */
-@media (min-width: 901px){
-  .right-section{
-    justify-content: center;   /* vertical center */
-  }
 }

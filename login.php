@@ -266,11 +266,11 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
             </div>
           </form>
 
-          <div class="or-divider" style="margin-top:1rem;">
+          <div class="or-divider">
             <span>or</span>
           </div>
 
-          <div class="buttons" style="margin-top:0.25rem;">
+          <div class="buttons">
             <a href="google_login.php" class="btn login-google-btn">
               Use CBSUA Google email (auto-fill)
             </a>
