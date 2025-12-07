@@ -424,3 +424,27 @@ select:focus{
   .main-title{ font-size:2.2rem; }
   .subtitle{ font-size:1rem; }
 }
+/* ==== WIDEN RIGHT PANEL TO ~40% ==== */
+.left-section{
+  flex:0 0 60%;      /* dati 70% */
+}
+
+.right-section{
+  flex:0 0 40%;      /* dati 30% */
+  max-width:40%;
+}
+
+/* konting bawas sa loob ng register card para di masyadong matangkad */
+.register-form{
+  padding:1rem 1.25rem 1rem;
+  gap:0.6rem;
+}
+
+.register-form .field-grid{
+  gap:0.55rem 0.9rem;
+}
+
+/* bawas ng konti sa space ng title */
+.form-title{
+  margin:2px 0 10px 0;
+}
