@@ -624,3 +624,62 @@ select{
   padding-top: 12px;
   padding-bottom: 12px;
 }
+/* ===== CENTER BUTTONS SA REGISTER FORM ===== */
+.register-form .form-actions{
+  justify-content: center;     /* center instead of flex-end */
+  gap: 1.1rem;
+}
+
+/* Optional: gawing pantay ang lapad ng dalawang button */
+.register-form .form-actions .btn{
+  min-width: 150px;
+}
+
+/* ===== PALAKIHIN ANG "— or —" DIVIDER ===== */
+.or-divider{
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.or-divider::before,
+.or-divider::after{
+  height: 2px;                 /* mas makapal na linya */
+  background:#c7c7c7;
+}
+
+/* ===== TABS: MAS MALAKI + SLIDER FEEL ===== */
+.auth-tabs{
+  padding: 6px;
+  border-radius: 999px;        /* full pill */
+  background: #e5e7eb;
+  position: relative;
+}
+
+/* mas malaking click area + font */
+.tab-btn{
+  font-size: 1rem;
+  padding: 12px 18px;
+  position: relative;
+  z-index: 1;
+  transition:
+    background .25s ease,
+    color .25s ease,
+    box-shadow .25s ease,
+    transform .2s ease,
+    opacity .2s ease;
+}
+
+/* inactive tab: medyo faded para may idea na pwede pang i-click/slide */
+.tab-btn:not(.active){
+  opacity: .7;
+}
+
+/* active tab: parang nakalutang na pill (slider handle vibe) */
+.tab-btn.active{
+  background: #ffffff;
+  color: #111;
+  box-shadow: 0 4px 12px rgba(0,0,0,.16);
+  transform: translateY(-1px);
+  opacity: 1;
+}
