@@ -507,3 +507,54 @@ select:focus{
 .register-form{
   margin-bottom: 4px;       /* halos dikit na sa Google button divider */
 }
+/* ==== COMPACT + PRESENTABLE LAYOUT SA RIGHT SIDE ==== */
+
+/* mas maliit na padding sa lahat ng gilid, almost sagad */
+.right-section{
+  padding: 8px 16px;          /* ~0.5rem top/bottom/left/right */
+  align-items: center;        /* center horizontally yung card */
+  justify-content: flex-start;/* content mula agad sa itaas */
+}
+
+/* tabs + slider: gamit ang buong lapad ng panel,
+   maliit lang na space sa taas/baba */
+.auth-tabs{
+  max-width: 100%;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.auth-slider{
+  max-width: 100%;
+  margin-bottom: 8px;
+}
+
+/* register card: konting bawas sa padding para hindi sobrang bulky
+   pero hindi rin masikip */
+.register-form{
+  padding: 1.4rem 1.5rem 1.2rem;
+  margin-bottom: 4px;         /* maliit na pagitan bago sa "or" */
+}
+
+/* font sizes para mas readable / mukhang punô */
+body{
+  font-size: 16px;
+}
+
+label{
+  font-size: 0.95rem;
+}
+
+input,
+select{
+  font-size: 1rem;            /* mas malaking text sa fields */
+}
+
+/* title mas prominent ng kaunti */
+.form-title{
+  font-size: 1.9rem;
+}
+
+#panelLogin .form-title{
+  font-size: 2rem;
+}
