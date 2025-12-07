@@ -864,3 +864,30 @@ select{
   padding-top: 10px;
   padding-bottom: 10px;
 }
+/* ==== FINE TUNE – LOGIN FIELD SIZE + SPACING ==== */
+
+/* palaparin pa nang konti ang card + padding sa loob */
+#panelLogin .form-stack{
+  max-width: 560px;               /* dati 500px */
+  padding: 2rem 2.4rem 2rem;      /* mas lapad at taas ang loob */
+}
+
+/* labels + inputs: mas laki pa ng font */
+#panelLogin label{
+  font-size: 1.12rem;
+}
+
+#panelLogin input{
+  font-size: 1.15rem;
+  padding: 13px 14px;             /* mas taas at lapad ang field */
+}
+
+/* ibaba pa nang konti si Login button at succeeding elements */
+#panelLogin .buttons{
+  margin-top: 20px;               /* login at google buttons */
+}
+
+#panelLogin .or-divider{
+  margin-top: 22px;
+  margin-bottom: 12px;
+}
