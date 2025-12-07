@@ -518,7 +518,7 @@ select:focus{
 
 /* liitan nang kaunti yung loob ng card */
 #panelRegister .register-form{
-  padding: 1.05rem 1.35rem 0.9rem;   /* dati mas makapal */
+  padding: 0.95rem 1.3rem 0.85rem;   /* dati mas makapal */
 }
 
 /* bawasan gaps sa pagitan ng rows */
