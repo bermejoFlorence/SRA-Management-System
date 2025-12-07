@@ -409,57 +409,72 @@ const HAS_GOOGLE_PENDING = <?php echo $googlePending ? 'true' : 'false'; ?>;
   const registerForm = document.getElementById('registerForm');
   const registerBtn  = document.getElementById('registerBtn');
 
-  if (registerForm && registerBtn) {
-    registerForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      registerBtn.disabled = true;
+if (registerForm && registerBtn) {
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    registerBtn.disabled = true;
 
-      const fd = new FormData(registerForm);
-      const email = String(fd.get('email') || '').trim().toLowerCase();
+    const fd = new FormData(registerForm);
 
-      if (!emailAllowed(email)) {
-        await showDomainError();
-        registerBtn.disabled = false;
-        return;
-      }
-      fd.set('email', email);
+    // ====== Password / Confirm Password check ======
+    const password        = String(fd.get('password') || '');
+    const confirmPassword = String(fd.get('confirm_password') || '');
 
-      try {
-        const res = await fetch('register_student.php', { method: 'POST', body: fd });
-        const data = await res.json();
+    if (password !== confirmPassword) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Password mismatch',
+        text: 'Password and Confirm Password do not match.',
+        confirmButtonColor: confirmColor
+      });
 
-        if (data.success) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Registered!',
-            text: data.message || 'Please check your email to verify your account.',
-            confirmButtonColor: confirmColor
-          }).then(() => {
-            // clear form + balik sa login tab
-            window.location = 'login.php#login';
-          });
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Registration Failed',
-            text: data.message || 'Please try again.',
-            confirmButtonColor: confirmColor
-          });
-        }
-      } catch (err) {
+      registerBtn.disabled = false;
+      return; // HINDI magpapatuloy ang submit
+    }
+    // ===============================================
+
+    const email = String(fd.get('email') || '').trim().toLowerCase();
+
+    if (!emailAllowed(email)) {
+      await showDomainError();
+      registerBtn.disabled = false;
+      return;
+    }
+    fd.set('email', email);
+
+    try {
+      const res = await fetch('register_student.php', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Registered!',
+          text: data.message || 'Please check your email to verify your account.',
+          confirmButtonColor: confirmColor
+        }).then(() => {
+          window.location = 'login.php#login';
+        });
+      } else {
         Swal.fire({
           icon: 'error',
-          title: 'Network Error',
-          text: 'Please try again.',
+          title: 'Registration Failed',
+          text: data.message || 'Please try again.',
           confirmButtonColor: confirmColor
         });
-      } finally {
-        registerBtn.disabled = false;
       }
-    });
-  }
-
-
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Network Error',
+        text: 'Please try again.',
+        confirmButtonColor: confirmColor
+      });
+    } finally {
+      registerBtn.disabled = false;
+    }
+  });
+}
   // ---------- LOGIN HANDLER ----------
   const loginForm = document.getElementById('loginForm');
   const loginBtn  = document.getElementById('loginBtn');
