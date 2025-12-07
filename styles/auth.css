@@ -891,3 +891,12 @@ select{
   margin-top: 22px;
   margin-bottom: 12px;
 }
+/* ==== LOGIN – PALAPARIN PARA MATCH SA REGISTER ==== */
+#panelLogin .form-stack{
+  max-width: 720px;          /* dati ~560px – ngayon halos puno na ng panel */
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 2.4rem 2rem; /* retain nice inner padding */
+  transform: scale(1.06);
+  transform-origin: top center;
+}
