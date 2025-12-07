@@ -25,18 +25,19 @@ body{
   margin:0;
   padding:0;
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background:var(--green);   /* kahit green bg, matatakpan ng container */
+  background:var(--green);
   color:var(--text);
   display:flex;
   align-items:stretch;
   justify-content:stretch;
+  font-size:16px;
 }
 
 /* ===================== LAYOUT WRAPPER ===================== */
 
 .container{
   width:100%;
-  min-height:100vh;          /* buong screen */
+  min-height:100vh;
   display:flex;
   align-items:stretch;
   justify-content:stretch;
@@ -47,7 +48,7 @@ body{
 /* ===================== LEFT SIDE ===================== */
 
 .left-section{
-  flex:0 0 60%;              /* 60% width */
+  flex:0 0 60%;
   position:relative;
   background:url('../picture.jpg') center/cover no-repeat;
   color:#fff;
@@ -137,55 +138,70 @@ body{
 /* ===================== RIGHT SIDE ===================== */
 
 .right-section{
-  flex:0 0 40%;              /* 40% width */
+  flex:0 0 40%;
   max-width:40%;
   background:var(--panel);
   display:flex;
   flex-direction:column;
-  align-items:center;         /* center horizontally */
-  justify-content:center;     /* center vertically */
-  padding:32px 26px 32px;
+  align-items:center;
+  justify-content:flex-start;
+  padding:12px 20px 16px;
   box-shadow:-8px 0 24px rgba(0,0,0,.18);
-
-  max-height:100vh;          /* kung mas mahaba, scroll */
+  max-height:100vh;
   overflow-y:auto;
 }
 
-/* Tabs */
+/* ===================== TABS ===================== */
 
 .auth-tabs{
   display:flex;
   gap:6px;
-  background:#e9ecef;
+  background:#e5e7eb;
   padding:6px;
-  border-radius:10px;
-  margin:0 auto 18px;
+  border-radius:999px;
+  margin:4px auto 10px;
   width:100%;
-  max-width:520px;
+  max-width:600px;
 }
 
 .tab-btn{
   flex:1;
-  padding:10px 12px;
+  padding:12px 18px;
   border:none;
-  border-radius:8px;
+  border-radius:999px;
   background:transparent;
   cursor:pointer;
   font-weight:800;
+  font-size:1rem;
   color:#333;
+  position:relative;
+  z-index:1;
+  transition:
+    background .25s ease,
+    color .25s ease,
+    box-shadow .25s ease,
+    transform .2s ease,
+    opacity .2s ease;
+}
+
+.tab-btn:not(.active){
+  opacity:.7;
 }
 
 .tab-btn.active{
   background:#fff;
-  box-shadow:0 2px 10px rgba(0,0,0,.08);
+  color:#111;
+  box-shadow:0 4px 12px rgba(0,0,0,.16);
+  transform:translateY(-1px);
+  opacity:1;
 }
 
-/* Slider */
+/* ===================== SLIDER ===================== */
 
 .auth-slider{
   width:100%;
-  max-width:520px;
-  margin:0 auto;
+  max-width:600px;
+  margin:0 auto 10px;
   position:relative;
   overflow:hidden;
   transition:height .25s ease;
@@ -200,7 +216,7 @@ body{
 
 .auth-panel{
   width:50%;
-  padding:4px 2px;
+  padding:4px 4px 12px;
   display:flex;
   flex-direction:column;
 }
@@ -209,13 +225,13 @@ body{
 
 .form-title{
   font-weight:800;
-  font-size:1.7rem;
+  font-size:1.9rem;
   color:#333;
   text-align:center;
-  margin:4px 0 14px 0;
+  margin:6px 0 12px 0;
 }
 
-/* ===================== FORMS ===================== */
+/* ===================== BASE FORM STYLES ===================== */
 
 .form-stack{
   display:flex;
@@ -236,8 +252,6 @@ label select{
   margin-top:6px;
 }
 
-/* inputs */
-
 input,
 select{
   padding:10px;
@@ -256,29 +270,47 @@ select:focus{
   background:#fff;
 }
 
-/* LOGIN: normal stacked layout (hindi space-between para di sobrang haba) */
+/* ===================== LOGIN PANEL ===================== */
 
-#panelLogin .form-stack{
-  justify-content:flex-start;
-  gap:16px;
+#panelLogin{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
 
 #panelLogin .form-title{
-  font-size:1.8rem;
-  margin-top:8px;
-  margin-bottom:18px;
+  font-size:2rem;
 }
 
-/* ===================== REGISTER CARD ===================== */
+#panelLogin .form-stack{
+  max-width:540px;
+  width:100%;
+  margin:0 auto;
+  background:#f9fafb;
+  border-radius:18px;
+  padding:1.5rem 1.7rem 1.5rem;
+  box-shadow:0 18px 45px rgba(15,23,42,0.08);
+  gap:16px;
+}
+
+#panelLogin label{
+  font-size:.98rem;
+}
+
+#panelLogin input{
+  font-size:1rem;
+}
+
+/* ===================== REGISTER PANEL ===================== */
 
 .register-form{
   background:#f9fafb;
   border-radius:18px;
-  padding:1.6rem 1.8rem 1.4rem;
+  padding:1.3rem 1.5rem 1.1rem;
   box-shadow:0 18px 45px rgba(15,23,42,0.08);
   display:flex;
   flex-direction:column;
-  gap:0.9rem;            /* hindi na flex:1 para sakto lang sa laman */
+  gap:0.7rem;
 }
 
 /* 12-column grid */
@@ -286,11 +318,9 @@ select:focus{
 .register-form .field-grid{
   display:grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap:0.9rem;
-  row-gap:0.9rem;
+  column-gap:0.8rem;
+  row-gap:0.7rem;
 }
-
-/* Column span helpers */
 
 .field-grid .col-3{  grid-column: span 3; }
 .field-grid .col-4{  grid-column: span 4; }
@@ -298,38 +328,40 @@ select:focus{
 .field-grid .col-12{ grid-column: span 12; }
 
 .register-form .form-actions{
-  margin-top:0.75rem;
-  padding-top:0.75rem;
+  margin-top:0.5rem;
+  padding-top:0.6rem;
   display:flex;
-  justify-content:flex-end;
-  gap:0.75rem;
+  justify-content:center;
+  gap:0.9rem;
   border-top:1px solid rgba(0,0,0,0.04);
 }
 
 .small-hint{
   font-size:0.9rem;
   color:#555;
-  margin:0 0 10px 0;
+  margin:0 0 8px 0;
 }
 
-/* Divider "or" */
+/* divider "or" (shared by login & register) */
 
 .or-divider{
-  margin:1.2rem 0 0.4rem;
+  margin:1rem 0 0.4rem;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:10px;
-  font-size:0.9rem;
+  font-size:0.95rem;
   color:#666;
+  font-weight:600;
+  letter-spacing:0.04em;
 }
 
 .or-divider::before,
 .or-divider::after{
   content:"";
   flex:1;
-  height:1px;
-  background:#d0d0d0;
+  height:2px;
+  background:#c7c7c7;
 }
 
 /* ===================== BUTTONS ===================== */
@@ -390,7 +422,7 @@ select:focus{
 
 /* Google button – teal outline style */
 
-.login-google-btn {
+.login-google-btn{
   background:#ffffff;
   color:#111;
   border:2px solid #1e8fa2;
@@ -450,11 +482,11 @@ select:focus{
     flex:0 0 auto;
     max-width:100%;
     width:100%;
-    padding:24px 16px 32px;
+    padding:20px 16px 24px;
     box-shadow:none;
     max-height:none;
     overflow-y:visible;
-    justify-content:flex-start;   /* sa mobile, normal scroll na lang */
+    justify-content:flex-start;
   }
 
   .auth-tabs,
@@ -481,498 +513,4 @@ select:focus{
 @media (max-width:520px){
   .main-title{ font-size:2.2rem; }
   .subtitle{ font-size:1rem; }
-}
-/* ========== OVERRIDES PARA MAS PUNO ANG RIGHT SIDE ========== */
-
-/* 1) Right panel – bawas padding at no vertical centering */
-.right-section{
-  align-items: center;       /* center horizontally pa rin */
-  justify-content: flex-start; /* content simula agad sa taas */
-  padding: 8px 26px 8px;    /* ~0.5rem top/bottom, retain left/right */
-}
-
-/* 2) Palakihin pa konti ang lapad ng tabs + card at liitan margin */
-.auth-tabs{
-  max-width: 560px;         /* dati 520px */
-  margin-top: 8px;
-  margin-bottom: 8px;       /* maliit na gap sa taas/baba */
-}
-
-.auth-slider{
-  max-width: 560px;         /* match sa tabs */
-  margin-bottom: 8px;       /* maliit na space bago sa ilalim */
-}
-
-/* optional: bawasan pa ng kaunti yung space sa ilalim ng register card */
-.register-form{
-  margin-bottom: 4px;       /* halos dikit na sa Google button divider */
-}
-/* ==== COMPACT + PRESENTABLE LAYOUT SA RIGHT SIDE ==== */
-
-/* mas maliit na padding sa lahat ng gilid, almost sagad */
-.right-section{
-  padding: 8px 16px;          /* ~0.5rem top/bottom/left/right */
-  align-items: center;        /* center horizontally yung card */
-  justify-content: flex-start;/* content mula agad sa itaas */
-}
-
-/* tabs + slider: gamit ang buong lapad ng panel,
-   maliit lang na space sa taas/baba */
-.auth-tabs{
-  max-width: 100%;
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-
-.auth-slider{
-  max-width: 100%;
-  margin-bottom: 8px;
-}
-
-/* register card: konting bawas sa padding para hindi sobrang bulky
-   pero hindi rin masikip */
-.register-form{
-  padding: 1.4rem 1.5rem 1.2rem;
-  margin-bottom: 4px;         /* maliit na pagitan bago sa "or" */
-}
-
-/* font sizes para mas readable / mukhang punô */
-body{
-  font-size: 16px;
-}
-
-label{
-  font-size: 0.95rem;
-}
-
-input,
-select{
-  font-size: 1rem;            /* mas malaking text sa fields */
-}
-
-/* title mas prominent ng kaunti */
-.form-title{
-  font-size: 1.9rem;
-}
-
-#panelLogin .form-title{
-  font-size: 2rem;
-}
-/* ==== SCALE UP TYPOGRAPHY + FIELDS PARA MAPUNO ANG HEIGHT ==== */
-
-/* base font a bit larger */
-body{
-  font-size: 17px;
-}
-
-/* labels mas readable */
-label{
-  font-size: 1rem;
-}
-
-/* inputs & selects: mas mataas + mas malaking text */
-input,
-select{
-  font-size: 1rem;
-  padding: 12px 11px;           /* dati 10px */
-}
-
-/* titles mas malaki para di masyadong “lutang” sa taas */
-.form-title{
-  font-size: 2rem;
-  margin-top: 10px;
-  margin-bottom: 18px;
-}
-
-#panelLogin .form-title{
-  font-size: 2.1rem;
-}
-
-/* helper text mas klaro */
-.small-hint{
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-/* dagdag konting vertical spacing sa pagitan ng rows/fields */
-.form-stack{
-  gap: 18px;
-}
-
-.register-form .field-grid{
-  row-gap: 1.1rem;
-}
-
-/* register card: kaunting dagdag sa loob para mas taas siya */
-.register-form{
-  padding-top: 1.8rem;
-  padding-bottom: 1.6rem;
-}
-
-/* divider at buttons: konting dagdag ng gap para hindi dikit tingnan */
-.or-divider{
-  margin-top: 1.4rem;
-  margin-bottom: 0.6rem;
-}
-
-.buttons{
-  margin-top: 10px;
-}
-
-/* right panel: very light adjustment sa padding para balanced pa rin */
-.right-section{
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-/* ===== CENTER BUTTONS SA REGISTER FORM ===== */
-.register-form .form-actions{
-  justify-content: center;     /* center instead of flex-end */
-  gap: 1.1rem;
-}
-
-/* Optional: gawing pantay ang lapad ng dalawang button */
-.register-form .form-actions .btn{
-  min-width: 150px;
-}
-
-/* ===== PALAKIHIN ANG "— or —" DIVIDER ===== */
-.or-divider{
-  font-size: 1.05rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.or-divider::before,
-.or-divider::after{
-  height: 2px;                 /* mas makapal na linya */
-  background:#c7c7c7;
-}
-
-/* ===== TABS: MAS MALAKI + SLIDER FEEL ===== */
-.auth-tabs{
-  padding: 6px;
-  border-radius: 999px;        /* full pill */
-  background: #e5e7eb;
-  position: relative;
-}
-
-/* mas malaking click area + font */
-.tab-btn{
-  font-size: 1rem;
-  padding: 12px 18px;
-  position: relative;
-  z-index: 1;
-  transition:
-    background .25s ease,
-    color .25s ease,
-    box-shadow .25s ease,
-    transform .2s ease,
-    opacity .2s ease;
-}
-
-/* inactive tab: medyo faded para may idea na pwede pang i-click/slide */
-.tab-btn:not(.active){
-  opacity: .7;
-}
-
-/* active tab: parang nakalutang na pill (slider handle vibe) */
-.tab-btn.active{
-  background: #ffffff;
-  color: #111;
-  box-shadow: 0 4px 12px rgba(0,0,0,.16);
-  transform: translateY(-1px);
-  opacity: 1;
-}
-/* ==== LOGIN PANEL – MAS PRESENTABLE ==== */
-
-/* align content sa gitna horizontally */
-#panelLogin{
-  align-items: center;
-}
-
-/* title: mas laki pero di masyadong malayo sa tabs */
-#panelLogin .form-title{
-  font-size: 2.1rem;
-  margin-top: 10px;
-  margin-bottom: 12px;
-}
-
-/* gawing card-style ang login form, mas maiksi ang lapad */
-#panelLogin .form-stack{
-  max-width: 460px;               /* hindi na full width */
-  width: 100%;
-  margin: 0 auto;
-  background:#f9fafb;
-  border-radius:18px;
-  padding:1.4rem 1.6rem 1.5rem;
-  box-shadow:0 18px 45px rgba(15,23,42,0.08);
-  gap: 16px;                      /* spacing ng fields */
-}
-
-/* fonts sa login labels at inputs – mas laki para readable */
-#panelLogin label{
-  font-size: 1rem;
-}
-
-#panelLogin input{
-  font-size: 1rem;
-  padding: 11px 12px;
-}
-
-/* ayusin spacing sa buttons at divider */
-#panelLogin .buttons{
-  margin-top: 12px;
-}
-
-#panelLogin .or-divider{
-  margin-top: 16px;
-  margin-bottom: 10px;
-}
-
-/* google button: konting laki para di mukhang nakalutang na maliit */
-#panelLogin .login-google-btn{
-  min-width: 260px;
-}
-
-/* right panel: sapat na lang ang top/bottom padding (pareho pa rin sa register) */
-.right-section{
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-/* ==== LOGIN CARD – PARANG NAKA-ZOOM IN ==== */
-
-#panelLogin .form-stack{
-  max-width: 500px;              /* konting laki pa ng lapad */
-  padding: 1.7rem 1.9rem 1.7rem; /* mas roomy sa loob */
-  transform: scale(1.06);        /* zoom effect */
-  transform-origin: top center;  /* lalaking pababa, hindi gagalaw sa tabs */
-}
-
-/* mas malaking fonts sa labels at fields */
-#panelLogin label{
-  font-size: 1.08rem;
-}
-
-#panelLogin input{
-  font-size: 1.08rem;
-  padding: 12px 13px;
-}
-
-/* login button – mas laki ng konti */
-#panelLogin .login-btn{
-  font-size: 1.05rem;
-  padding: 0.65rem 2.4rem;
-}
-
-/* "or" divider + google button */
-#panelLogin .or-divider{
-  font-size: 1.1rem;
-}
-
-#panelLogin .login-google-btn{
-  font-size: 1.02rem;
-  padding: 11px 34px;
-}
-/* Gawing kasing-laki at style ng login card ang register card */
-#panelRegister .register-form{
-  max-width: 980px;              /* adjust if gusto mong mas makitid o mas malapad */
-  margin: 0 auto;
-  padding: 1.7rem 1.9rem 1.7rem;
-  box-shadow: 0 18px 45px rgba(15,23,42,0.08);
-}
-
-/* medyo lakihan pa font ng labels/inputs sa register para match sa login */
-#panelRegister label{
-  font-size: 1rem;
-}
-
-#panelRegister input,
-#panelRegister select{
-  font-size: 1rem;
-  padding: 12px 13px;
-}
-/* ================= FINAL OVERRIDES – LOGIN ================= */
-
-/* gawin nating flex container yung panel para ma-center yung card */
-#panelLogin{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* title sa login */
-#panelLogin .form-title{
-  font-size: 2.2rem;
-  margin-top: 12px;
-  margin-bottom: 14px;
-}
-
-/* login card (yung <form class="form-stack">) */
-#panelLogin .form-stack{
-  max-width: 500px;
-  width: 100%;
-  margin: 0 auto;
-  background:#f9fafb;
-  border-radius:18px;
-  padding:1.8rem 2rem 1.8rem;
-  box-shadow:0 18px 45px rgba(15,23,42,0.12);
-
-  display:flex;
-  flex-direction:column;
-  gap: 18px;
-
-  transform: scale(1.06);        /* parang naka-zoom */
-  transform-origin: top center;
-}
-
-/* labels at inputs – mas malaki font */
-#panelLogin label{
-  font-size: 1.08rem;
-}
-
-#panelLogin input{
-  font-size: 1.08rem;
-  padding: 12px 13px;
-}
-
-/* login button */
-#panelLogin .login-btn{
-  font-size: 1.05rem;
-  padding: 0.7rem 2.6rem;
-}
-
-/* divider at google button */
-#panelLogin .or-divider{
-  font-size: 1.1rem;
-  margin-top: 18px;
-  margin-bottom: 10px;
-}
-
-#panelLogin .login-google-btn{
-  font-size: 1.02rem;
-  padding: 11px 34px;
-}
-
-/* switch hint sa baba (No account yet? Create one) */
-#panelLogin .switch-hint{
-  margin-top: 14px;
-  text-align: center;
-}
-
-/* konting adjust sa right panel para sakto ang top/bottom spacing */
-.right-section{
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-/* ==== FINE TUNE – LOGIN FIELD SIZE + SPACING ==== */
-
-/* palaparin pa nang konti ang card + padding sa loob */
-#panelLogin .form-stack{
-  max-width: 560px;               /* dati 500px */
-  padding: 2rem 2.4rem 2rem;      /* mas lapad at taas ang loob */
-}
-
-/* labels + inputs: mas laki pa ng font */
-#panelLogin label{
-  font-size: 1.12rem;
-}
-
-#panelLogin input{
-  font-size: 1.15rem;
-  padding: 13px 14px;             /* mas taas at lapad ang field */
-}
-
-/* ibaba pa nang konti si Login button at succeeding elements */
-#panelLogin .buttons{
-  margin-top: 20px;               /* login at google buttons */
-}
-
-#panelLogin .or-divider{
-  margin-top: 22px;
-  margin-bottom: 12px;
-}
-/* ==== LOGIN – PALAPARIN PARA MATCH SA REGISTER ==== */
-#panelLogin .form-stack{
-  max-width: 720px;          /* dati ~560px – ngayon halos puno na ng panel */
-  width: 100%;
-  margin: 0 auto;
-  padding: 2rem 2.4rem 2rem; /* retain nice inner padding */
-  transform: scale(1.06);
-  transform-origin: top center;
-}
-/* ===== FINAL TUNING (DESKTOP AT 100% ZOOM) ===== */
-
-/* base text size balik sa normal */
-body{
-  font-size: 16px;
-}
-
-/* right panel spacing: hindi masikip, hindi rin sobrang laki */
-.right-section{
-  padding: 16px 24px;
-}
-
-/* tabs + slider: magkasing-lapad, sakto lang sa panel */
-.auth-tabs,
-.auth-slider{
-  max-width: 600px;
-}
-
-/* LOGIN title */
-#panelLogin .form-title{
-  font-size: 1.9rem;
-  margin-top: 10px;
-  margin-bottom: 14px;
-}
-
-/* LOGIN card – normal width, wala nang zoom */
-#panelLogin .form-stack{
-  max-width: 560px;                 /* hindi na 720 at walang scale */
-  width: 100%;
-  margin: 0 auto;
-  padding: 1.6rem 1.8rem 1.6rem;
-  background:#f9fafb;
-  border-radius:18px;
-  box-shadow:0 18px 45px rgba(15,23,42,0.08);
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  transform: none;                  /* REMOVE zoom */
-}
-
-/* login labels / fields – medyo mas maliit ulit */
-#panelLogin label{
-  font-size: 0.97rem;
-}
-
-#panelLogin input{
-  font-size: 0.97rem;
-  padding: 10px 11px;
-}
-
-/* login button & google button – sakto lang laki */
-#panelLogin .login-btn{
-  font-size: 0.98rem;
-  padding: 0.55rem 2.2rem;
-}
-
-#panelLogin .login-google-btn{
-  font-size: 0.95rem;
-  padding: 10px 30px;
-}
-
-/* REGISTER side – pareho ng feel sa login */
-#panelRegister .register-form{
-  max-width: 100%;
-  padding: 1.5rem 1.7rem 1.4rem;
-}
-
-#panelRegister label{
-  font-size: 0.95rem;
-}
-
-#panelRegister input,
-#panelRegister select{
-  font-size: 0.95rem;
-  padding: 10px 11px;
 }
