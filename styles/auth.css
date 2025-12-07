@@ -683,3 +683,59 @@ select{
   transform: translateY(-1px);
   opacity: 1;
 }
+/* ==== LOGIN PANEL – MAS PRESENTABLE ==== */
+
+/* align content sa gitna horizontally */
+#panelLogin{
+  align-items: center;
+}
+
+/* title: mas laki pero di masyadong malayo sa tabs */
+#panelLogin .form-title{
+  font-size: 2.1rem;
+  margin-top: 10px;
+  margin-bottom: 12px;
+}
+
+/* gawing card-style ang login form, mas maiksi ang lapad */
+#panelLogin .form-stack{
+  max-width: 460px;               /* hindi na full width */
+  width: 100%;
+  margin: 0 auto;
+  background:#f9fafb;
+  border-radius:18px;
+  padding:1.4rem 1.6rem 1.5rem;
+  box-shadow:0 18px 45px rgba(15,23,42,0.08);
+  gap: 16px;                      /* spacing ng fields */
+}
+
+/* fonts sa login labels at inputs – mas laki para readable */
+#panelLogin label{
+  font-size: 1rem;
+}
+
+#panelLogin input{
+  font-size: 1rem;
+  padding: 11px 12px;
+}
+
+/* ayusin spacing sa buttons at divider */
+#panelLogin .buttons{
+  margin-top: 12px;
+}
+
+#panelLogin .or-divider{
+  margin-top: 16px;
+  margin-bottom: 10px;
+}
+
+/* google button: konting laki para di mukhang nakalutang na maliit */
+#panelLogin .login-google-btn{
+  min-width: 260px;
+}
+
+/* right panel: sapat na lang ang top/bottom padding (pareho pa rin sa register) */
+.right-section{
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
