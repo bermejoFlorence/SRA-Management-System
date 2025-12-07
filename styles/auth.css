@@ -514,3 +514,38 @@ select:focus{
   .main-title{ font-size:2.2rem; }
   .subtitle{ font-size:1rem; }
 }
+/* ==== FINE TUNE – REGISTER PARA DI SOBRANG TAAS ==== */
+
+/* liitan nang kaunti yung loob ng card */
+#panelRegister .register-form{
+  padding: 1.05rem 1.35rem 0.9rem;   /* dati mas makapal */
+}
+
+/* bawasan gaps sa pagitan ng rows */
+#panelRegister .register-form .field-grid{
+  row-gap: 0.55rem;
+  column-gap: 0.75rem;
+}
+
+/* medyo liitan lang font at height ng fields sa register side */
+#panelRegister label{
+  font-size: 0.9rem;
+}
+
+#panelRegister input,
+#panelRegister select{
+  font-size: 0.93rem;
+  padding: 9px 10px;
+}
+
+/* actions (Go to Login / Register) – konting bawas space sa taas */
+#panelRegister .register-form .form-actions{
+  margin-top: 0.4rem;
+  padding-top: 0.45rem;
+}
+
+/* divider sa ilalim ng form – konting sikip para may room sa Google button */
+#panelRegister .or-divider{
+  margin-top: 0.9rem;
+  margin-bottom: 0.35rem;
+}
