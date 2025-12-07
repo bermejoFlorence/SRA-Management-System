@@ -773,3 +773,21 @@ select{
   font-size: 1.02rem;
   padding: 11px 34px;
 }
+/* Gawing kasing-laki at style ng login card ang register card */
+#panelRegister .register-form{
+  max-width: 980px;              /* adjust if gusto mong mas makitid o mas malapad */
+  margin: 0 auto;
+  padding: 1.7rem 1.9rem 1.7rem;
+  box-shadow: 0 18px 45px rgba(15,23,42,0.08);
+}
+
+/* medyo lakihan pa font ng labels/inputs sa register para match sa login */
+#panelRegister label{
+  font-size: 1rem;
+}
+
+#panelRegister input,
+#panelRegister select{
+  font-size: 1rem;
+  padding: 12px 13px;
+}
