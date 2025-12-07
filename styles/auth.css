@@ -448,3 +448,34 @@ select:focus{
 .form-title{
   margin:2px 0 10px 0;
 }
+/* ==== Use full width of the right panel ==== */
+.auth-tabs,
+.auth-slider{
+  max-width: 100%;       /* dati 500px, kaya may bakanteng espasyo */
+}
+
+/* Register form – 12-column grid para sa custom layout */
+.register-form .field-grid{
+  display:grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap:0.6rem 0.9rem;
+}
+
+/* Column span helpers */
+.field-grid .col-3{ grid-column: span 3; }   /* 4 items per row (4x3=12) */
+.field-grid .col-4{ grid-column: span 4; }   /* 3 items per row (3x4=12) */
+.field-grid .col-6{ grid-column: span 6; }   /* 2 items per row (2x6=12) */
+.field-grid .col-12{ grid-column: span 12; } /* full width */
+
+/* Responsive: stack all fields on small screens */
+@media (max-width: 900px){
+  .register-form .field-grid{
+    grid-template-columns: 1fr;
+  }
+  .field-grid .col-3,
+  .field-grid .col-4,
+  .field-grid .col-6,
+  .field-grid .col-12{
+    grid-column: span 1;
+  }
+}

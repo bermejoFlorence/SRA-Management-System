@@ -153,45 +153,30 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
             <input type="hidden" name="google_mode"
                    value="<?php echo $googlePending ? '1' : '0'; ?>">
 
-            <div class="field-grid">
-              <label>Firstname
+                       <div class="field-grid">
+              <!-- Row 1: Firstname, Lastname, Middlename, Extension -->
+              <label class="col-3">Firstname
                 <input type="text" name="firstname" required autocomplete="given-name"/>
               </label>
 
-              <label>Middlename
-                <input type="text" name="middlename" autocomplete="additional-name"/>
-              </label>
-
-              <label>Lastname
+              <label class="col-3">Lastname
                 <input type="text" name="lastname" required autocomplete="family-name"/>
               </label>
 
-              <label>Extension Name
+              <label class="col-3">Middlename
+                <input type="text" name="middlename" autocomplete="additional-name"/>
+              </label>
+
+              <label class="col-3">Extension Name
                 <input type="text" name="extensionname" placeholder="e.g., Jr., II, Sr." />
               </label>
 
-              <label>Student ID No.
+              <!-- Row 2: Student ID, Course, Major -->
+              <label class="col-4">Student ID No.
                 <input type="text" name="studentid" required />
               </label>
 
-              <label>Email
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  autocomplete="email"
-                  inputmode="email"
-                  value="<?php echo htmlspecialchars($googleEmail); ?>"
-                  <?php echo $googlePending ? 'readonly' : ''; ?>
-                />
-              </label>
-
-              <label>Password
-                <input type="password" name="password" required autocomplete="new-password"/>
-              </label>
-
-              <!-- COURSE (dropdown from sra_programs) -->
-              <label>Course
+              <label class="col-4">Course
                 <select name="program_id" id="programSelect" required>
                   <option value="">Select course</option>
                   <?php foreach ($programs as $p): ?>
@@ -207,15 +192,14 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
                 </select>
               </label>
 
-              <!-- MAJOR (depends on course, may be disabled) -->
-              <label>Major
+              <label class="col-4">Major
                 <select name="major_id" id="majorSelect" disabled>
                   <option value="">Select course first</option>
                 </select>
               </label>
 
-              <!-- YEAR LEVEL -->
-              <label>Year Level
+              <!-- Row 3: Year Level, Section, School Year -->
+              <label class="col-4">Year Level
                 <select name="yearlevel" id="yearLevelSelect" required>
                   <option value="">Select year level</option>
                   <option value="1">1st Year</option>
@@ -225,7 +209,7 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
                 </select>
               </label>
 
-              <label>Section
+              <label class="col-4">Section
                 <select name="section" id="sectionSelect" required>
                   <option value="">Select section</option>
                   <option value="A">A</option>
@@ -241,7 +225,7 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
                 </select>
               </label>
 
-              <label>School Year
+              <label class="col-4">School Year
                 <select name="school_year" id="schoolYearSelect" required>
                   <option value="">Select school year</option>
                   <?php foreach ($syOptions as $sy): ?>
@@ -251,7 +235,30 @@ $googlePhoto   = $googlePending['profile_photo'] ?? '';
                   <?php endforeach; ?>
                 </select>
               </label>
+
+              <!-- Row 4: Email (full width) -->
+              <label class="col-12">Email
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  autocomplete="email"
+                  inputmode="email"
+                  value="<?php echo htmlspecialchars($googleEmail); ?>"
+                  <?php echo $googlePending ? 'readonly' : ''; ?>
+                />
+              </label>
+
+              <!-- Row 5: Password + Confirm Password -->
+              <label class="col-6">Password
+                <input type="password" name="password" required autocomplete="new-password"/>
+              </label>
+
+              <label class="col-6">Confirm Password
+                <input type="password" name="confirm_password" required autocomplete="new-password"/>
+              </label>
             </div>
+
 
             <div class="form-actions">
               <button type="button" class="btn login-alt" id="goLogin">Go to Login</button>
