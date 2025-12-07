@@ -791,3 +791,76 @@ select{
   font-size: 1rem;
   padding: 12px 13px;
 }
+/* ================= FINAL OVERRIDES – LOGIN ================= */
+
+/* gawin nating flex container yung panel para ma-center yung card */
+#panelLogin{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* title sa login */
+#panelLogin .form-title{
+  font-size: 2.2rem;
+  margin-top: 12px;
+  margin-bottom: 14px;
+}
+
+/* login card (yung <form class="form-stack">) */
+#panelLogin .form-stack{
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+  background:#f9fafb;
+  border-radius:18px;
+  padding:1.8rem 2rem 1.8rem;
+  box-shadow:0 18px 45px rgba(15,23,42,0.12);
+
+  display:flex;
+  flex-direction:column;
+  gap: 18px;
+
+  transform: scale(1.06);        /* parang naka-zoom */
+  transform-origin: top center;
+}
+
+/* labels at inputs – mas malaki font */
+#panelLogin label{
+  font-size: 1.08rem;
+}
+
+#panelLogin input{
+  font-size: 1.08rem;
+  padding: 12px 13px;
+}
+
+/* login button */
+#panelLogin .login-btn{
+  font-size: 1.05rem;
+  padding: 0.7rem 2.6rem;
+}
+
+/* divider at google button */
+#panelLogin .or-divider{
+  font-size: 1.1rem;
+  margin-top: 18px;
+  margin-bottom: 10px;
+}
+
+#panelLogin .login-google-btn{
+  font-size: 1.02rem;
+  padding: 11px 34px;
+}
+
+/* switch hint sa baba (No account yet? Create one) */
+#panelLogin .switch-hint{
+  margin-top: 14px;
+  text-align: center;
+}
+
+/* konting adjust sa right panel para sakto ang top/bottom spacing */
+.right-section{
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
