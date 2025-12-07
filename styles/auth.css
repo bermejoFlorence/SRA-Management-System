@@ -41,13 +41,13 @@ body{
   align-items:stretch;
   justify-content:stretch;
   margin:0;
-  padding:0;                 /* WALANG padding sa taas → walang black bar */
+  padding:0;                 /* walang padding sa gilid */
 }
 
 /* ===================== LEFT SIDE ===================== */
 
 .left-section{
-  flex:0 0 70%;              /* ≈70% width */
+  flex:0 0 60%;              /* 60% width (dati 70) */
   position:relative;
   background:url('../picture.jpg') center/cover no-repeat;
   color:#fff;
@@ -137,8 +137,8 @@ body{
 /* ===================== RIGHT SIDE ===================== */
 
 .right-section{
-  flex:0 0 30%;              /* ≈30% width */
-  max-width:30%;
+  flex:0 0 40%;              /* 40% width (dati 30) */
+  max-width:40%;
   background:var(--panel);
   display:flex;
   flex-direction:column;
@@ -157,9 +157,9 @@ body{
   background:#e9ecef;
   padding:6px;
   border-radius:10px;
-  margin:0 auto 16px;
+  margin:0 auto 18px;
   width:100%;
-  max-width:500px;
+  max-width:100%;            /* gamitin buong lapad ng right panel */
 }
 
 .tab-btn{
@@ -181,7 +181,7 @@ body{
 /* Slider */
 .auth-slider{
   width:100%;
-  max-width:500px;
+  max-width:100%;            /* full width din */
   margin:0 auto;
   position:relative;
   overflow:hidden;
@@ -208,7 +208,7 @@ body{
   font-size:1.6rem;
   color:#333;
   text-align:center;
-  margin:4px 0 14px 0;
+  margin:2px 0 10px 0;
 }
 
 /* ===================== FORMS ===================== */
@@ -251,26 +251,49 @@ select:focus{
   background:#fff;
 }
 
-/* REGISTER CARD */
+/* LOGIN: punuin ang vertical space */
+#panelLogin .form-stack{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;   /* fields sa taas, google + link pababa */
+}
+
+/* konting laki ng title sa login */
+#panelLogin .form-title{
+  font-size:1.8rem;
+  margin-top:8px;
+  margin-bottom:16px;
+}
+
+/* ===================== REGISTER CARD ===================== */
 
 .register-form{
   background:#f9fafb;
   border-radius:18px;
-  padding:1.25rem 1.5rem 1.2rem;
+  padding:1.6rem 1.8rem 1.4rem;
   box-shadow:0 18px 45px rgba(15,23,42,0.08);
   display:flex;
   flex-direction:column;
-  gap:0.75rem;
+  gap:0.9rem;
 }
 
+/* 12-column grid */
 .register-form .field-grid{
   display:grid;
-  grid-template-columns:repeat(2, minmax(0,1fr));
-  gap:0.6rem 1rem;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap:0.9rem;
+  row-gap:0.9rem;
 }
 
+/* Column span helpers */
+.field-grid .col-3{  grid-column: span 3; }   /* 4 items per row (4x3=12) */
+.field-grid .col-4{  grid-column: span 4; }   /* 3 items per row (3x4=12) */
+.field-grid .col-6{  grid-column: span 6; }   /* 2 items per row (2x6=12) */
+.field-grid .col-12{ grid-column: span 12; }  /* full width */
+
 .register-form .form-actions{
-  margin-top:0.5rem;
+  margin-top:auto;              /* itulak pababa yung buttons */
   padding-top:0.75rem;
   display:flex;
   justify-content:flex-end;
@@ -283,7 +306,7 @@ select:focus{
   margin:0 0 10px 0;
 }
 
-/* Buttons */
+/* ===================== BUTTONS ===================== */
 
 .buttons{
   display:flex;
@@ -411,8 +434,15 @@ select:focus{
     max-width:640px;
   }
 
+  /* Stack all fields on small screens */
   .register-form .field-grid{
-    grid-template-columns:1fr;
+    grid-template-columns: 1fr;
+  }
+  .field-grid .col-3,
+  .field-grid .col-4,
+  .field-grid .col-6,
+  .field-grid .col-12{
+    grid-column: span 1;
   }
 
   .buttons .btn{
@@ -424,114 +454,10 @@ select:focus{
   .main-title{ font-size:2.2rem; }
   .subtitle{ font-size:1rem; }
 }
-/* ==== WIDEN RIGHT PANEL TO ~40% ==== */
-.left-section{
-  flex:0 0 60%;      /* dati 70% */
-}
 
-.right-section{
-  flex:0 0 40%;      /* dati 30% */
-  max-width:40%;
-}
-
-/* konting bawas sa loob ng register card para di masyadong matangkad */
-.register-form{
-  padding:1rem 1.25rem 1rem;
-  gap:0.6rem;
-}
-
-.register-form .field-grid{
-  gap:0.55rem 0.9rem;
-}
-
-/* bawas ng konti sa space ng title */
-.form-title{
-  margin:2px 0 10px 0;
-}
-/* ==== Use full width of the right panel ==== */
-.auth-tabs,
-.auth-slider{
-  max-width: 100%;       /* dati 500px, kaya may bakanteng espasyo */
-}
-
-/* Register form – 12-column grid para sa custom layout */
-.register-form .field-grid{
-  display:grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap:0.6rem 0.9rem;
-}
-
-/* Column span helpers */
-.field-grid .col-3{ grid-column: span 3; }   /* 4 items per row (4x3=12) */
-.field-grid .col-4{ grid-column: span 4; }   /* 3 items per row (3x4=12) */
-.field-grid .col-6{ grid-column: span 6; }   /* 2 items per row (2x6=12) */
-.field-grid .col-12{ grid-column: span 12; } /* full width */
-
-/* Responsive: stack all fields on small screens */
-@media (max-width: 900px){
-  .register-form .field-grid{
-    grid-template-columns: 1fr;
-  }
-  .field-grid .col-3,
-  .field-grid .col-4,
-  .field-grid .col-6,
-  .field-grid .col-12{
-    grid-column: span 1;
-  }
-}
-/* LOGIN: punuin ang vertical space */
-#panelLogin .form-stack{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;   /* fields sa taas, google + link pababa */
-}
-
-/* konting laki ng title sa login para di mukhang maliit */
-#panelLogin .form-title{
-  font-size:1.8rem;
-  margin-top:8px;
-  margin-bottom:16px;
-}
-/* REGISTER: form card fills available height */
-.register-form{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-}
-
-/* grid ng fields sa itaas, buttons sa ibaba */
-.register-form .field-grid{
-  margin-bottom:0.75rem;
-}
-
-.register-form .form-actions{
-  margin-top:auto;              /* itulak pababa yung buttons */
-  padding-top:0.75rem;
-}
-/* ==== DESKTOP: center vertically ang login/register column ==== */
+/* DESKTOP: center vertically ang login/register column */
 @media (min-width: 901px){
   .right-section{
-    justify-content: center;   /* dati flex-start → pantay taas/baba */
+    justify-content: center;   /* vertical center */
   }
-
-  /* konting tweak sa spacing ng tabs at card */
-  .auth-tabs{
-    margin-top: 0;
-    margin-bottom: 18px;
-    max-width: 100%;
-  }
-
-  .auth-slider{
-    max-width: 100%;
-  }
-}
-/* Register card: mas maraming breathing room sa loob */
-.register-form{
-  padding: 1.6rem 1.8rem 1.4rem;
-  gap: 0.9rem;
-}
-
-.register-form .field-grid{
-  row-gap: 0.9rem;
 }
