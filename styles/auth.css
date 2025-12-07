@@ -900,3 +900,79 @@ select{
   transform: scale(1.06);
   transform-origin: top center;
 }
+/* ===== FINAL TUNING (DESKTOP AT 100% ZOOM) ===== */
+
+/* base text size balik sa normal */
+body{
+  font-size: 16px;
+}
+
+/* right panel spacing: hindi masikip, hindi rin sobrang laki */
+.right-section{
+  padding: 16px 24px;
+}
+
+/* tabs + slider: magkasing-lapad, sakto lang sa panel */
+.auth-tabs,
+.auth-slider{
+  max-width: 600px;
+}
+
+/* LOGIN title */
+#panelLogin .form-title{
+  font-size: 1.9rem;
+  margin-top: 10px;
+  margin-bottom: 14px;
+}
+
+/* LOGIN card – normal width, wala nang zoom */
+#panelLogin .form-stack{
+  max-width: 560px;                 /* hindi na 720 at walang scale */
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.6rem 1.8rem 1.6rem;
+  background:#f9fafb;
+  border-radius:18px;
+  box-shadow:0 18px 45px rgba(15,23,42,0.08);
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  transform: none;                  /* REMOVE zoom */
+}
+
+/* login labels / fields – medyo mas maliit ulit */
+#panelLogin label{
+  font-size: 0.97rem;
+}
+
+#panelLogin input{
+  font-size: 0.97rem;
+  padding: 10px 11px;
+}
+
+/* login button & google button – sakto lang laki */
+#panelLogin .login-btn{
+  font-size: 0.98rem;
+  padding: 0.55rem 2.2rem;
+}
+
+#panelLogin .login-google-btn{
+  font-size: 0.95rem;
+  padding: 10px 30px;
+}
+
+/* REGISTER side – pareho ng feel sa login */
+#panelRegister .register-form{
+  max-width: 100%;
+  padding: 1.5rem 1.7rem 1.4rem;
+}
+
+#panelRegister label{
+  font-size: 0.95rem;
+}
+
+#panelRegister input,
+#panelRegister select{
+  font-size: 0.95rem;
+  padding: 10px 11px;
+}
