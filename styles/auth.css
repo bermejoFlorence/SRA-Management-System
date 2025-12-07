@@ -482,3 +482,28 @@ select:focus{
   .main-title{ font-size:2.2rem; }
   .subtitle{ font-size:1rem; }
 }
+/* ========== OVERRIDES PARA MAS PUNO ANG RIGHT SIDE ========== */
+
+/* 1) Right panel – bawas padding at no vertical centering */
+.right-section{
+  align-items: center;       /* center horizontally pa rin */
+  justify-content: flex-start; /* content simula agad sa taas */
+  padding: 8px 26px 8px;    /* ~0.5rem top/bottom, retain left/right */
+}
+
+/* 2) Palakihin pa konti ang lapad ng tabs + card at liitan margin */
+.auth-tabs{
+  max-width: 560px;         /* dati 520px */
+  margin-top: 8px;
+  margin-bottom: 8px;       /* maliit na gap sa taas/baba */
+}
+
+.auth-slider{
+  max-width: 560px;         /* match sa tabs */
+  margin-bottom: 8px;       /* maliit na space bago sa ilalim */
+}
+
+/* optional: bawasan pa ng kaunti yung space sa ilalim ng register card */
+.register-form{
+  margin-bottom: 4px;       /* halos dikit na sa Google button divider */
+}
