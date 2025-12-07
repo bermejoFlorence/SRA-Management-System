@@ -479,3 +479,33 @@ select:focus{
     grid-column: span 1;
   }
 }
+/* LOGIN: punuin ang vertical space */
+#panelLogin .form-stack{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;   /* fields sa taas, google + link pababa */
+}
+
+/* konting laki ng title sa login para di mukhang maliit */
+#panelLogin .form-title{
+  font-size:1.8rem;
+  margin-top:8px;
+  margin-bottom:16px;
+}
+/* REGISTER: form card fills available height */
+.register-form{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+/* grid ng fields sa itaas, buttons sa ibaba */
+.register-form .field-grid{
+  margin-bottom:0.75rem;
+}
+
+.register-form .form-actions{
+  margin-top:auto;              /* itulak pababa yung buttons */
+  padding-top:0.75rem;
+}
