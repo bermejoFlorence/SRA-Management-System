@@ -739,3 +739,37 @@ select{
   padding-top: 10px;
   padding-bottom: 10px;
 }
+/* ==== LOGIN CARD – PARANG NAKA-ZOOM IN ==== */
+
+#panelLogin .form-stack{
+  max-width: 500px;              /* konting laki pa ng lapad */
+  padding: 1.7rem 1.9rem 1.7rem; /* mas roomy sa loob */
+  transform: scale(1.06);        /* zoom effect */
+  transform-origin: top center;  /* lalaking pababa, hindi gagalaw sa tabs */
+}
+
+/* mas malaking fonts sa labels at fields */
+#panelLogin label{
+  font-size: 1.08rem;
+}
+
+#panelLogin input{
+  font-size: 1.08rem;
+  padding: 12px 13px;
+}
+
+/* login button – mas laki ng konti */
+#panelLogin .login-btn{
+  font-size: 1.05rem;
+  padding: 0.65rem 2.4rem;
+}
+
+/* "or" divider + google button */
+#panelLogin .or-divider{
+  font-size: 1.1rem;
+}
+
+#panelLogin .login-google-btn{
+  font-size: 1.02rem;
+  padding: 11px 34px;
+}
