@@ -509,3 +509,29 @@ select:focus{
   margin-top:auto;              /* itulak pababa yung buttons */
   padding-top:0.75rem;
 }
+/* ==== DESKTOP: center vertically ang login/register column ==== */
+@media (min-width: 901px){
+  .right-section{
+    justify-content: center;   /* dati flex-start → pantay taas/baba */
+  }
+
+  /* konting tweak sa spacing ng tabs at card */
+  .auth-tabs{
+    margin-top: 0;
+    margin-bottom: 18px;
+    max-width: 100%;
+  }
+
+  .auth-slider{
+    max-width: 100%;
+  }
+}
+/* Register card: mas maraming breathing room sa loob */
+.register-form{
+  padding: 1.6rem 1.8rem 1.4rem;
+  gap: 0.9rem;
+}
+
+.register-form .field-grid{
+  row-gap: 0.9rem;
+}
