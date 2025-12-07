@@ -558,3 +558,69 @@ select{
 #panelLogin .form-title{
   font-size: 2rem;
 }
+/* ==== SCALE UP TYPOGRAPHY + FIELDS PARA MAPUNO ANG HEIGHT ==== */
+
+/* base font a bit larger */
+body{
+  font-size: 17px;
+}
+
+/* labels mas readable */
+label{
+  font-size: 1rem;
+}
+
+/* inputs & selects: mas mataas + mas malaking text */
+input,
+select{
+  font-size: 1rem;
+  padding: 12px 11px;           /* dati 10px */
+}
+
+/* titles mas malaki para di masyadong “lutang” sa taas */
+.form-title{
+  font-size: 2rem;
+  margin-top: 10px;
+  margin-bottom: 18px;
+}
+
+#panelLogin .form-title{
+  font-size: 2.1rem;
+}
+
+/* helper text mas klaro */
+.small-hint{
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* dagdag konting vertical spacing sa pagitan ng rows/fields */
+.form-stack{
+  gap: 18px;
+}
+
+.register-form .field-grid{
+  row-gap: 1.1rem;
+}
+
+/* register card: kaunting dagdag sa loob para mas taas siya */
+.register-form{
+  padding-top: 1.8rem;
+  padding-bottom: 1.6rem;
+}
+
+/* divider at buttons: konting dagdag ng gap para hindi dikit tingnan */
+.or-divider{
+  margin-top: 1.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.buttons{
+  margin-top: 10px;
+}
+
+/* right panel: very light adjustment sa padding para balanced pa rin */
+.right-section{
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
