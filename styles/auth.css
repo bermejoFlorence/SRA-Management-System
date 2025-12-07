@@ -963,7 +963,7 @@ body{
 
 /* REGISTER side – pareho ng feel sa login */
 #panelRegister .register-form{
-  max-width: 100%;
+  max-width: 80%;
   padding: 1.5rem 1.7rem 1.4rem;
 }
 
