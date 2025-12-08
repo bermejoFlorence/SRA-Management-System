@@ -1,4 +1,3 @@
-
 <?php
 // admin/includes/sidebar.php
 $ACTIVE_MENU = $ACTIVE_MENU ?? 'dashboard';
@@ -37,47 +36,29 @@ $openCls   = fn($k) => ($ACTIVE_MENU === $k) ? 'open' : '';
     <i class="chev fas fa-chevron-down"></i>
   </a>
   <div class="submenu <?php echo $openCls('stories'); ?>" data-submenu="stories">
-      <a class="<?php echo $subActive('slt'); ?>" href="stories_sl.php">Starting Level Assessment</a>
+    <a class="<?php echo $subActive('slt'); ?>" href="stories_sl.php">Starting Level Assessment</a>
     <a class="<?php echo $subActive('pb');  ?>" href="stories_pb.php">Power Builder Assessment</a>
     <a class="<?php echo $subActive('rb');  ?>" href="stories_rb.php">Rate Builder Assessment</a>
-
   </div>
 
-  <!-- <a class="<?php echo $active('assessments'); ?>" href="assessments.php">
-    <i class="fas fa-pen-to-square"></i> Assessments
-  </a> -->
-  <!-- <a class="<?php echo $active('students'); ?>" href="students.php">
-    <i class="fas fa-user-graduate"></i> Students
-  </a> -->
-  
-   <!-- NEW: Programs & Students -->
+  <!-- NEW: Programs & Students -->
   <a class="<?php echo $active('prog_students'); ?>" href="programs_students.php">
     <i class="fas fa-layer-group"></i> Programs &amp; Students
   </a>
-  
-  <!-- <a class="<?php echo $active('certificates'); ?>" href="certificates.php">
-    <i class="fas fa-certificate"></i> Certificates
-  </a>
-  <a class="<?php echo $active('reports'); ?>" href="reports.php">
-    <i class="fas fa-chart-column"></i> Reports
-  </a> -->
 
   <!-- Configuration -->
   <div style="margin:14px 10px 6px; font-size:12px; text-transform:uppercase; opacity:.7; letter-spacing:.5px;">
     Configuration
   </div>
+
   <a class="<?php echo $active('levels'); ?>" href="levels.php">
     <i class="fas fa-swatchbook"></i> Levels &amp; Thresholds
   </a>
-  <!-- <a class="<?php echo $active('settings'); ?>" href="settings.php">
-    <i class="fas fa-gear"></i> Settings
-  </a>
+
+  <!-- NEW: Announcements menu -->
   <a class="<?php echo $active('announcements'); ?>" href="announcements.php">
     <i class="fas fa-bullhorn"></i> Announcements
-  </a> -->
-  <!-- <a class="<?php echo $active('users'); ?>" href="users.php">
-    <i class="fas fa-users-gear"></i> Admins/Users
-  </a> -->
+  </a>
 
   <hr style="border:none; border-top:1px solid rgba(255,255,255,.25); margin:12px 0;">
   <a href="../logout.php">
