@@ -320,7 +320,12 @@ require_once __DIR__ . '/includes/sidebar.php';
 .head-meta .meta-value{
   font-weight:900; font-size:clamp(.95rem,.9rem + .25vw,1.05rem); color:var(--g);
 }
-
+.slt-warning {
+  color: #c23934;          /* soft red, hindi sobrang lakas */
+  font-size: .9rem;
+  margin: 4px 0 10px;
+  line-height: 1.5;
+}
 </style>
 
 <div class="main-content">
@@ -388,6 +393,12 @@ require_once __DIR__ . '/includes/sidebar.php';
             <li><strong>Target:</strong> Pass at least <strong>8/15</strong> stories to unlock <em>Rate Builder</em>.</li>
             <li><strong>Stay online.</strong> A refresh or lost connection ends the attempt and it cannot be resumed.</li>
           </ul>
+                <p class="slt-warning">
+    While taking the test, please stay on this page. The administrator can see when you
+    leave or switch tabs. If you are frequently away from the test or stay off the page
+    for a long time, your attempt may be rejected and you may be required to start from
+    the beginning. Even a passing score may be marked as <strong>invalid</strong>.
+  </p>
 
 <div class="pill" style="margin:8px 0 14px;">
   Current progress: <strong><?= (int)$pbProgressDone ?>/<?= (int)$pbProgressTotal ?></strong>
