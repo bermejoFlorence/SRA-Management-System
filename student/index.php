@@ -545,41 +545,48 @@ try {
   margin:10px 0 0 18px;
 }
 
-/* --- Announcements list (flat, no bullets) --- */
+/* --- Announcements list (same feel as Reading Tips) --- */
 .ann-list{
-  list-style:none;
-  padding:0;
-  margin:4px 0 0;
+  list-style: disc;
+  padding-left: 20px;      /* katulad ng normal <ul> */
+  margin: 4px 0 0;
 }
 
 .ann-item{
-  padding:8px 0 10px;
-  border-bottom:1px dashed #e5e7eb;
+  padding: 6px 0 10px;
+  border-bottom: 1px dashed #e5e7eb;
 }
 .ann-item:last-child{
   border-bottom:none;
 }
 
+/* title: green + soft highlight */
 .ann-title{
-  font-size:.95rem;
+  display:inline-block;
   font-weight:600;
   color:#064d00;
+  background:#fdf6e3;
+  padding:3px 8px;
+  border-radius:6px;
   margin-bottom:2px;
 }
 
+/* date (mas maliit nang kaunti) */
 .ann-meta{
-  font-size:.8rem;
+  font-size:0.85rem;
   color:#6b7280;
-  margin-bottom:4px;
+  margin:2px 0 4px;
 }
 
+/* body: same size as Reading Tips (1rem) */
 .ann-body{
-  font-size:.9rem;
+  font-size:1rem;
   color:#374151;
 }
 
+/* empty state */
 .ann-empty{
-  font-size:.9rem;
+  font-size:0.95rem;
   color:#6b7280;
   margin:8px 0 0;
 }
