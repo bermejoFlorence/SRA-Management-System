@@ -17,11 +17,7 @@ $sql = "
       announcement_id,
       title,
       body,
-      audience,
-      priority,
       status,
-      start_date,
-      end_date,
       created_at
   FROM sra_announcements
   ORDER BY created_at DESC
@@ -469,19 +465,12 @@ require_once __DIR__ . '/includes/sidebar.php';
               data-id="<?php echo (int)$a['announcement_id']; ?>"
               data-title="<?php echo htmlspecialchars($a['title'], ENT_QUOTES); ?>"
               data-body="<?php echo htmlspecialchars($a['body'], ENT_QUOTES); ?>"
-              data-audience="<?php echo htmlspecialchars($a['audience'], ENT_QUOTES); ?>"
-              data-priority="<?php echo htmlspecialchars($a['priority'], ENT_QUOTES); ?>"
               data-status="<?php echo htmlspecialchars($a['status'], ENT_QUOTES); ?>"
-              data-start="<?php echo htmlspecialchars($a['start_date'] ?? '', ENT_QUOTES); ?>"
-              data-end="<?php echo htmlspecialchars($a['end_date'] ?? '', ENT_QUOTES); ?>"
             >
               <td><?php echo $i++; ?></td>
               <td>
                 <div class="ann-detail-title">
                   <?php echo htmlspecialchars($a['title']); ?>
-                  <?php if ($a['priority'] === 'important'): ?>
-                    <span style="margin-left:6px; font-size:11px; color:#b45309;">• Important</span>
-                  <?php endif; ?>
                 </div>
                 <div class="ann-detail-body">
                   <?php echo htmlspecialchars($a['body']); ?>
@@ -547,38 +536,12 @@ require_once __DIR__ . '/includes/sidebar.php';
       </div>
 
       <div class="form-row">
-        <label for="ann_audience">Audience</label>
-        <select id="ann_audience" name="audience">
-          <option value="students">Students only</option>
-          <option value="all">All users</option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <label for="ann_priority">Priority</label>
-        <select id="ann_priority" name="priority">
-          <option value="normal">Normal</option>
-          <option value="important">Important</option>
-        </select>
-      </div>
-
-      <div class="form-row">
         <label for="ann_status">Status</label>
         <select id="ann_status" name="status">
           <option value="active">Active</option>
           <option value="scheduled">Scheduled</option>
           <option value="inactive">Inactive</option>
         </select>
-      </div>
-
-      <div class="form-row">
-        <label>Visibility dates
-          <span style="font-weight:400; font-size:12px; color:#6b7280;">(optional)</span>
-        </label>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <input type="date" id="ann_start_date" name="start_date" />
-          <input type="date" id="ann_end_date" name="end_date" />
-        </div>
       </div>
 
       <div class="modal-footer">
@@ -603,11 +566,7 @@ require_once __DIR__ . '/includes/sidebar.php';
   const modeInput = document.getElementById('ann_mode');
   const titleInput= document.getElementById('ann_title');
   const bodyInput = document.getElementById('ann_body');
-  const audInput  = document.getElementById('ann_audience');
-  const priInput  = document.getElementById('ann_priority');
   const statusInp = document.getElementById('ann_status');
-  const startInp  = document.getElementById('ann_start_date');
-  const endInp    = document.getElementById('ann_end_date');
 
   if (!backdrop || !form) return;
 
@@ -618,20 +577,12 @@ require_once __DIR__ . '/includes/sidebar.php';
       idInput.value   = row.dataset.id || '';
       titleInput.value= row.dataset.title || '';
       bodyInput.value = row.dataset.body || '';
-      audInput.value  = row.dataset.audience || 'students';
-      priInput.value  = row.dataset.priority || 'normal';
       statusInp.value = row.dataset.status || 'active';
-      startInp.value  = row.dataset.start || '';
-      endInp.value    = row.dataset.end || '';
     } else {
       titleEl.textContent = 'Add Announcement';
       idInput.value   = '';
       form.reset();
-      audInput.value  = 'students';
-      priInput.value  = 'normal';
       statusInp.value = 'active';
-      startInp.value  = '';
-      endInp.value    = '';
     }
     backdrop.classList.add('show');
     setTimeout(()=>titleInput.focus(), 80);
