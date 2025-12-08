@@ -246,13 +246,6 @@ ob_start();
       color: #064d00;
     }
 
-    /* Row para sa course group header */
-    .course-group-row td {
-      background: #f4f8f0;
-      font-weight: 700;
-      font-size: 9px;
-      color: #064d00;
-    }
   </style>
 </head>
 <body>
@@ -319,14 +312,12 @@ ob_start();
           <th style="width:55px;">RB</th>
         </tr>
       </thead>
-      <tbody>
+       <tbody>
       <?php
       $i = 1;
       $fmt = function($v) {
           return $v !== null ? number_format($v, 2) . '%' : '—';
       };
-
-      $currentCourse = null;
 
       foreach ($rows as $s):
           $full_name = trim(
@@ -335,13 +326,16 @@ ob_start();
               ($s['ext_name'] ? ' ' . $s['ext_name'] : '')
           );
 
+          // Course (code + name)
           $course = trim(($s['program_code'] ?? '') . ' – ' . ($s['program_name'] ?? ''));
           if ($course === '–') {
               $course = 'No Program';
           }
 
+          // Major
           $major = $s['major_name'] ?: '—';
 
+          // Year & Section
           $yl  = $s['year_level'] ? ('Year ' . (int)$s['year_level']) : '—';
           $sec = $s['section'] !== '' ? $s['section'] : '—';
           $ys  = $yl . ' - ' . $sec;
@@ -349,18 +343,6 @@ ob_start();
           $slt = $s['slt_percent'];
           $pb  = $s['pb_percent'];
           $rb  = $s['rb_percent'];
-
-          // ===== COURSE GROUP HEADER (BSIT block, then next course, etc.) =====
-          if ($currentCourse !== $course) {
-              $currentCourse = $course;
-      ?>
-        <tr class="course-group-row">
-          <td colspan="9">
-            <?php echo htmlspecialchars($currentCourse); ?>
-          </td>
-        </tr>
-      <?php
-          }
       ?>
         <tr>
           <td class="center"><?php echo $i++; ?></td>
@@ -375,6 +357,7 @@ ob_start();
         </tr>
       <?php endforeach; ?>
       </tbody>
+
     </table>
   <?php endif; ?>
 </div>
