@@ -428,17 +428,16 @@ $res->free();
         </p>
       </div>
       <div class="header-actions">
-  <!-- Add Course button (unchanged) -->
   <button type="button" class="btn btn-add-course" id="btnAddCourse">
     + Add Course
   </button>
 
-  <!-- NEW: Export overall PDF results -->
-  <a href="programs_students_export_pdf.php"
+  <a href="overall_export_pdf_results.php"
      class="btn btn-export-overall">
     Export overall PDF results
   </a>
 </div>
+
 
     </div>
 
