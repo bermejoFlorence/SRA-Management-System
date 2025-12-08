@@ -269,19 +269,22 @@ if ($isFirstTimer) {
   }
 }
 
-/* ---------- Answer distribution (correct / wrong / skipped) ---------- */
-function fetch_answer_distribution(mysqli $conn, int $studentId, string $setType): array {
+/* ---------- Answer distribution (correct / wrong / skipped) ---------- */function fetch_answer_distribution(mysqli $conn, int $studentId, string $setType): array {
   $sql = "
     SELECT
-      SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END) AS correct_cnt,
-      SUM(CASE WHEN aa.is_correct = 0 THEN 1 ELSE 0 END) AS wrong_cnt,
+      SUM(CASE WHEN aa.is_correct = 1  THEN 1 ELSE 0 END) AS correct_cnt,
+      SUM(CASE WHEN aa.is_correct = 0  THEN 1 ELSE 0 END) AS wrong_cnt,
       SUM(CASE WHEN aa.is_correct IS NULL THEN 1 ELSE 0 END) AS skipped_cnt
     FROM assessment_attempts a
-    JOIN attempt_answers aa ON aa.attempt_id = a.attempt_id
+    JOIN attempt_stories ats
+      ON ats.attempt_id = a.attempt_id
+    JOIN attempt_answers aa
+      ON aa.attempt_story_id = ats.attempt_story_id
    WHERE a.student_id = ?
-     AND a.set_type = ?
+     AND a.set_type   = ?
      AND a.status IN ('in_progress','submitted','scored')
   ";
+
   $correct = $wrong = $skipped = 0;
   if ($stmt = $conn->prepare($sql)) {
     $stmt->bind_param('is', $studentId, $setType);
@@ -294,9 +297,8 @@ function fetch_answer_distribution(mysqli $conn, int $studentId, string $setType
     }
     $stmt->close();
   }
-  return ['correct'=>$correct,'wrong'=>$wrong,'skipped'=>$skipped];
+  return ['correct' => $correct, 'wrong' => $wrong, 'skipped' => $skipped];
 }
-
 
 function to_percent_dist(array $dist): array {
   $total = max(0, ($dist['correct'] ?? 0) + ($dist['wrong'] ?? 0) + ($dist['skipped'] ?? 0));
