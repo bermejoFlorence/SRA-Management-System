@@ -382,6 +382,39 @@ $res->free();
   transform: translateY(0);
   box-shadow: 0 8px 18px rgba(6, 77, 0, 0.18);
 }
+/* layout ng actions sa kanan */
+.header-actions {
+  display: flex;
+  flex-direction: column;   /* para vertical: Add Course sa taas, export sa baba */
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Export overall PDF button – mas subtle kaysa Add Course */
+.header-actions .btn-export-overall {
+  border-radius: 999px;
+  padding: 8px 18px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.12s;
+}
+
+.header-actions .btn-export-overall:hover {
+  background: #f3f4f6;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+  transform: translateY(-1px);
+}
+
+.header-actions .btn-export-overall:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.2);
+}
 
 </style>
 
@@ -395,11 +428,18 @@ $res->free();
         </p>
       </div>
       <div class="header-actions">
-       <button type="button" class="btn btn-add-course" id="btnAddCourse">
-  + Add Course
-</button>
+  <!-- Add Course button (unchanged) -->
+  <button type="button" class="btn btn-add-course" id="btnAddCourse">
+    + Add Course
+  </button>
 
-      </div>
+  <!-- NEW: Export overall PDF results -->
+  <a href="programs_students_export_pdf.php"
+     class="btn btn-export-overall">
+    Export overall PDF results
+  </a>
+</div>
+
     </div>
 
     <div class="courses-table-wrapper">
