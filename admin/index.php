@@ -134,6 +134,98 @@ if (!array_filter($badgeColors)) {
 require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/includes/sidebar.php';
 ?>
+
+<style>
+  /* ====== Student Badge Chart Card ====== */
+  .chart-card{
+    border-radius: 16px;
+    border: 1px solid #e3e7e3;
+    box-shadow: 0 10px 28px rgba(0,0,0,.06);
+    background: #fff;
+    padding: 1.25rem 1.5rem;
+    margin-top: 1.25rem;
+  }
+
+  .chart-card h3{
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #064d00;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+
+  .chart-card h3 .icon-badge{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: #064d00;
+    color: #fff;
+    font-size: .9rem;
+  }
+
+  .chart-header-line{
+    height: 2px;
+    width: 100%;
+    background: #064d00;
+    margin: .75rem 0 1rem;
+    opacity: .7;
+  }
+
+  .chart-filters{
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem 1rem;
+    align-items: flex-end;
+  }
+
+  .chart-filters .form-group{
+    min-width: 160px;
+  }
+
+  .chart-filters label{
+    font-size: .8rem;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 2px;
+  }
+
+  .chart-filters .form-select,
+  .chart-filters .btn{
+    font-size: .8rem;
+  }
+
+  .chart-help-text{
+    font-size: .8rem;
+    color: #666;
+    margin-top: .5rem;
+    margin-bottom: .75rem;
+  }
+
+  .chart-help-text strong{
+    font-weight: 700;
+  }
+
+  .chart-wrapper{
+    position: relative;
+    width: 100%;
+    height: 340px;      /* fixed canvas height pero responsive width */
+  }
+
+  @media (max-width: 576px){
+    .chart-card{
+      padding: 1rem 1.1rem;
+    }
+    .chart-wrapper{
+      height: 280px;
+    }
+  }
+</style>
+
 <div class="main-content">
 
   <div class="banner">
@@ -143,65 +235,77 @@ require_once __DIR__ . '/includes/sidebar.php';
       — Dr. Seuss
     </div>
   </div>
+  <!-- ================== STUDENT BADGE CHART CARD ================== -->
+  <div class="chart-card">
 
-  <!-- ================== FILTERS + CHART ================== -->
-  <div class="chart-container" style="grid-column:1 / -1;">
-
-    <div class="d-flex flex-wrap align-items-center justify-content-between mb-3" style="gap:.75rem;">
-      <h3 class="mb-0">🎖 Student Badge Chart</h3>
-
-      <form method="get" class="d-flex flex-wrap" style="gap:.5rem;">
-        <!-- School Year filter -->
-        <div>
-          <label for="sy" style="font-size:.8rem; display:block; margin-bottom:2px;">School Year</label>
-          <select name="sy" id="sy" class="form-select form-select-sm">
-            <option value="">All School Years</option>
-            <?php foreach ($syOptions as $sy): ?>
-              <option value="<?= htmlspecialchars($sy) ?>"
-                <?= $sy === $selectedSy ? 'selected' : '' ?>>
-                <?= htmlspecialchars($sy) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-
-        <!-- Program filter -->
-        <div>
-          <label for="program_id" style="font-size:.8rem; display:block; margin-bottom:2px;">Program</label>
-          <select name="program_id" id="program_id" class="form-select form-select-sm">
-            <option value="0">All Programs</option>
-            <?php foreach ($programs as $prog): ?>
-              <option value="<?= (int)$prog['program_id'] ?>"
-                <?= ((int)$prog['program_id'] === $selectedProgram) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($prog['program_code'] . ' — ' . $prog['program_name']) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-
-        <div class="align-self-end">
-          <button type="submit" class="btn btn-sm btn-primary">
-            Apply
-          </button>
-        </div>
-      </form>
+    <!-- Title row -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <h3>
+        <span class="icon-badge">
+          <i class="fa-solid fa-award"></i>
+        </span>
+        Student Badge Chart
+      </h3>
     </div>
 
-    <p style="font-size:.8rem; color:#666; margin-top:-.5rem; margin-bottom:.75rem;">
+    <div class="chart-header-line"></div>
+
+    <!-- Filters -->
+    <form method="get" class="chart-filters mb-2">
+      <div class="form-group">
+        <label for="sy">School Year</label>
+        <select name="sy" id="sy" class="form-select form-select-sm">
+          <option value="">All School Years</option>
+          <?php foreach ($syOptions as $sy): ?>
+            <option value="<?= htmlspecialchars($sy) ?>"
+              <?= $sy === $selectedSy ? 'selected' : '' ?>>
+              <?= htmlspecialchars($sy) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="program_id">Program</label>
+        <select name="program_id" id="program_id" class="form-select form-select-sm">
+          <option value="0">All Programs</option>
+          <?php foreach ($programs as $prog): ?>
+            <option value="<?= (int)$prog['program_id'] ?>"
+              <?= ((int)$prog['program_id'] === $selectedProgram) ? 'selected' : '' ?>>
+              <?= htmlspecialchars($prog['program_code'] . ' — ' . $prog['program_name']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <div>
+        <button type="submit" class="btn btn-sm btn-success px-3">
+          Apply
+        </button>
+      </div>
+    </form>
+
+    <!-- Small description text -->
+    <p class="chart-help-text">
       Showing students with a <strong>current level/badge</strong>
       (based on SLT / assigned level)
       <?php if ($selectedSy || $selectedProgram): ?>
         — filtered by
-        <?= $selectedSy ? 'SY ' . htmlspecialchars($selectedSy) : '' ?>
+        <?= $selectedSy ? '<strong>SY ' . htmlspecialchars($selectedSy) . '</strong>' : '' ?>
         <?= ($selectedSy && $selectedProgram ? ' · ' : '') ?>
-        <?= $selectedProgram ? 'Program ID ' . (int)$selectedProgram : '' ?>
+        <?= $selectedProgram ? '<strong>selected program</strong>' : '' ?>.
       <?php else: ?>
         — for <strong>all school years</strong> and <strong>all programs</strong>.
       <?php endif; ?>
     </p>
 
-    <canvas id="badgeChart" height="130"></canvas>
+    <!-- Chart canvas -->
+    <div class="chart-wrapper">
+      <canvas id="badgeChart"></canvas>
+    </div>
   </div>
+</div> <!-- end .main-content -->
+
 </div>
 
 <script>
@@ -217,52 +321,53 @@ require_once __DIR__ . '/includes/sidebar.php';
     // optional: you can show a message using plain JS/HTML if walang data.
     return;
   }
-
-  new Chart(el.getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Number of students',
-        data: counts,
-        backgroundColor: colors,
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        title:  { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const value = ctx.parsed.y ?? 0;
-              return `Students: ${value}`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Level / Badge Color'
-          }
-        },
-        y: {
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: 'Number of Students'
-          },
-          ticks: {
-            precision: 0   // whole numbers only
+new Chart(el.getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: labels,
+    datasets: [{
+      label: 'Number of students',
+      data: counts,
+      backgroundColor: colors,
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,   // <--- ADD THIS
+    plugins: {
+      legend: { display: false },
+      title:  { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            const value = ctx.parsed.y ?? 0;
+            return `Students: ${value}`;
           }
         }
       }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Level / Badge Color'
+        }
+      },
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Number of Students'
+        },
+        ticks: {
+          precision: 0
+        }
+      }
     }
-  });
+  }
+});
+
 })();
 </script>
 
