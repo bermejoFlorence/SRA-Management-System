@@ -5,168 +5,47 @@ require_role('admin', '../login.php#login');
 $PAGE_TITLE  = 'Announcements';
 $ACTIVE_MENU = 'announcements';
 
-require_once __DIR__ . '/includes/header.php';  // navbar + hamburger + backdrop + JS
+// ✳️ TEMP DATA LANG – papalitan natin ito ng real DB query mamaya
+$announcements = [
+    [
+        'id'          => 1,
+        'title'       => 'Starting Level Test Completion',
+        'body'        => 'All students are required to complete the Starting Level Test on or before August 15, 2025. Log in early to avoid delays.',
+        'created_at'  => '2025-07-20 09:15:00',
+        'status'      => 'active',
+    ],
+    [
+        'id'          => 2,
+        'title'       => 'Power Builder Assessment Opening',
+        'body'        => 'The Power Builder Assessment will open on August 20, 2025 for all eligible students who have completed their SLT stories.',
+        'created_at'  => '2025-07-25 14:30:00',
+        'status'      => 'scheduled',
+    ],
+    [
+        'id'          => 3,
+        'title'       => 'System Maintenance',
+        'body'        => 'The SRA system will undergo maintenance on August 5, 2025 from 7:00 PM to 9:00 PM. Please plan your tests accordingly.',
+        'created_at'  => '2025-07-18 16:05:00',
+        'status'      => 'inactive',
+    ],
+];
+
+require_once __DIR__ . '/includes/header.php';  // navbar + hamburger
 require_once __DIR__ . '/includes/sidebar.php'; // sidebar
 ?>
-<div class="main-content">
-  <!-- Page header -->
-  <div class="page-header">
-    <div>
-      <h1 class="page-title">Announcements</h1>
-      <p class="page-subtitle">
-        Create and manage updates that students will see on their dashboard.
-      </p>
-    </div>
-    <button type="button" class="btn-main" onclick="document.getElementById('annFormCard').scrollIntoView({behavior:'smooth'});">
-      <i class="fas fa-plus-circle"></i>
-      <span>New Announcement</span>
-    </button>
-  </div>
-
-  <div class="ann-layout">
-    <!-- LEFT: Create / Edit form -->
-    <div class="card ann-form-card" id="annFormCard">
-      <div class="card-header">
-        <h2>Create / Edit Announcement</h2>
-        <p>Set the title, message, audience, and visibility period.</p>
-      </div>
-
-      <!-- NOTE: action & backend logic - gagawin natin sa next step -->
-      <form method="post" action="announcements_save.php" class="ann-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="title">Title <span class="req">*</span></label>
-            <input type="text" id="title" name="title" placeholder="e.g. Starting Level Test Deadline" required>
-          </div>
-          <div class="form-group">
-            <label for="audience">Audience</label>
-            <select id="audience" name="audience">
-              <option value="students">Students</option>
-              <option value="all">All Users</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="start_date">Start Date</label>
-            <input type="date" id="start_date" name="start_date">
-          </div>
-          <div class="form-group">
-            <label for="end_date">End Date</label>
-            <input type="date" id="end_date" name="end_date">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="priority">Priority</label>
-            <select id="priority" name="priority">
-              <option value="normal">Normal</option>
-              <option value="important">Important</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="switch-label">
-              <input type="checkbox" name="is_active" value="1" checked>
-              <span class="switch-pill"></span>
-              <span class="switch-text">Visible on student dashboard</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="body">Message <span class="req">*</span></label>
-          <textarea id="body" name="body" rows="4" placeholder="Write the full announcement message here…" required></textarea>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn-main">
-            <i class="fas fa-save"></i>
-            <span>Save Announcement</span>
-          </button>
-          <button type="reset" class="btn-ghost" type="button">
-            Clear
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <!-- RIGHT: List of announcements (sample static cards for now) -->
-    <div class="card ann-list-card">
-      <div class="card-header list-header">
-        <div>
-          <h2>Existing Announcements</h2>
-          <p>Latest announcements that will appear on student dashboards.</p>
-        </div>
-        <span class="badge-count">2</span> <!-- sample count for now -->
-      </div>
-
-      <ul class="ann-list">
-        <!-- Sample item #1 -->
-        <li class="ann-item important">
-          <div class="ann-item-main">
-            <div class="ann-meta">
-              <span class="ann-category">Deadline</span>
-              <span class="ann-date">Aug 15, 2025 • Students</span>
-            </div>
-            <h3 class="ann-title">Starting Level Test Completion</h3>
-            <p class="ann-body">
-              All students are required to complete the Starting Level Test on or before
-              <strong>August 15, 2025</strong>. Please log in early to avoid last-minute issues.
-            </p>
-          </div>
-          <div class="ann-footer">
-            <span class="ann-status active-dot">Active</span>
-            <div class="ann-actions">
-              <button type="button" class="btn-link"><i class="fas fa-pen"></i> Edit</button>
-              <button type="button" class="btn-link danger"><i class="fas fa-box-archive"></i> Archive</button>
-            </div>
-          </div>
-        </li>
-
-        <!-- Sample item #2 -->
-        <li class="ann-item">
-          <div class="ann-item-main">
-            <div class="ann-meta">
-              <span class="ann-category">Reminder</span>
-              <span class="ann-date">Aug 20, 2025 • Students</span>
-            </div>
-            <h3 class="ann-title">Power Builder Assessment Opening</h3>
-            <p class="ann-body">
-              The Power Builder Assessment will open on <strong>August 20, 2025</strong>.
-              You may start once you finish the SLT stories required for your level.
-            </p>
-          </div>
-          <div class="ann-footer">
-            <span class="ann-status scheduled-dot">Scheduled</span>
-            <div class="ann-actions">
-              <button type="button" class="btn-link"><i class="fas fa-pen"></i> Edit</button>
-              <button type="button" class="btn-link danger"><i class="fas fa-box-archive"></i> Archive</button>
-            </div>
-          </div>
-        </li>
-      </ul>
-
-      <!-- Empty state (i-hide mo na lang pag may dynamic data na tayo) -->
-      <!--
-      <div class="ann-empty">
-        <i class="fas fa-bullhorn"></i>
-        <h3>No announcements yet</h3>
-        <p>Create your first announcement and it will appear here.</p>
-      </div>
-      -->
-    </div>
-  </div>
-</div>
 
 <style>
-/* --------- Page header --------- */
-.main-content{
-  padding:24px 28px 32px;
+/* ------- Main wrapper card (same feel as courses-card) ------- */
+.ann-card{
+  background:#ffffff;
+  border-radius:24px;
+  padding:20px 24px 24px;
+  margin:16px 16px 32px;
+  box-shadow:0 18px 45px rgba(0,0,0,0.08);
 }
 
-.page-header{
+/* header area */
+.ann-card-header{
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -174,361 +53,317 @@ require_once __DIR__ . '/includes/sidebar.php'; // sidebar
   margin-bottom:18px;
 }
 
-.page-title{
+.ann-card-header h1{
   margin:0;
-  font-size:22px;
-  font-weight:600;
-  color:#fff;
+  font-size:26px;
+  font-weight:800;
+  color:#064d00;
 }
 
-.page-subtitle{
+.ann-card-header .subtitle{
   margin:4px 0 0;
-  font-size:13px;
-  opacity:.85;
-  color:#f0f4f0;
+  font-size:14px;
+  color:#4b5563;
 }
 
-/* --------- Layout --------- */
-.ann-layout{
-  display:grid;
-  grid-template-columns:minmax(0, 1.1fr) minmax(0, 1.6fr);
-  gap:18px;
-  align-items:flex-start;
-}
-
-@media (max-width: 992px){
-  .ann-layout{
-    grid-template-columns:minmax(0,1fr);
-  }
-}
-
-/* --------- Cards --------- */
-.card{
-  background:#f9faf9;
-  border-radius:18px;
-  padding:18px 20px 20px;
-  box-shadow:0 14px 40px rgba(0,0,0,.16);
-}
-
-.card-header h2{
-  margin:0;
-  font-size:16px;
-  font-weight:600;
-  color:#013107;
-}
-.card-header p{
-  margin:4px 0 0;
-  font-size:13px;
-  color:#555;
-}
-
-.ann-form-card{
-  background:#fdfefb;
-}
-
-.ann-list-card{
-  background:#ffffff;
-}
-
-/* --------- Form --------- */
-.ann-form{
-  margin-top:14px;
-}
-
-.form-row{
-  display:grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap:12px;
-}
-
-@media (max-width: 720px){
-  .form-row{
-    grid-template-columns:minmax(0,1fr);
-  }
-}
-
-.form-group{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  margin-bottom:10px;
-}
-
-.form-group label{
-  font-size:13px;
-  font-weight:500;
-  color:#123118;
-}
-
-.req{
-  color:#d9534f;
-}
-
-.ann-form input[type="text"],
-.ann-form input[type="date"],
-.ann-form select,
-.ann-form textarea{
-  border-radius:10px;
-  border:1px solid #d6e1d6;
-  padding:8px 10px;
-  font-size:13px;
-  font-family:inherit;
-  background:#ffffff;
-  outline:none;
-  transition:border-color .18s, box-shadow .18s, background .18s;
-}
-
-.ann-form input:focus,
-.ann-form select:focus,
-.ann-form textarea:focus{
-  border-color:#0b6e2a;
-  box-shadow:0 0 0 1px rgba(11,110,42,.18);
-  background:#fbfffa;
-}
-
-/* switch */
-.switch-label{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-top:20px;
-  cursor:pointer;
-  font-size:13px;
-}
-.switch-label input{
-  display:none;
-}
-.switch-pill{
-  width:34px;
-  height:18px;
+/* Add Announcement button – white + green pill */
+.header-actions .btn-add-ann{
   border-radius:999px;
-  background:#c3d6c3;
-  position:relative;
-  transition:background .18s;
-}
-.switch-pill::after{
-  content:'';
-  position:absolute;
-  top:2px;
-  left:3px;
-  width:14px;
-  height:14px;
-  border-radius:50%;
-  background:#fff;
-  box-shadow:0 1px 3px rgba(0,0,0,.25);
-  transition:transform .18s;
-}
-.switch-label input:checked + .switch-pill{
-  background:#0b6e2a;
-}
-.switch-label input:checked + .switch-pill::after{
-  transform:translateX(13px);
-}
-.switch-text{
-  color:#123118;
+  padding:10px 24px;
+  border:1px solid rgba(6,77,0,0.22);
+  background:#ffffff;
+  color:#064d00;
+  font-weight:700;
+  font-size:14px;
+  cursor:pointer;
+  box-shadow:0 12px 30px rgba(6,77,0,0.12);
+  transition:background 0.15s, transform 0.12s, box-shadow 0.12s;
 }
 
-/* buttons */
-.btn-main{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  border:none;
-  border-radius:999px;
-  padding:8px 16px;
-  font-size:13px;
-  font-weight:500;
-  cursor:pointer;
-  background:#0b6e2a;
-  color:#fff;
-  box-shadow:0 8px 20px rgba(0,0,0,.25);
-  transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
-}
-.btn-main:hover{
-  background:#095321;
-  box-shadow:0 10px 26px rgba(0,0,0,.3);
+.header-actions .btn-add-ann:hover{
+  background:#e5f3da;
   transform:translateY(-1px);
+  box-shadow:0 16px 32px rgba(6,77,0,0.18);
 }
-.btn-main i{
+
+.header-actions .btn-add-ann:active{
+  transform:translateY(0);
+  box-shadow:0 8px 18px rgba(6,77,0,0.18);
+}
+
+/* ------- Table wrapper ------- */
+.ann-table-wrapper{
+  margin-top:4px;
+}
+
+.ann-table{
+  width:100%;
+  border-collapse:collapse;
+  overflow:hidden;
+  border-radius:18px;
+}
+
+.ann-table thead tr{
+  background:#f4f8f0;
+}
+
+.ann-table th,
+.ann-table td{
+  padding:12px 18px;
   font-size:14px;
 }
 
-.btn-ghost{
-  border-radius:999px;
-  border:1px solid #c2d2c2;
-  padding:7px 14px;
+.ann-table th{
+  text-align:left;
+  font-weight:700;
+  color:#064d00;
+}
+
+.ann-table tbody tr:nth-child(even){
+  background:#fcfdf9;
+}
+
+.ann-table tbody tr:nth-child(odd){
+  background:#ffffff;
+}
+
+.ann-table tbody tr:hover{
+  background:#f1f5f9;
+}
+
+/* ------- Announcement detail cell ------- */
+.ann-detail-title{
+  font-weight:600;
+  color:#0b3d0f;
+  margin-bottom:2px;
+}
+
+.ann-detail-body{
   font-size:13px;
-  background:transparent;
-  cursor:pointer;
-  color:#214020;
-}
-.btn-ghost:hover{
-  background:#eef4ee;
-}
-
-.form-actions{
-  margin-top:6px;
-  display:flex;
-  align-items:center;
-  gap:10px;
+  color:#4b5563;
+  max-width:650px;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
 }
 
-/* --------- List --------- */
-.list-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px;
-}
-
-.badge-count{
-  min-width:26px;
-  height:26px;
-  border-radius:999px;
-  background:#013107;
-  color:#ffd768;
+/* date column */
+.ann-date{
   font-size:13px;
-  display:flex;
+  color:#374151;
+}
+
+/* status badge */
+.ann-status-badge{
+  display:inline-flex;
   align-items:center;
   justify-content:center;
-  font-weight:600;
-}
-
-.ann-list{
-  list-style:none;
-  margin:14px 0 0;
-  padding:0;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-.ann-item{
-  border-radius:14px;
-  padding:10px 12px 11px;
-  background:#f6faf6;
-  border:1px solid #dde7dd;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-.ann-item.important{
-  border-color:#f2b54d;
-  background:#fffaf1;
-}
-
-.ann-meta{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.6px;
-}
-.ann-category{
-  padding:2px 8px;
+  min-width:80px;
+  padding:4px 12px;
   border-radius:999px;
-  background:rgba(1,49,7,.07);
-  color:#0b6e2a;
-  font-weight:600;
-}
-.ann-item.important .ann-category{
-  background:rgba(236,163,5,.08);
-  color:#c97a03;
-}
-.ann-date{
-  opacity:.7;
-  color:#334333;
-}
-
-.ann-title{
-  margin:2px 0 0;
-  font-size:14px;
-  font-weight:600;
-  color:#102510;
-}
-.ann-body{
-  margin:2px 0 0;
-  font-size:13px;
-  color:#3a4b3a;
-}
-
-.ann-footer{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  margin-top:2px;
-}
-.ann-status{
   font-size:12px;
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  color:#285028;
-}
-.ann-status::before{
-  content:'';
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:#8bc34a;
-}
-.ann-status.scheduled-dot::before{
-  background:#ffb74d;
-}
-.ann-status.active-dot::before{
-  background:#4caf50;
+  font-weight:600;
 }
 
+.ann-status-active{
+  background:#e5f3da;
+  color:#065f46;
+}
+
+.ann-status-scheduled{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.ann-status-inactive{
+  background:#e5e7eb;
+  color:#374151;
+}
+
+/* action buttons */
 .ann-actions{
   display:flex;
   align-items:center;
-  gap:6px;
+  justify-content:center;
+  gap:8px;
 }
 
-.btn-link{
-  border:none;
-  background:none;
-  padding:0;
-  font-size:12px;
-  cursor:pointer;
-  color:#0b6e2a;
+.btn-pill{
   display:inline-flex;
   align-items:center;
-  gap:4px;
-}
-.btn-link.danger{
-  color:#c0392b;
-}
-.btn-link i{
-  font-size:12px;
+  justify-content:center;
+  padding:7px 14px;
+  border-radius:999px;
+  border:none;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  text-decoration:none;
+  transition:filter 0.12s, transform 0.12s;
 }
 
-/* empty state (optional) */
-.ann-empty{
-  margin-top:10px;
-  padding:22px 16px;
-  border-radius:14px;
-  background:#f6faf6;
-  text-align:center;
-  color:#445944;
-}
-.ann-empty i{
-  font-size:26px;
-  margin-bottom:6px;
-  color:#0b6e2a;
-}
-.ann-empty h3{
-  margin:0 0 4px;
-  font-size:15px;
-}
-.ann-empty p{
-  margin:0;
+.btn-pill i{
+  margin-right:6px;
   font-size:13px;
 }
+
+.btn-edit{
+  background:#ffffff;
+  border:1px solid #d1d5db;
+  color:#064d00;
+  box-shadow:0 6px 14px rgba(156,163,175,0.4);
+}
+
+.btn-edit:hover{
+  filter:brightness(0.97);
+  transform:translateY(-1px);
+}
+
+.btn-delete{
+  background:linear-gradient(135deg,#f97373,#ef4444);
+  color:#ffffff;
+  box-shadow:0 10px 22px rgba(239,68,68,0.45);
+}
+
+.btn-delete:hover{
+  filter:brightness(0.97);
+  transform:translateY(-1px);
+}
+
+/* empty state */
+.ann-empty{
+  padding:28px 12px;
+  text-align:center;
+}
+
+.ann-empty p{
+  margin:0;
+}
+
+.ann-empty .hint{
+  margin-top:6px;
+  font-size:13px;
+  color:#6b7280;
+}
+
+/* responsive tweaks */
+@media (max-width:768px){
+  .ann-card{
+    margin:10px;
+    padding:16px;
+  }
+
+  .ann-card-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .ann-table th,
+  .ann-table td{
+    padding:10px 12px;
+  }
+}
 </style>
+
+<div class="main-content">
+  <section class="card ann-card">
+    <div class="ann-card-header">
+      <div>
+        <h1>Announcements Management</h1>
+        <p class="subtitle">
+          View and manage all announcements shown on the student dashboard.
+        </p>
+      </div>
+      <div class="header-actions">
+        <!-- later: open modal / go to create page -->
+        <button type="button" class="btn-add-ann" id="btnAddAnnouncement">
+          + Add Announcement
+        </button>
+      </div>
+    </div>
+
+    <div class="ann-table-wrapper">
+      <?php if (empty($announcements)): ?>
+        <div class="ann-empty">
+          <p>No announcements created yet.</p>
+          <p class="hint">Click <strong>Add Announcement</strong> to create your first message.</p>
+        </div>
+      <?php else: ?>
+        <table class="ann-table">
+          <thead>
+            <tr>
+              <th style="width:60px;">#</th>
+              <th>Announcement Details</th>
+              <th style="width:180px;">Date Created</th>
+              <th style="width:140px;">Status</th>
+              <th style="width:210px; text-align:center;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          <?php
+          $i = 1;
+          foreach ($announcements as $a):
+              $created = date('M d, Y', strtotime($a['created_at']));
+              $status  = strtolower($a['status']);
+              $badgeClass = 'ann-status-inactive';
+              $label      = 'Inactive';
+              if ($status === 'active'){
+                  $badgeClass = 'ann-status-active';
+                  $label      = 'Active';
+              } elseif ($status === 'scheduled'){
+                  $badgeClass = 'ann-status-scheduled';
+                  $label      = 'Scheduled';
+              }
+          ?>
+            <tr>
+              <td><?php echo $i++; ?></td>
+              <td>
+                <div class="ann-detail-title">
+                  <?php echo htmlspecialchars($a['title']); ?>
+                </div>
+                <div class="ann-detail-body">
+                  <?php echo htmlspecialchars($a['body']); ?>
+                </div>
+              </td>
+              <td>
+                <span class="ann-date"><?php echo $created; ?></span>
+              </td>
+              <td>
+                <span class="ann-status-badge <?php echo $badgeClass; ?>">
+                  <?php echo $label; ?>
+                </span>
+              </td>
+              <td>
+                <div class="ann-actions">
+                  <!-- later: link to edit.php?id=... -->
+                  <a href="#"
+                     class="btn-pill btn-edit">
+                    <i class="fas fa-pen"></i>Edit
+                  </a>
+                  <button type="button"
+                          class="btn-pill btn-delete">
+                    <i class="fas fa-trash-alt"></i>Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+      <?php endif; ?>
+    </div>
+  </section>
+</div>
+
+<script>
+// placeholder lang muna – later lalagyan natin ng modal / redirect
+document.getElementById('btnAddAnnouncement')?.addEventListener('click', () => {
+  // example: redirect to a create page
+  // window.location.href = 'announcements_create.php';
+  console.log('Add Announcement clicked');
+});
+</script>
 
 </body>
 </html>
