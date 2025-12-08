@@ -1,5 +1,5 @@
 <?php
-// student/certificates.php — printable landscape certificate (Letter)
+// student/certificates.php — printable landscape certificate (Short/Letter)
 // Shows the latest certificate for the student's *current level* if they qualify.
 
 require_once __DIR__ . '/../includes/auth.php';
@@ -19,19 +19,17 @@ $campusName = $_SESSION['campus_name'] ?? 'Sipocot';
 
 /* Logos: place the actual files in the same folder as this PHP file.
    Example files:
-   student/1.webp  (CBSUA seal, left)
-   student/2.png   (SRA logo, right)
+   student/1.png  (CBSUA seal / main logo for left strip)
+   student/2.png  (secondary logo, optional, also on left strip)
 */
-$leftLogoRel  = '1.png';
-$rightLogoRel = '2.png';
+$leftLogoRel   = '1.png';
+$secondLogoRel = '2.png';
 
-// Filesystem paths for existence check
-$leftLogoFs   = __DIR__ . '/' . $leftLogoRel;
-$rightLogoFs  = __DIR__ . '/' . $rightLogoRel;
+$leftLogoFs    = __DIR__ . '/' . $leftLogoRel;
+$secondLogoFs  = __DIR__ . '/' . $secondLogoRel;
 
-// URL src (relative to this page)
-$leftLogoUrl  = $leftLogoRel;
-$rightLogoUrl = $rightLogoRel;
+$leftLogoUrl   = $leftLogoRel;
+$secondLogoUrl = $secondLogoRel;
 
 // Signatories
 $sign1Name = 'MERCY M. ALMONTE';
@@ -124,137 +122,265 @@ $year = $awardDate->format('Y');
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 :root{
-  --g:#0a3a1a; --g2:#0f5f2a;
-  --gold:#d0a32b; --gold2:#f5d46b;
-  --ink:#111; --muted:#666;
+  --green-main:#0b5e2b;
+  --green-dark:#06451f;
+  --green-light:#9dcaa5;
+  --border-soft:#c7dccc;
+  --ink:#111;
+  --muted:#555;
+  --bg:#f5f6f4;
 }
 
-/* ===== PRINT SETTINGS ===== */
-@page{ size: Letter landscape; margin: 0.5in; }
+/* ===== PRINT SETTINGS (Short/Letter, landscape) ===== */
+@page{
+  size: 8.5in 11in landscape;
+  margin: 0.5in;
+}
 @media print{
   body{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .toolbar{ display:none !important; }
 }
 
 /* ===== LAYOUT ===== */
-html,body{ background:#e9eceb; margin:0; }
+html,body{
+  margin:0;
+  padding:0;
+  background:#d9ded8;
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
 
 .toolbar{
-  display:flex; justify-content:center; gap:10px; padding:10px;
-  background:#fff; border-bottom:1px solid #e4e7e6;
-  position:sticky; top:0; z-index:10;
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  padding:10px;
+  background:#fff;
+  border-bottom:1px solid #e3e7e1;
+  position:sticky;
+  top:0;
+  z-index:20;
 }
 .toolbar button{
-  padding:10px 14px; border-radius:10px; border:1px solid #dfe3e2;
-  background:#fff; font-weight:700; cursor:pointer;
+  padding:9px 16px;
+  border-radius:999px;
+  border:1px solid #cfd7cf;
+  background:#fff;
+  font-weight:600;
+  cursor:pointer;
 }
-.toolbar .primary{ background:linear-gradient(90deg,#1c612e,#29964a); color:#fff; border-color:#1c612e; }
+.toolbar .primary{
+  background:linear-gradient(90deg,#0d6b2f,#158a3b);
+  color:#fff;
+  border-color:#0d6b2f;
+}
 
-/* Canvas that fits exactly inside @page margins */
 .sheet{
   position:relative;
-  width:10.5in;                /* 11 - (0.5*2) */
-  height:7.5in;                /* 8.5 - (0.5*2) */
-  margin:0 auto;
-  background:#fff;
-  box-shadow:0 12px 36px rgba(0,0,0,.18);
-  border:1px solid #e7ecea;
-}
-@media print{ .sheet{ box-shadow:none; border:0; } }
-
-/* Background side panels */
-.side{
-  position:absolute; top:0; bottom:0; width:180px; z-index:1;
-  background: linear-gradient(180deg, #06270f, #174d2b 60%, #0e2218);
-  overflow:hidden;              /* important: clip rotated gold bars */
-}
-.side.left  { left:0; }
-.side.right { right:0; }
-
-/* gold slanted ribbons (clipped by .side overflow) */
-.side:before, .side:after{
-  content:""; position:absolute; width:6px; top:0; bottom:0; z-index:1;
-  background: linear-gradient(180deg, var(--gold2), var(--gold));
-  transform: rotate(10deg);
-  box-shadow: 0 0 0 1px rgba(0,0,0,.06);
-}
-.side.left:before  { left:140px; } .side.left:after  { left:160px; }
-.side.right:before { right:140px; } .side.right:after { right:160px; }
-
-/* Inner white panel */
-.inner{
-  position:absolute; top:0; bottom:0; left:180px; right:180px;
-  background:#fff; z-index:2;
+  width:10in;           /* 11 - 0.5*2 */
+  height:7.5in;         /* 8.5 - 0.5*2 */
+  margin:10px auto 20px;
+  background:var(--bg);
+  border:4px solid var(--green-main);    /* outer green frame */
+  box-shadow:0 14px 40px rgba(0,0,0,.18);
 }
 
-/* Header with logos */
-.header{
-  position:absolute; left:180px; right:180px; top:0.45in; z-index:3;
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
-}
-.hdr-side{ width:1.7in; display:flex; justify-content:center; align-items:center; }
-.hdr-center{ flex:1; text-align:center; }
-.hdr-logo{
-  width:1.5in; height:1.5in; object-fit:contain; display:block;
-  -webkit-print-color-adjust: exact; print-color-adjust: exact;
-}
-.school{
-  display:inline-block; background:#eee; padding:6px 16px; border-radius:6px;
-  font-weight:800; letter-spacing:.5px; color:#333;
-}
-.campuses{ margin-top:6px; color:#b00; font-weight:600; letter-spacing:.3px; }
-
-/* Foreground content (above backgrounds) */
-.title, .ribbon, .name, .body, .signs, .note { position:absolute; z-index:3; }
-
-/* Main title */
-.title{
-  left:0; right:0; top:1.6in; text-align:center;
-  font-weight:900; letter-spacing:3px; color:#161616; font-size:48px;
+/* inner soft border */
+.sheet::before{
+  content:"";
+  position:absolute;
+  inset:12px;
+  border:1px solid var(--border-soft);
+  pointer-events:none;
 }
 
-/* Ribbon */
-.ribbon{
-  left:3.2in; right:3.2in; top:2.35in; text-align:center;
-  background: linear-gradient(90deg, #1a5b2f, #2c8b4a);
-  color:#fff; font-weight:800; text-transform:lowercase; letter-spacing:.5px;
-  padding:10px 14px; border-radius:999px; box-shadow: 0 4px 10px rgba(0,0,0,.12);
+/* LEFT GREEN PANEL */
+.left-panel{
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:0;
+  width:1.9in;
+  background:linear-gradient(180deg,#0d6b2f,#0e7b34 55%,#0a481e);
+  box-shadow:inset -4px 0 8px rgba(0,0,0,.35);
+  z-index:2;
+  color:#fff;
+}
+.left-panel-inner{
+  position:absolute;
+  inset:0.7in 0.25in 0.6in;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:0.35in;
+}
+.left-logo-main{
+  width:1.3in;
+  height:1.3in;
+  object-fit:contain;
+}
+.left-logo-small{
+  width:1.15in;
+  height:0.8in;
+  object-fit:contain;
 }
 
-/* Name */
-.name{
-  left:0; right:0; top:2.95in; text-align:center;
-  font-size:34px; font-weight:900; color:#111; letter-spacing:1px;
+/* MAIN CONTENT AREA */
+.main{
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:1.9in;
+  right:0;
+  padding:0.65in 0.9in 0.6in;
+  z-index:3;
 }
 
-/* Body paragraph */
-.body{
-  left:2.2in; right:2.2in; top:3.55in; text-align:center;
-  font-size:16px; color:#222; line-height:1.6;
+/* subtle building watermark (optional bg image) */
+.watermark{
+  position:absolute;
+  inset:1.5in 0.9in 1.5in 2.2in;
+  opacity:.07;
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
+  pointer-events:none;
 }
-.small{ font-size:13px; } .muted{ color:#666; }
+/* Lagyan mo ng actual image file kung meron ka:
+   .watermark{ background-image:url('building.png'); }
+*/
 
-/* Signatures – moved up to reduce gap */
-.signs{
-  left:2.2in; right:2.2in; bottom:1.15in; display:flex; gap:48px;
+/* HEADER TEXT */
+.header-intro{
+  text-align:center;
+  position:relative;
+  z-index:4;
 }
-.sig{ flex:1; text-align:center; }
-.sig .line{ margin:0 auto 6px; height:2px; width:80%; background:#333; }
-.sig .n{ font-weight:800; } .sig .r{ color:#444; font-size:14px; }
+.header-intro .republic{
+  font-size:11px;
+  color:var(--muted);
+  letter-spacing:.8px;
+}
+.header-intro .school{
+  margin-top:2px;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:#1b361d;
+}
+.header-intro .campuses{
+  margin-top:3px;
+  font-size:11px;
+  letter-spacing:.8px;
+  color:#a02121;
+}
 
-/* Footnote */
+/* TITLE BLOCK */
+.title-block{
+  text-align:center;
+  margin-top:0.45in;
+  position:relative;
+  z-index:4;
+}
+.title-block .cert{
+  font-size:40px;
+  line-height:1;
+  letter-spacing:6px;
+  font-weight:800;
+  color:var(--green-main);
+}
+.title-block .of{
+  margin-top:6px;
+  font-size:22px;
+  letter-spacing:4px;
+  font-weight:600;
+  color:var(--green-main);
+}
+
+/* GIVEN TEXT + NAME */
+.given{
+  margin-top:0.35in;
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+}
+.student-name{
+  margin-top:0.20in;
+  text-align:center;
+  font-size:32px;
+  letter-spacing:3px;
+  font-weight:800;
+  color:#333;
+}
+.name-line{
+  width:4.8in;
+  height:1px;
+  background:#555;
+  margin:6px auto 0;
+}
+
+/* BODY PARAGRAPH */
+.body-text{
+  position:relative;
+  margin:0.45in auto 0;
+  max-width:6.7in;
+  text-align:center;
+  font-size:14px;
+  color:#222;
+  font-style:italic;
+  line-height:1.6;
+}
+.body-text b{
+  font-style:normal;
+}
+
+/* SIGNATORIES */
+.signatures{
+  position:absolute;
+  left:1.9in;
+  right:1.0in;
+  bottom:0.85in;
+  display:flex;
+  justify-content:space-between;
+  gap:1.6in;
+  z-index:4;
+}
+.sig{
+  flex:1;
+  text-align:center;
+  font-size:12px;
+}
+.sig .sig-line{
+  width:85%;
+  height:1px;
+  background:#444;
+  margin:0 auto 8px;
+}
+.sig .name{
+  font-weight:700;
+  letter-spacing:.7px;
+}
+.sig .role{
+  color:var(--muted);
+}
+
+/* FOOTNOTE/N0TE (optional) */
 .note{
-  left:0; right:0; bottom:0.35in; text-align:center; color:#7a7a7a; font-size:12px;
+  position:absolute;
+  left:1.9in;
+  right:1.0in;
+  bottom:0.45in;
+  text-align:center;
+  font-size:11px;
+  color:#777;
 }
 
-/* Optional: slightly narrower side panels in print for extra breathing room */
+/* Print tweaks: hide drop shadow outline differences */
 @media print{
-  .side{ width:170px; }
-  .inner{ left:170px; right:170px; }
-  .header{ left:170px; right:170px; }
+  .sheet{ box-shadow:none; }
 }
 </style>
-
 </head>
 <body>
 
@@ -263,74 +389,82 @@ html,body{ background:#e9eceb; margin:0; }
   <button onclick="location.href='index.php'">Back to Dashboard</button>
 </div>
 
-<div class="wrap">
-  <div class="sheet">
+<div class="sheet">
+  <!-- Left green strip with logos -->
+  <div class="left-panel">
+    <div class="left-panel-inner">
+      <?php if (is_file($leftLogoFs)): ?>
+        <img class="left-logo-main"
+             src="<?= htmlspecialchars($leftLogoUrl) ?>?v=<?= @filemtime($leftLogoFs) ?>"
+             alt="CBSUA Logo">
+      <?php endif; ?>
 
-    <!-- background -->
-    <div class="side left"></div>
-    <div class="side right"></div>
-    <div class="inner"></div>
+      <?php if (is_file($secondLogoFs)): ?>
+        <img class="left-logo-small"
+             src="<?= htmlspecialchars($secondLogoUrl) ?>?v=<?= @filemtime($secondLogoFs) ?>"
+             alt="Secondary Logo">
+      <?php endif; ?>
+    </div>
+  </div>
 
-    <!-- header (logos + school name) -->
-    <div class="header">
-      <div class="hdr-side">
-        <?php if (is_file($leftLogoFs)): ?>
-          <img class="hdr-logo"
-               src="<?= htmlspecialchars($leftLogoUrl) ?>?v=<?= @filemtime($leftLogoFs) ?>"
-               alt="CBSUA Seal">
-        <?php endif; ?>
+  <!-- Main content -->
+  <div class="main">
+    <!-- watermark (optional image, see CSS comment) -->
+    <div class="watermark"></div>
+
+    <div class="header-intro">
+      <div class="republic">Republic of the Philippines</div>
+      <div class="school">
+        <?= htmlspecialchars($schoolName) ?>
       </div>
-
-      <div class="hdr-center">
-        <div class="school"><?= htmlspecialchars($schoolName) ?></div>
-        <div class="campuses"><?= htmlspecialchars(implode(' | ', $campuses)) ?></div>
-      </div>
-
-      <div class="hdr-side">
-        <?php if (is_file($rightLogoFs)): ?>
-          <img class="hdr-logo"
-               src="<?= htmlspecialchars($rightLogoUrl) ?>?v=<?= @filemtime($rightLogoFs) ?>"
-               alt="SRA Logo">
-        <?php endif; ?>
+      <div class="campuses">
+        <?= htmlspecialchars(implode(' | ', $campuses)) ?>
       </div>
     </div>
 
-    <!-- content -->
-    <div class="title">CERTIFICATE</div>
+    <div class="title-block">
+      <div class="cert">CERTIFICATE</div>
+      <div class="of">OF APPRECIATION</div>
+    </div>
 
-    <div class="ribbon">is hereby given to</div>
+    <div class="given">is hereby given to</div>
 
-    <div class="name"><?= htmlspecialchars($studentName) ?></div>
+    <div class="student-name">
+      <?= htmlspecialchars($studentName) ?>
+    </div>
+    <div class="name-line"></div>
 
-    <div class="body">
+    <p class="body-text">
       has successfully achieved the target for the
       <b>SRA Level <?= htmlspecialchars($levelName ?: '—') ?></b> at the
-      <?= htmlspecialchars($schoolName) ?> – <b><?= htmlspecialchars($campusName) ?></b> Reading
-      Center. Given this <b><?= htmlspecialchars($day) ?></b> day of
+      <?= htmlspecialchars($schoolName) ?> – <b><?= htmlspecialchars($campusName) ?></b> Reading Center.
+      Given this <b><?= htmlspecialchars($day) ?></b> day of
       <b><?= htmlspecialchars($mon . ' ' . $year) ?></b>.
-      <div class="small muted" style="margin-top:8px;">
+      <br><br>
+      <span style="font-size:12px; font-style:normal; color:#444;">
         (Requirement: passed at least <?= (int)$requiredRBPass ?> Rate Builder stor<?= $requiredRBPass>1?'ies':'y' ?> •
         Your passed stories: <?= (int)$rbPassed ?>)
-      </div>
-    </div>
+      </span>
+    </p>
 
-    <div class="signs">
+    <div class="signatures">
       <div class="sig">
-        <div class="line"></div>
-        <div class="n"><?= htmlspecialchars($sign1Name) ?></div>
-        <div class="r"><?= htmlspecialchars($sign1Role) ?></div>
+        <div class="sig-line"></div>
+        <div class="name"><?= htmlspecialchars($sign1Name) ?></div>
+        <div class="role"><?= htmlspecialchars($sign1Role) ?></div>
       </div>
       <div class="sig">
-        <div class="line"></div>
-        <div class="n"><?= htmlspecialchars($sign2Name) ?></div>
-        <div class="r"><?= htmlspecialchars($sign2Role) ?></div>
+        <div class="sig-line"></div>
+        <div class="name"><?= htmlspecialchars($sign2Name) ?></div>
+        <div class="role"><?= htmlspecialchars($sign2Role) ?></div>
       </div>
     </div>
 
     <div class="note">
-      <?= $eligible ? 'This certificate is valid for the current school year.' : 'Not yet eligible — complete the Rate Builder requirement.' ?>
+      <?= $eligible
+        ? 'This certificate is valid for the current school year.'
+        : 'Not yet eligible — complete the Rate Builder requirement.' ?>
     </div>
-
   </div>
 </div>
 
