@@ -17,11 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $title   = trim($_POST['title'] ?? '');
 $body    = trim($_POST['body'] ?? '');
-$audience= $_POST['audience'] ?? 'students';
-$priority= $_POST['priority'] ?? 'normal';
 $status  = $_POST['status'] ?? 'active';
-$start   = $_POST['start_date'] ?? null;
-$end     = $_POST['end_date'] ?? null;
 $mode    = $_POST['mode'] ?? 'create';
 $id      = (int)($_POST['announcement_id'] ?? 0);
 
@@ -30,18 +26,12 @@ if ($title === '' || $body === '') {
     exit;
 }
 
-// normalize values
-$validAudience = ['students','all'];
-if (!in_array($audience, $validAudience, true)) $audience = 'students';
-
-$validPriority = ['normal','important'];
-if (!in_array($priority, $validPriority, true)) $priority = 'normal';
+/* audience & priority: fixed values na lang */
+$audience = 'students';
+$priority = 'normal';
 
 $validStatus   = ['active','scheduled','inactive'];
 if (!in_array($status, $validStatus, true)) $status = 'active';
-
-$startDate = $start ? date('Y-m-d', strtotime($start)) : null;
-$endDate   = $end   ? date('Y-m-d', strtotime($end))   : null;
 
 $createdBy = (int)($_SESSION['user_id'] ?? 0);
 
@@ -50,18 +40,16 @@ try {
         $stmt = $conn->prepare("
           UPDATE sra_announcements
           SET title = ?, body = ?, audience = ?, priority = ?, status = ?,
-              start_date = ?, end_date = ?, updated_at = NOW()
+              start_date = NULL, end_date = NULL, updated_at = NOW()
           WHERE announcement_id = ?
         ");
         $stmt->bind_param(
-          'sssssssi',
+          'sssssi',
           $title,
           $body,
           $audience,
           $priority,
           $status,
-          $startDate,
-          $endDate,
           $id
         );
         $stmt->execute();
@@ -71,17 +59,15 @@ try {
         $stmt = $conn->prepare("
           INSERT INTO sra_announcements
             (title, body, audience, priority, status, start_date, end_date, created_by)
-          VALUES (?,?,?,?,?,?,?,?)
+          VALUES (?, ?, ?, ?, ?, NULL, NULL, ?)
         ");
         $stmt->bind_param(
-          'sssssssi',
+          'sssssi',
           $title,
           $body,
           $audience,
           $priority,
           $status,
-          $startDate,
-          $endDate,
           $createdBy
         );
         $stmt->execute();
