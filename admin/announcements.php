@@ -5,33 +5,35 @@ require_role('admin', '../login.php#login');
 $PAGE_TITLE  = 'Announcements';
 $ACTIVE_MENU = 'announcements';
 
-// ✳️ TEMP DATA LANG – papalitan natin ito ng real DB query mamaya
-$announcements = [
-    [
-        'id'          => 1,
-        'title'       => 'Starting Level Test Completion',
-        'body'        => 'All students are required to complete the Starting Level Test on or before August 15, 2025. Log in early to avoid delays.',
-        'created_at'  => '2025-07-20 09:15:00',
-        'status'      => 'active',
-    ],
-    [
-        'id'          => 2,
-        'title'       => 'Power Builder Assessment Opening',
-        'body'        => 'The Power Builder Assessment will open on August 20, 2025 for all eligible students who have completed their SLT stories.',
-        'created_at'  => '2025-07-25 14:30:00',
-        'status'      => 'scheduled',
-    ],
-    [
-        'id'          => 3,
-        'title'       => 'System Maintenance',
-        'body'        => 'The SRA system will undergo maintenance on August 5, 2025 from 7:00 PM to 9:00 PM. Please plan your tests accordingly.',
-        'created_at'  => '2025-07-18 16:05:00',
-        'status'      => 'inactive',
-    ],
-];
+require_once __DIR__ . '/../db_connect.php';
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$conn->set_charset('utf8mb4');
+@$conn->query("SET time_zone = '+08:00'");
 
-require_once __DIR__ . '/includes/header.php';  // navbar + hamburger
-require_once __DIR__ . '/includes/sidebar.php'; // sidebar
+/* ---------- Load announcements from DB ---------- */
+$announcements = [];
+$sql = "
+  SELECT
+      announcement_id,
+      title,
+      body,
+      audience,
+      priority,
+      status,
+      start_date,
+      end_date,
+      created_at
+  FROM sra_announcements
+  ORDER BY created_at DESC
+";
+$res = $conn->query($sql);
+while ($row = $res->fetch_assoc()) {
+    $announcements[] = $row;
+}
+$res->free();
+
+require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/includes/sidebar.php';
 ?>
 
 <style>
@@ -264,6 +266,154 @@ require_once __DIR__ . '/includes/sidebar.php'; // sidebar
     padding:10px 12px;
   }
 }
+
+/* ---------- ADD/EDIT ANNOUNCEMENT MODAL ---------- */
+
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:900;
+  padding:16px;
+}
+
+.modal-backdrop.show{
+  display:flex;
+}
+
+.modal-dialog{
+  background:#ffffff;
+  border-radius:20px;
+  max-width:520px;
+  width:100%;
+  box-shadow:0 20px 50px rgba(15,23,42,0.35);
+  animation:modalFadeIn 0.18s ease-out;
+}
+
+@keyframes modalFadeIn{
+  from{ opacity:0; transform:translateY(12px) scale(0.97); }
+  to{ opacity:1; transform:translateY(0) scale(1); }
+}
+
+.modal-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 18px 10px;
+  border-bottom:1px solid #e5e7eb;
+}
+
+.modal-header h2{
+  margin:0;
+  font-size:18px;
+  font-weight:700;
+  color:#064d00;
+}
+
+.modal-close{
+  background:transparent;
+  border:none;
+  font-size:22px;
+  line-height:1;
+  cursor:pointer;
+  color:#6b7280;
+}
+
+.modal-close:hover{
+  color:#111827;
+}
+
+.modal-body{
+  padding:12px 18px 16px;
+}
+
+.modal-text{
+  font-size:13px;
+  color:#6b7280;
+  margin:0 0 10px;
+}
+
+.form-row{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin-bottom:10px;
+}
+
+.form-row label{
+  font-size:13px;
+  font-weight:600;
+  color:#111827;
+}
+
+.form-row .req{
+  color:#dc2626;
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea{
+  border-radius:10px;
+  border:1px solid #d1d5db;
+  padding:8px 12px;
+  font-size:14px;
+  outline:none;
+  font-family:inherit;
+  transition:border-color 0.15s, box-shadow 0.15s;
+}
+
+.form-row textarea{
+  resize:vertical;
+  min-height:80px;
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus{
+  border-color:#1e8fa2;
+  box-shadow:0 0 0 2px rgba(30,143,162,0.25);
+}
+
+.modal-footer{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:8px;
+}
+
+.btn-ghost{
+  border-radius:999px;
+  padding:8px 20px;
+  background:#ffffff;
+  border:1px solid #d1d5db;
+  font-size:14px;
+  font-weight:600;
+  color:#111827;
+  cursor:pointer;
+}
+
+.btn-ghost:hover{
+  background:#f3f4f6;
+}
+
+.btn-accent{
+  border-radius:999px;
+  padding:8px 22px;
+  border:none;
+  background:linear-gradient(135deg,#f5a425,#f6c445);
+  color:#1f2327;
+  box-shadow:0 10px 24px rgba(245,164,37,0.35);
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.btn-accent:hover{
+  filter:brightness(0.95);
+}
 </style>
 
 <div class="main-content">
@@ -276,7 +426,6 @@ require_once __DIR__ . '/includes/sidebar.php'; // sidebar
         </p>
       </div>
       <div class="header-actions">
-        <!-- later: open modal / go to create page -->
         <button type="button" class="btn-add-ann" id="btnAddAnnouncement">
           + Add Announcement
         </button>
@@ -316,11 +465,23 @@ require_once __DIR__ . '/includes/sidebar.php'; // sidebar
                   $label      = 'Scheduled';
               }
           ?>
-            <tr>
+            <tr
+              data-id="<?php echo (int)$a['announcement_id']; ?>"
+              data-title="<?php echo htmlspecialchars($a['title'], ENT_QUOTES); ?>"
+              data-body="<?php echo htmlspecialchars($a['body'], ENT_QUOTES); ?>"
+              data-audience="<?php echo htmlspecialchars($a['audience'], ENT_QUOTES); ?>"
+              data-priority="<?php echo htmlspecialchars($a['priority'], ENT_QUOTES); ?>"
+              data-status="<?php echo htmlspecialchars($a['status'], ENT_QUOTES); ?>"
+              data-start="<?php echo htmlspecialchars($a['start_date'] ?? '', ENT_QUOTES); ?>"
+              data-end="<?php echo htmlspecialchars($a['end_date'] ?? '', ENT_QUOTES); ?>"
+            >
               <td><?php echo $i++; ?></td>
               <td>
                 <div class="ann-detail-title">
                   <?php echo htmlspecialchars($a['title']); ?>
+                  <?php if ($a['priority'] === 'important'): ?>
+                    <span style="margin-left:6px; font-size:11px; color:#b45309;">• Important</span>
+                  <?php endif; ?>
                 </div>
                 <div class="ann-detail-body">
                   <?php echo htmlspecialchars($a['body']); ?>
@@ -336,13 +497,12 @@ require_once __DIR__ . '/includes/sidebar.php'; // sidebar
               </td>
               <td>
                 <div class="ann-actions">
-                  <!-- later: link to edit.php?id=... -->
-                  <a href="#"
-                     class="btn-pill btn-edit">
-                    <i class="fas fa-pen"></i>Edit
-                  </a>
                   <button type="button"
-                          class="btn-pill btn-delete">
+                          class="btn-pill btn-edit btn-edit-ann">
+                    <i class="fas fa-pen"></i>Edit
+                  </button>
+                  <button type="button"
+                          class="btn-pill btn-delete btn-delete-ann">
                     <i class="fas fa-trash-alt"></i>Delete
                   </button>
                 </div>
@@ -356,13 +516,280 @@ require_once __DIR__ . '/includes/sidebar.php'; // sidebar
   </section>
 </div>
 
+<!-- Add/Edit Announcement Modal -->
+<div class="modal-backdrop" id="annBackdrop" aria-hidden="true">
+  <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="annModalTitle">
+    <div class="modal-header">
+      <h2 id="annModalTitle">Add Announcement</h2>
+      <button type="button" class="modal-close" id="annClose">&times;</button>
+    </div>
+
+    <form id="annForm" class="modal-body">
+      <p class="modal-text">
+        Create or update announcements that will be displayed on the student dashboard.
+      </p>
+
+      <input type="hidden" name="announcement_id" id="announcement_id" value="">
+      <input type="hidden" name="mode" id="ann_mode" value="create">
+
+      <div class="form-row">
+        <label for="ann_title">Title <span class="req">*</span></label>
+        <input type="text" id="ann_title" name="title"
+               placeholder="e.g. Starting Level Test Completion"
+               maxlength="191" required />
+      </div>
+
+      <div class="form-row">
+        <label for="ann_body">Message <span class="req">*</span></label>
+        <textarea id="ann_body" name="body"
+                  placeholder="Write the full announcement message here..."
+                  required></textarea>
+      </div>
+
+      <div class="form-row">
+        <label for="ann_audience">Audience</label>
+        <select id="ann_audience" name="audience">
+          <option value="students">Students only</option>
+          <option value="all">All users</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="ann_priority">Priority</label>
+        <select id="ann_priority" name="priority">
+          <option value="normal">Normal</option>
+          <option value="important">Important</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="ann_status">Status</label>
+        <select id="ann_status" name="status">
+          <option value="active">Active</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Visibility dates
+          <span style="font-weight:400; font-size:12px; color:#6b7280;">(optional)</span>
+        </label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input type="date" id="ann_start_date" name="start_date" />
+          <input type="date" id="ann_end_date" name="end_date" />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-ghost" id="annCancel">Cancel</button>
+        <button type="submit" class="btn-accent" id="annSaveBtn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
-// placeholder lang muna – later lalagyan natin ng modal / redirect
-document.getElementById('btnAddAnnouncement')?.addEventListener('click', () => {
-  // example: redirect to a create page
-  // window.location.href = 'announcements_create.php';
-  console.log('Add Announcement clicked');
-});
+(function(){
+  const backdrop  = document.getElementById('annBackdrop');
+  const btnOpen   = document.getElementById('btnAddAnnouncement');
+  const btnClose  = document.getElementById('annClose');
+  const btnCancel = document.getElementById('annCancel');
+  const form      = document.getElementById('annForm');
+  const saveBtn   = document.getElementById('annSaveBtn');
+  const titleEl   = document.getElementById('annModalTitle');
+
+  const idInput   = document.getElementById('announcement_id');
+  const modeInput = document.getElementById('ann_mode');
+  const titleInput= document.getElementById('ann_title');
+  const bodyInput = document.getElementById('ann_body');
+  const audInput  = document.getElementById('ann_audience');
+  const priInput  = document.getElementById('ann_priority');
+  const statusInp = document.getElementById('ann_status');
+  const startInp  = document.getElementById('ann_start_date');
+  const endInp    = document.getElementById('ann_end_date');
+
+  if (!backdrop || !form) return;
+
+  function openModal(mode, row){
+    modeInput.value = mode;
+    if (mode === 'edit' && row){
+      titleEl.textContent = 'Edit Announcement';
+      idInput.value   = row.dataset.id || '';
+      titleInput.value= row.dataset.title || '';
+      bodyInput.value = row.dataset.body || '';
+      audInput.value  = row.dataset.audience || 'students';
+      priInput.value  = row.dataset.priority || 'normal';
+      statusInp.value = row.dataset.status || 'active';
+      startInp.value  = row.dataset.start || '';
+      endInp.value    = row.dataset.end || '';
+    } else {
+      titleEl.textContent = 'Add Announcement';
+      idInput.value   = '';
+      form.reset();
+      audInput.value  = 'students';
+      priInput.value  = 'normal';
+      statusInp.value = 'active';
+      startInp.value  = '';
+      endInp.value    = '';
+    }
+    backdrop.classList.add('show');
+    setTimeout(()=>titleInput.focus(), 80);
+  }
+
+  function closeModal(){
+    backdrop.classList.remove('show');
+    form.reset();
+    idInput.value = '';
+    modeInput.value = 'create';
+  }
+
+  btnOpen?.addEventListener('click', ()=>openModal('create', null));
+  btnClose?.addEventListener('click', closeModal);
+  btnCancel?.addEventListener('click', closeModal);
+
+  backdrop.addEventListener('click', (e)=>{
+    if (e.target === backdrop) closeModal();
+  });
+
+  // Edit buttons
+  document.querySelectorAll('.btn-edit-ann').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const row = btn.closest('tr');
+      if (row) openModal('edit', row);
+    });
+  });
+
+  // Delete buttons
+  document.querySelectorAll('.btn-delete-ann').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const row = btn.closest('tr');
+      if (!row) return;
+      const id  = row.dataset.id;
+      const title = row.dataset.title || 'this announcement';
+
+      if (window.Swal){
+        const res = await Swal.fire({
+          icon: 'warning',
+          title: 'Delete announcement?',
+          text: 'Are you sure you want to delete "' + title + '"?',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, delete',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#6b7280'
+        });
+        if (!res.isConfirmed) return;
+      } else {
+        if (!confirm('Delete this announcement?')) return;
+      }
+
+      try{
+        const fd = new FormData();
+        fd.append('announcement_id', id);
+
+        const resp = await fetch('ajax_delete_announcement.php', {
+          method: 'POST',
+          body: fd
+        });
+        const data = await resp.json();
+
+        if (data.success){
+          if (window.Swal){
+            Swal.fire({
+              icon:'success',
+              title:'Deleted',
+              text:data.message || 'Announcement deleted.',
+              confirmButtonColor:'#1e8fa2'
+            }).then(()=>window.location.reload());
+          }else{
+            alert(data.message || 'Deleted.');
+            window.location.reload();
+          }
+        }else{
+          if (window.Swal){
+            Swal.fire({
+              icon:'error',
+              title:'Error',
+              text:data.message || 'Unable to delete.',
+              confirmButtonColor:'#1e8fa2'
+            });
+          }else{
+            alert(data.message || 'Unable to delete.');
+          }
+        }
+      }catch(err){
+        console.error(err);
+        if (window.Swal){
+          Swal.fire({
+            icon:'error',
+            title:'Network error',
+            text:'Please try again.',
+            confirmButtonColor:'#1e8fa2'
+          });
+        }else{
+          alert('Network error, please try again.');
+        }
+      }
+    });
+  });
+
+  // Submit (create / edit)
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    saveBtn.disabled = true;
+
+    const fd = new FormData(form);
+
+    try{
+      const resp = await fetch('ajax_save_announcement.php', {
+        method: 'POST',
+        body: fd
+      });
+      const data = await resp.json();
+
+      if (data.success){
+        closeModal();
+        if (window.Swal){
+          Swal.fire({
+            icon:'success',
+            title:'Saved',
+            text:data.message || 'Announcement saved successfully.',
+            confirmButtonColor:'#1e8fa2'
+          }).then(()=>window.location.reload());
+        }else{
+          alert(data.message || 'Saved.');
+          window.location.reload();
+        }
+      }else{
+        if (window.Swal){
+          Swal.fire({
+            icon:'error',
+            title:'Unable to save',
+            text:data.message || 'Please check the form and try again.',
+            confirmButtonColor:'#1e8fa2'
+          });
+        }else{
+          alert(data.message || 'Unable to save.');
+        }
+      }
+    }catch(err){
+      console.error(err);
+      if (window.Swal){
+        Swal.fire({
+          icon:'error',
+          title:'Network error',
+          text:'Please try again.',
+          confirmButtonColor:'#1e8fa2'
+        });
+      }else{
+        alert('Network error, please try again.');
+      }
+    }finally{
+      saveBtn.disabled = false;
+    }
+  });
+})();
 </script>
 
 </body>
