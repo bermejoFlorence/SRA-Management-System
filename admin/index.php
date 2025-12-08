@@ -104,13 +104,34 @@ if ($params) {
 $stmt->execute();
 $res = $stmt->get_result();
 
+// mapping by level name kung walang color_hex sa DB
+$nameColorMap = [
+    'green'  => '#4caf50',
+    'blue'   => '#2196f3',
+    'brown'  => '#795548',
+    'orange' => '#ff9800',
+    'red'    => '#f44336',
+    'aqua'   => '#00bcd4',
+    'gold'   => '#ffd600',
+    'purple' => '#9c27b0',
+    'yellow' => '#ffeb3b',
+];
+
 while ($row = $res->fetch_assoc()) {
-    $badgeLabels[] = ucfirst(strtolower($row['level_name']));
+    $levelName  = strtolower($row['level_name']);
+    $badgeLabels[] = ucfirst($levelName);
     $badgeCounts[] = (int)$row['total_students'];
 
-    // Gamitin yung color_hex kung meron, kung wala mag-default color na lang later
-    $badgeColors[] = !empty($row['color_hex']) ? $row['color_hex'] : null;
+    // piliin: 1) color_hex kung meron, else 2) mapping by name, else null
+    if (!empty($row['color_hex'])) {
+        $badgeColors[] = $row['color_hex'];
+    } elseif (isset($nameColorMap[$levelName])) {
+        $badgeColors[] = $nameColorMap[$levelName];
+    } else {
+        $badgeColors[] = null; // later papalitan ng default palette
+    }
 }
+
 $res->free();
 $stmt->close();
 
@@ -224,6 +245,48 @@ require_once __DIR__ . '/includes/sidebar.php';
       height: 280px;
     }
   }
+  .chart-filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.75rem 1rem;
+  align-items:center;
+  margin-bottom:.25rem;
+}
+
+.chart-filters .filter-inline{
+  display:flex;
+  align-items:center;
+  gap:.4rem;
+}
+
+.chart-filters .filter-label{
+  font-size:.85rem;
+  font-weight:700;
+  color:#1c3c1f;
+  white-space:nowrap;
+}
+
+.chart-filters .form-select{
+  font-size:.85rem;
+  padding-block:.25rem;
+}
+
+.chart-filters .btn{
+  font-size:.85rem;
+  font-weight:600;
+  padding:.3rem .9rem;
+}
+
+.chart-help-text{
+  font-size:.8rem;
+  color:#555;
+  margin-top:.2rem;
+  margin-bottom:.75rem;
+}
+.chart-help-text em{
+  font-style:italic;
+}
+
 </style>
 
 <div class="main-content">
@@ -251,39 +314,41 @@ require_once __DIR__ . '/includes/sidebar.php';
     <div class="chart-header-line"></div>
 
     <!-- Filters -->
-    <form method="get" class="chart-filters mb-2">
-      <div class="form-group">
-        <label for="sy">School Year</label>
-        <select name="sy" id="sy" class="form-select form-select-sm">
-          <option value="">All School Years</option>
-          <?php foreach ($syOptions as $sy): ?>
-            <option value="<?= htmlspecialchars($sy) ?>"
-              <?= $sy === $selectedSy ? 'selected' : '' ?>>
-              <?= htmlspecialchars($sy) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+   <form method="get" class="chart-filters mb-2">
 
-      <div class="form-group">
-        <label for="program_id">Program</label>
-        <select name="program_id" id="program_id" class="form-select form-select-sm">
-          <option value="0">All Programs</option>
-          <?php foreach ($programs as $prog): ?>
-            <option value="<?= (int)$prog['program_id'] ?>"
-              <?= ((int)$prog['program_id'] === $selectedProgram) ? 'selected' : '' ?>>
-              <?= htmlspecialchars($prog['program_code'] . ' — ' . $prog['program_name']) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+  <div class="filter-inline">
+    <span class="filter-label">School Year</span>
+    <select name="sy" id="sy" class="form-select form-select-sm">
+      <option value="">All School Years</option>
+      <?php foreach ($syOptions as $sy): ?>
+        <option value="<?= htmlspecialchars($sy) ?>"
+          <?= $sy === $selectedSy ? 'selected' : '' ?>>
+          <?= htmlspecialchars($sy) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+  </div>
 
-      <div>
-        <button type="submit" class="btn btn-sm btn-success px-3">
-          Apply
-        </button>
-      </div>
-    </form>
+  <div class="filter-inline">
+    <span class="filter-label">Program</span>
+    <select name="program_id" id="program_id" class="form-select form-select-sm">
+      <option value="0">All Programs</option>
+      <?php foreach ($programs as $prog): ?>
+        <option value="<?= (int)$prog['program_id'] ?>"
+          <?= ((int)$prog['program_id'] === $selectedProgram) ? 'selected' : '' ?>>
+          <?= htmlspecialchars($prog['program_code'] . ' — ' . $prog['program_name']) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+  </div>
+
+  <div class="filter-inline">
+    <button type="submit" class="btn btn-sm btn-success">
+      Apply
+    </button>
+  </div>
+</form>
+
 
     <!-- Small description text -->
     <p class="chart-help-text">
