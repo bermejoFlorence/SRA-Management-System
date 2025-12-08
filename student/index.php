@@ -280,7 +280,7 @@ function fetch_answer_distribution(mysqli $conn, int $studentId, string $setType
     JOIN attempt_answers aa ON aa.attempt_id = a.attempt_id
    WHERE a.student_id = ?
      AND a.set_type = ?
-     AND a.status IN ('submitted','scored')
+     AND a.status IN ('in_progress','submitted','scored')
   ";
   $correct = $wrong = $skipped = 0;
   if ($stmt = $conn->prepare($sql)) {
@@ -296,6 +296,7 @@ function fetch_answer_distribution(mysqli $conn, int $studentId, string $setType
   }
   return ['correct'=>$correct,'wrong'=>$wrong,'skipped'=>$skipped];
 }
+
 
 function to_percent_dist(array $dist): array {
   $total = max(0, ($dist['correct'] ?? 0) + ($dist['wrong'] ?? 0) + ($dist['skipped'] ?? 0));
@@ -979,50 +980,57 @@ body, .main-content { border: 0 !important; }
 
   // Completion bar chart
   const ctxBar = document.getElementById('completionBar');
-  if (ctxBar) {
-    new Chart(ctxBar, {
-      type: 'bar',
-      data: {
-        labels: ['Starting Level Test', 'Power Builder', 'Rate Builder'],
-        datasets: [{
-          label: 'Completion (%)',
-          data: completionPercents,
-          backgroundColor: ['#2E7D32', '#ECA305', '#1565C0'],
-          borderRadius: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 100,
-            ticks: {
-              stepSize: 20,
-              callback: (val) => val + '%'
-            },
-            title: {
-              display: true,
-              text: 'Completion'
-            }
+if (ctxBar) {
+  new Chart(ctxBar, {
+    type: 'bar',
+    data: {
+      labels: ['Starting Level Test', 'Power Builder', 'Rate Builder'],
+      datasets: [{
+        label: 'Completion (%)',
+        data: completionPercents,
+        backgroundColor: ['#2E7D32', '#ECA305', '#1565C0'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      indexAxis: 'y',   // ⭐ ito ang nagpapahiga
+      scales: {
+        x: {
+          beginAtZero: true,
+          max: 100,
+          ticks: {
+            stepSize: 20,
+            callback: (val) => val + '%'
+          },
+          title: {
+            display: true,
+            text: 'Completion (%)'
           }
         },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const idx = context.dataIndex;
-                const pct = context.parsed.y || 0;
-                const detail = completionLabelsDetail[idx] || '';
-                return `${pct}%  (${detail})`;
-              }
+        y: {
+          title: {
+            display: false
+          }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const idx = context.dataIndex;
+              const pct = context.parsed.x || 0;
+              const detail = completionLabelsDetail[idx] || '';
+              return `${pct}%  (${detail})`;
             }
           }
         }
       }
-    });
-  }
+    }
+  });
+}
+
 </script>
 
 </body>
