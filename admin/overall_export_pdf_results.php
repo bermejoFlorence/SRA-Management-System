@@ -1,6 +1,7 @@
 <?php
 // admin/overall_export_pdf_results.php
-// Export PDF: all students (all programs) + SLT/PB/RB best results
+// Export PDF: ONLY students who finished SLT, PB, RB (all have percent)
+// Grouped visually per course
 
 require_once __DIR__ . '/../includes/auth.php';
 require_role('admin', '../login.php#login');
@@ -46,7 +47,9 @@ $sub_rb = "
 ";
 
 /* =========================
-   MAIN QUERY: ALL STUDENTS
+   MAIN QUERY:
+   - students only
+   - must have SLT, PB, RB (all non-NULL)
 ========================= */
 
 $sql = "
@@ -75,6 +78,11 @@ $sql = "
     LEFT JOIN ($sub_pb)  pb  ON pb.student_id  = u.user_id
     LEFT JOIN ($sub_rb)  rb  ON rb.student_id  = u.user_id
     WHERE u.role = 'student'
+      AND slt.best_percent IS NOT NULL
+      AND pb.best_percent  IS NOT NULL
+      AND rb.best_percent  IS NOT NULL
+      -- optional: kung gusto mo ACTIVE lang
+      -- AND u.status = 'active'
 ";
 
 $sql .= "
@@ -95,7 +103,7 @@ while ($r = $res->fetch_assoc()) {
 $res->free();
 
 /* =========================
-   LOGOS (same as sample mo)
+   LOGOS (same style as program export)
 ========================= */
 
 $logo1Path = realpath(__DIR__ . '/1.png');
@@ -107,7 +115,7 @@ $logo2Data = ($logo2Path && file_exists($logo2Path)) ? base64_encode(file_get_co
 $logo3Data = ($logo3Path && file_exists($logo3Path)) ? base64_encode(file_get_contents($logo3Path)) : null;
 
 $today  = date('F d, Y h:i A');
-$title  = 'Overall Students Assessment Results (All Programs)';
+$title  = 'Overall Students Assessment Results (Finished SLT, PB & RB)';
 
 ob_start();
 ?>
@@ -237,6 +245,14 @@ ob_start();
       font-weight: 600;
       color: #064d00;
     }
+
+    /* Row para sa course group header */
+    .course-group-row td {
+      background: #f4f8f0;
+      font-weight: 700;
+      font-size: 9px;
+      color: #064d00;
+    }
   </style>
 </head>
 <body>
@@ -277,15 +293,17 @@ ob_start();
 <div id="content">
   <h1><?php echo htmlspecialchars($title); ?></h1>
   <p class="subtitle">
-    Summary of all students across programs with their best SLT, Power Builder, and Rate Builder results.
+    Includes only students who have completed all three assessments: Starting Level Test (SLT),
+    Power Builder (PB), and Rate Builder (RB).
   </p>
 
   <div class="meta">
-    Generated on: <?php echo htmlspecialchars($today); ?>
+    Generated on: <?php echo htmlspecialchars($today); ?><br>
+    Total students in this report: <?php echo count($rows); ?>
   </div>
 
   <?php if (empty($rows)): ?>
-    <p style="width:96%;margin:0 auto;">No students found.</p>
+    <p style="width:96%;margin:0 auto;">No students found with completed SLT, PB, and RB.</p>
   <?php else: ?>
     <table>
       <thead>
@@ -308,6 +326,8 @@ ob_start();
           return $v !== null ? number_format($v, 2) . '%' : '—';
       };
 
+      $currentCourse = null;
+
       foreach ($rows as $s):
           $full_name = trim(
               $s['last_name'] . ', ' . $s['first_name'] .
@@ -317,7 +337,7 @@ ob_start();
 
           $course = trim(($s['program_code'] ?? '') . ' – ' . ($s['program_name'] ?? ''));
           if ($course === '–') {
-              $course = '';
+              $course = 'No Program';
           }
 
           $major = $s['major_name'] ?: '—';
@@ -329,6 +349,18 @@ ob_start();
           $slt = $s['slt_percent'];
           $pb  = $s['pb_percent'];
           $rb  = $s['rb_percent'];
+
+          // ===== COURSE GROUP HEADER (BSIT block, then next course, etc.) =====
+          if ($currentCourse !== $course) {
+              $currentCourse = $course;
+      ?>
+        <tr class="course-group-row">
+          <td colspan="9">
+            <?php echo htmlspecialchars($currentCourse); ?>
+          </td>
+        </tr>
+      <?php
+          }
       ?>
         <tr>
           <td class="center"><?php echo $i++; ?></td>
@@ -363,7 +395,7 @@ $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'landscape');   // ✅ naka-landscape
 
-$filename = 'SRA_Overall_Students_Results_' . date('Ymd_His') . '.pdf';
+$filename = 'SRA_Overall_Students_Finished_SLT_PB_RB_' . date('Ymd_His') . '.pdf';
 $dompdf->render();
 $dompdf->stream($filename, ['Attachment' => true]); // ✅ auto-download
 exit;
