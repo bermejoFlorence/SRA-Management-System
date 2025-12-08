@@ -349,6 +349,29 @@ if (isset($_GET['debug'])) {
   print_r($debug);
   echo "</pre></div>";
 }
+
+/* ---------- Active announcements for student dashboard ---------- */
+$announcements = [];
+try {
+    $sql = "
+        SELECT announcement_id, title, body, created_at
+        FROM sra_announcements
+        WHERE status = 'active'
+        ORDER BY created_at DESC
+        LIMIT 5
+    ";
+    if ($res = $conn->query($sql)) {
+        while ($row = $res->fetch_assoc()) {
+            $announcements[] = $row;
+        }
+        $res->free();
+    }
+} catch (Throwable $e) {
+    // kung may error, tahimik lang tayo sa UI
+    error_log('Announcements load error: ' . $e->getMessage());
+    $announcements = [];
+}
+
 ?>
 
 <style>
@@ -516,7 +539,51 @@ if (isset($_GET['debug'])) {
   border-bottom:2px solid var(--g); padding-bottom:8px;
   font-size: clamp(1rem, 1rem + .2vw, 1.1rem);
 }
-.info-card ul{ margin:10px 0 0 18px; }
+
+/* default UL para sa Reading Tips (may indent) */
+.info-card ul{
+  margin:10px 0 0 18px;
+}
+
+/* --- Announcements list (flat, no bullets) --- */
+.ann-list{
+  list-style:none;
+  padding:0;
+  margin:4px 0 0;
+}
+
+.ann-item{
+  padding:8px 0 10px;
+  border-bottom:1px dashed #e5e7eb;
+}
+.ann-item:last-child{
+  border-bottom:none;
+}
+
+.ann-title{
+  font-size:.95rem;
+  font-weight:600;
+  color:#064d00;
+  margin-bottom:2px;
+}
+
+.ann-meta{
+  font-size:.8rem;
+  color:#6b7280;
+  margin-bottom:4px;
+}
+
+.ann-body{
+  font-size:.9rem;
+  color:#374151;
+}
+
+.ann-empty{
+  font-size:.9rem;
+  color:#6b7280;
+  margin:8px 0 0;
+}
+
 
 @media (max-width: 900px){
   .info-grid{ grid-template-columns: 1fr; }
@@ -816,16 +883,36 @@ body, .main-content { border: 0 !important; }
   </div>
 
   <!-- Announcements + Reading Tips -->
+  <!-- Announcements + Reading Tips -->
   <section class="info-grid">
+    <!-- Dynamic Announcements -->
     <div class="info-card">
       <h3>🔔 Announcements</h3>
-      <ul>
-        <li>All students are required to complete the SRA Starting Level Test by <strong>August 15, 2025</strong>.</li>
-        <li>The Power Builder Assessment will open on <strong>August 20, 2025</strong>.</li>
-        <li>Students who achieve 85%+ in Rate Builder receive a Certificate.</li>
-        <li>Log in 15 minutes before your scheduled test to avoid delays.</li>
-      </ul>
+
+      <?php if (empty($announcements)): ?>
+        <p class="ann-empty">
+          No announcements at the moment. Please check again later.
+        </p>
+      <?php else: ?>
+        <ul class="ann-list">
+          <?php foreach ($announcements as $a): ?>
+            <li class="ann-item">
+              <div class="ann-title">
+                <?= htmlspecialchars($a['title']); ?>
+              </div>
+              <div class="ann-meta">
+                <?= date('M d, Y', strtotime($a['created_at'])); ?>
+              </div>
+              <div class="ann-body">
+                <?= nl2br(htmlspecialchars($a['body'])); ?>
+              </div>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      <?php endif; ?>
     </div>
+
+    <!-- Reading Tips (static pa rin) -->
     <div class="info-card">
       <h3>💡 Reading Tips</h3>
       <ul>
