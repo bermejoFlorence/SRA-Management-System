@@ -160,6 +160,7 @@ $rbFrac = ($rbCardTotal > 0) ? ($rbCardDone / $rbCardTotal) : 0.0;
 $pbUnlocked   = $sltDone;  // PB still gated by SLT
 $rbUnlocked   = ($pbCardTotal > 0 && $pbCardDone >= $pbCardTotal);
 $certUnlocked = ($rbCardTotal > 0 && $rbCardDone >= $rbCardTotal);
+
 /* ----- Certificate state based on RB completion + validation ----- */
 $certState = 'locked'; // locked | pending | validated | invalid
 
@@ -268,6 +269,62 @@ if ($isFirstTimer) {
   }
 }
 
+/* ---------- Answer distribution (correct / wrong / skipped) ---------- */
+function fetch_answer_distribution(mysqli $conn, int $studentId, string $setType): array {
+  $sql = "
+    SELECT
+      SUM(CASE WHEN aa.is_correct = 1 THEN 1 ELSE 0 END) AS correct_cnt,
+      SUM(CASE WHEN aa.is_correct = 0 THEN 1 ELSE 0 END) AS wrong_cnt,
+      SUM(CASE WHEN aa.is_correct IS NULL THEN 1 ELSE 0 END) AS skipped_cnt
+    FROM assessment_attempts a
+    JOIN attempt_answers aa ON aa.attempt_id = a.attempt_id
+   WHERE a.student_id = ?
+     AND a.set_type = ?
+     AND a.status IN ('submitted','scored')
+  ";
+  $correct = $wrong = $skipped = 0;
+  if ($stmt = $conn->prepare($sql)) {
+    $stmt->bind_param('is', $studentId, $setType);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($row = $res->fetch_assoc()) {
+      $correct = (int)($row['correct_cnt'] ?? 0);
+      $wrong   = (int)($row['wrong_cnt'] ?? 0);
+      $skipped = (int)($row['skipped_cnt'] ?? 0);
+    }
+    $stmt->close();
+  }
+  return ['correct'=>$correct,'wrong'=>$wrong,'skipped'=>$skipped];
+}
+
+function to_percent_dist(array $dist): array {
+  $total = max(0, ($dist['correct'] ?? 0) + ($dist['wrong'] ?? 0) + ($dist['skipped'] ?? 0));
+  if ($total <= 0) {
+    return ['correct'=>0,'wrong'=>0,'skipped'=>0,'total'=>0];
+  }
+  $c = round($dist['correct'] / $total * 100);
+  $w = round($dist['wrong']   / $total * 100);
+  $s = 100 - $c - $w; // para siguradong 100% total
+  return ['correct'=>$c,'wrong'=>$w,'skipped'=>$s,'total'=>$total];
+}
+
+$distSLTRaw = fetch_answer_distribution($conn, $studentId, 'SLT');
+$distPBRaw  = fetch_answer_distribution($conn, $studentId, 'PB');
+$distBRRaw  = fetch_answer_distribution($conn, $studentId, 'RB');
+
+$distSLT = to_percent_dist($distSLTRaw);
+$distPB  = to_percent_dist($distPBRaw);
+$distRB  = to_percent_dist($distBRRaw);
+
+/* ---------- Completion percentages for bar chart ---------- */
+$sltCompletionPct = $sltDone ? 100 : 0;
+$pbCompletionPct  = ($pbCardTotal > 0) ? (int)round(($pbCardDone / $pbCardTotal) * 100) : 0;
+$rbCompletionPct  = ($rbCardTotal > 0) ? (int)round(($rbCardDone / $rbCardTotal) * 100) : 0;
+
+$pbLabelText = $pbCardTotal > 0 ? ($pbCardDone . ' / ' . $pbCardTotal . ' stories') : '0 / 0 stories';
+$rbLabelText = $rbCardTotal > 0 ? ($rbCardDone . ' / ' . $rbCardTotal . ' stories') : '0 / 0 stories';
+$sltLabelText = $sltDone ? '1 / 1 test' : '0 / 1 test';
+
 /* ===== (Optional) Debug panel: open page with ?debug=1 to see values ===== */
 if (isset($_GET['debug'])) {
   echo '<div style="margin:12px 16px;padding:12px;border:1px solid #ddd;border-left:6px solid #1565C0;background:#f8fbff;border-radius:8px;">';
@@ -279,57 +336,14 @@ if (isset($_GET['debug'])) {
     'RB_publishedTotal'=>$rbPublishedTotal,'RB_completed'=>$rbCompleted,
     'RB_cardDone/Total'=>"$rbCardDone/$rbCardTotal",'RB_unlocked'=>$rbUnlocked,
     'Cert_unlocked'=>$certUnlocked,'overall'=>$overall,'remaining'=>$remaining,
+    'distSLT'=>$distSLT,'distPB'=>$distPB,'distRB'=>$distRB,
+    'completionPct'=>[
+      'SLT'=>$sltCompletionPct,
+      'PB'=>$pbCompletionPct,
+      'RB'=>$rbCompletionPct
+    ]
   ];
   print_r($debug);
-
-  // Per-story indicator (PB)
-  if ($levelId) {
-    echo "\nPB stories (published) vs scored:\n";
-    $sql = "
-      SELECT p.story_id,
-             MAX(CASE WHEN s.score IS NOT NULL THEN 1 ELSE 0 END) AS scored
-        FROM stories p
-        JOIN story_sets ss ON ss.set_id=p.set_id
-   LEFT JOIN assessment_attempts a
-          ON a.student_id=? AND a.set_type='PB' AND a.status IN ('submitted','scored')
-   LEFT JOIN attempt_stories s
-          ON s.attempt_id=a.attempt_id AND s.story_id=p.story_id
-       WHERE ss.set_type='PB' AND ss.level_id=? AND p.status='published'
-    GROUP BY p.story_id
-    ORDER BY p.story_id";
-    if ($st = $conn->prepare($sql)) {
-      $st->bind_param('ii', $studentId, $levelId);
-      $st->execute();
-      $rs = $st->get_result();
-      while ($row = $rs->fetch_assoc()) {
-        echo "  PB story {$row['story_id']} => ".($row['scored'] ? 'scored' : 'NOT scored')."\n";
-      }
-      $st->close();
-    }
-
-    echo "\nRB stories (published) vs scored:\n";
-    $sql = "
-      SELECT p.story_id,
-             MAX(CASE WHEN s.score IS NOT NULL THEN 1 ELSE 0 END) AS scored
-        FROM stories p
-        JOIN story_sets ss ON ss.set_id=p.set_id
-   LEFT JOIN assessment_attempts a
-          ON a.student_id=? AND a.set_type='RB' AND a.status IN ('submitted','scored')
-   LEFT JOIN attempt_stories s
-          ON s.attempt_id=a.attempt_id AND s.story_id=p.story_id
-       WHERE ss.set_type='RB' AND ss.level_id=? AND p.status='published'
-    GROUP BY p.story_id
-    ORDER BY p.story_id";
-    if ($st = $conn->prepare($sql)) {
-      $st->bind_param('ii', $studentId, $levelId);
-      $st->execute();
-      $rs = $st->get_result();
-      while ($row = $rs->fetch_assoc()) {
-        echo "  RB story {$row['story_id']} => ".($row['scored'] ? 'scored' : 'NOT scored')."\n";
-      }
-      $st->close();
-    }
-  }
   echo "</pre></div>";
 }
 ?>
@@ -505,6 +519,94 @@ if (isset($_GET['debug'])) {
   .info-grid{ grid-template-columns: 1fr; }
 }
 
+/* ---------- Analytics section (charts) ---------- */
+.analytics-section{
+  padding: 8px clamp(12px, 2vw, 20px) clamp(24px, 3vw, 32px);
+}
+.analytics-title{
+  font-weight: 800;
+  color: var(--g);
+  font-size: clamp(1.1rem, 1.1rem + .2vw, 1.3rem);
+  margin: 0 0 12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.analytics-title span.icon{
+  font-size:1.4rem;
+}
+.chart-row{
+  display:grid;
+  gap: clamp(12px, 2vw, 20px);
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: clamp(18px, 3vw, 24px);
+}
+@media (max-width: 1100px){
+  .chart-row{
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 768px){
+  .chart-row{
+    grid-template-columns: 1fr;
+  }
+}
+.chart-card{
+  background:#fff;
+  border-radius:12px;
+  box-shadow: var(--card-shadow);
+  padding: clamp(12px, 2vw, 18px);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.chart-card h4{
+  margin:0;
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--g);
+}
+.chart-card small{
+  font-size:.8rem;
+  opacity:.8;
+}
+.chart-wrapper{
+  position:relative;
+  width:100%;
+  min-height:220px;
+}
+.chart-wrapper canvas{
+  width:100%!important;
+  height:100%!important;
+}
+
+/* Completion bar chart */
+.completion-card{
+  background:#fff;
+  border-radius:12px;
+  box-shadow: var(--card-shadow);
+  padding: clamp(14px, 2vw, 20px);
+}
+.completion-card h4{
+  margin:0 0 4px;
+  color:var(--g);
+  font-size: clamp(1rem, 1rem + .2vw, 1.1rem);
+}
+.completion-card p{
+  margin:0 0 12px;
+  font-size:.85rem;
+  opacity:.85;
+}
+.completion-wrapper{
+  position:relative;
+  width:100%;
+  min-height:260px;
+}
+.completion-wrapper canvas{
+  width:100%!important;
+  height:100%!important;
+}
+
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce){
   .btn-primary, .card-box button{ transition: none; }
@@ -633,6 +735,7 @@ body, .main-content { border: 0 !important; }
 
     <!-- PB (locked until SLT is done) -->
     <div class="card-box <?= $pbUnlocked ? '' : 'locked' ?>"
+
          title="<?= $pbUnlocked ? '' : 'Unlocks after you finish the Starting Level Test' ?>">
       <h4>📈 Power Builder Assessment</h4>
       <p style="opacity:.8;margin-top:-6px;">
@@ -652,6 +755,7 @@ body, .main-content { border: 0 !important; }
 
     <!-- RB (unlocks when ALL PB published are completed) -->
     <div class="card-box <?= $rbUnlocked ? '' : 'locked' ?>"
+
          title="<?= $rbUnlocked ? '' : 'Unlocks after you finish all published Power Builder stories' ?>">
       <h4>📚 Rate Builder Assessment</h4>
       <p>Rate your Builder Assessment.</p>
@@ -729,7 +833,197 @@ body, .main-content { border: 0 !important; }
       </ul>
     </div>
   </section>
+
+  <!-- Analytics section (Pie + Bar charts) -->
+  <section class="analytics-section">
+    <h2 class="analytics-title">
+      <span class="icon">📊</span>
+      Assessment Performance Overview
+    </h2>
+
+    <!-- Row 1: 3 pie charts -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <h4>Starting Level Test</h4>
+        <small>
+          <?php if ($distSLT['total'] > 0): ?>
+            Based on <?= (int)$distSLT['total']; ?> answered items.
+          <?php else: ?>
+            No SLT results yet.
+          <?php endif; ?>
+        </small>
+        <div class="chart-wrapper">
+          <canvas id="pieSLT"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h4>Power Builder Test</h4>
+        <small>
+          <?php if ($distPB['total'] > 0): ?>
+            Based on <?= (int)$distPB['total']; ?> answered items.
+          <?php else: ?>
+            No Power Builder results yet.
+          <?php endif; ?>
+        </small>
+        <div class="chart-wrapper">
+          <canvas id="piePB"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h4>Rate Builder Test</h4>
+        <small>
+          <?php if ($distRB['total'] > 0): ?>
+            Based on <?= (int)$distRB['total']; ?> answered items.
+          <?php else: ?>
+            No Rate Builder results yet.
+          <?php endif; ?>
+        </small>
+        <div class="chart-wrapper">
+          <canvas id="pieRB"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: completion bar chart -->
+    <div class="completion-card">
+      <h4>Completion by Assessment</h4>
+      <p>This shows how many activities you have finished for each stage.</p>
+      <div class="completion-wrapper">
+        <canvas id="completionBar"></canvas>
+      </div>
+    </div>
+  </section>
+
 </div>
+
+<!-- Charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // --------- Data from PHP ---------
+  const distSLT = {
+    correct: <?= (int)$distSLT['correct']; ?>,
+    wrong:   <?= (int)$distSLT['wrong']; ?>,
+    skipped: <?= (int)$distSLT['skipped']; ?>
+  };
+  const distPB = {
+    correct: <?= (int)$distPB['correct']; ?>,
+    wrong:   <?= (int)$distPB['wrong']; ?>,
+    skipped: <?= (int)$distPB['skipped']; ?>
+  };
+  const distRB = {
+    correct: <?= (int)$distRB['correct']; ?>,
+    wrong:   <?= (int)$distRB['wrong']; ?>,
+    skipped: <?= (int)$distRB['skipped']; ?>
+  };
+
+  const piePercentSLT = [<?= (int)$distSLT['correct']; ?>, <?= (int)$distSLT['wrong']; ?>, <?= (int)$distSLT['skipped']; ?>];
+  const piePercentPB  = [<?= (int)$distPB['correct']; ?>,  <?= (int)$distPB['wrong']; ?>,  <?= (int)$distPB['skipped']; ?>];
+  const piePercentRB  = [<?= (int)$distRB['correct']; ?>,  <?= (int)$distRB['wrong']; ?>,  <?= (int)$distRB['skipped']; ?>];
+
+  const completionPercents = [
+    <?= (int)$sltCompletionPct; ?>,
+    <?= (int)$pbCompletionPct; ?>,
+    <?= (int)$rbCompletionPct; ?>
+  ];
+  const completionLabelsDetail = [
+    '<?= addslashes($sltLabelText); ?>',
+    '<?= addslashes($pbLabelText); ?>',
+    '<?= addslashes($rbLabelText); ?>'
+  ];
+
+  const correctColor = '#2E7D32';
+  const wrongColor   = '#D32F2F';
+  const skippedColor = '#9E9E9E';
+
+  function makePieChart(ctxId, percentArr) {
+    const ctx = document.getElementById(ctxId);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Correct', 'Wrong', 'Skipped'],
+        datasets: [{
+          data: percentArr,
+          backgroundColor: [correctColor, wrongColor, skippedColor]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 8
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                return `${label}: ${value}%`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  makePieChart('pieSLT', piePercentSLT);
+  makePieChart('piePB',  piePercentPB);
+  makePieChart('pieRB',  piePercentRB);
+
+  // Completion bar chart
+  const ctxBar = document.getElementById('completionBar');
+  if (ctxBar) {
+    new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: ['Starting Level Test', 'Power Builder', 'Rate Builder'],
+        datasets: [{
+          label: 'Completion (%)',
+          data: completionPercents,
+          backgroundColor: ['#2E7D32', '#ECA305', '#1565C0'],
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              stepSize: 20,
+              callback: (val) => val + '%'
+            },
+            title: {
+              display: true,
+              text: 'Completion'
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const idx = context.dataIndex;
+                const pct = context.parsed.y || 0;
+                const detail = completionLabelsDetail[idx] || '';
+                return `${pct}%  (${detail})`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
 
 </body>
 </html>
