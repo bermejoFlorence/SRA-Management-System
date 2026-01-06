@@ -577,26 +577,16 @@ require_once __DIR__ . '/includes/sidebar.php';
           $sec    = safe_text($r['section'] ?? '');
           $pct    = number_format((float)$r['overall_percent'], 2);
 
-          $photo  = trim((string)($r['profile_photo'] ?? ''));
-          $hasImg = ($photo !== '' && is_http_url($photo));
+      
         ?>
           <div class="topcard rank<?= $rank ?> pos<?= $pos ?>">
             <div class="rank-pill"><?= str_pad((string)$rank, 2, '0', STR_PAD_LEFT) ?></div>
 
             <div class="topcard-body">
               <div class="avatar-wrap">
-                <?php if ($hasImg): ?>
-                  <img
-                    src="<?= h($photo) ?>"
-                    alt="<?= h($nm) ?>"
-                    loading="lazy"
-                    referrerpolicy="no-referrer"
-                    onerror="this.outerHTML='<i class=&quot;fa-solid fa-user&quot;></i>';"
-                  >
-                <?php else: ?>
-                  <i class="fa-solid fa-user"></i>
-                <?php endif; ?>
-              </div>
+  <i class="fa-solid fa-user"></i>
+</div>
+
 
               <div class="top-meta">
                 <p class="top-name" title="<?= h($nm) ?>"><?= h($nm) ?></p>
