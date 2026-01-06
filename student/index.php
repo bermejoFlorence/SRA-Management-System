@@ -791,80 +791,195 @@ body, .main-content { border: 0 !important; }
   cursor: not-allowed;
   filter: none !important;
 }
-/* ---------- Top Performers (Student dashboard) ---------- */
+
+/* ---------- Top Overall Performers (match Admin style) ---------- */
 .top-performers{
   margin: 0 clamp(12px, 2vw, 20px) clamp(12px, 2vw, 16px);
   background:#fff;
   border:1px solid #eaeaea;
-  border-radius:12px;
+  border-radius:14px;
   box-shadow: var(--card-shadow);
   padding: clamp(14px, 2vw, 18px);
 }
-.top-performers .tp-title{
-  display:flex; align-items:center; gap:10px;
-  font-weight:900; color:var(--g);
-  font-size: clamp(1.05rem, 1rem + .25vw, 1.25rem);
-  margin:0;
+
+.top-performers .tp-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding-bottom:10px;
+  border-bottom: 2px solid rgba(0,51,0,.25);
 }
+
+.top-performers .tp-title{
+  margin:0;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:900;
+  color:var(--g);
+  font-size: clamp(1.05rem, 1rem + .25vw, 1.25rem);
+}
+
+.top-performers .tp-title .tp-icon{
+  width:30px; height:30px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  background: var(--g);
+  color:#fff;
+  font-size:.95rem;
+}
+
 .top-performers .tp-sub{
-  margin:.35rem 0 0;
+  margin:.55rem 0 0;
   color:#555;
   font-size:.92rem;
 }
+
 .tp-grid{
   display:grid;
-  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
   gap: 14px;
   margin-top: 14px;
 }
 @media (max-width: 1100px){ .tp-grid{ grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 700px){ .tp-grid{ grid-template-columns: 1fr; } }
+@media (max-width: 720px){ .tp-grid{ grid-template-columns: 1fr; } }
 
+/* Card base */
 .tp-card{
-  border:1px solid #ededed;
-  border-radius:14px;
-  padding: 14px;
-  background: linear-gradient(180deg,#ffffff, #fafafa);
   position:relative;
+  border-radius:16px;
+  border:1px solid #e9e9e9;
+  background:#fff;
   overflow:hidden;
+  box-shadow: 0 8px 22px rgba(0,0,0,.05);
 }
-.tp-rank{
-  position:absolute; top:10px; right:10px;
-  width:32px; height:32px; border-radius:999px;
-  display:flex; align-items:center; justify-content:center;
-  font-weight:900;
-  background:#0b3d0b; color:#fff;
-  font-size:.9rem;
-  opacity:.9;
+
+/* subtle top accent line (like admin) */
+.tp-card::before{
+  content:"";
+  position:absolute;
+  left:0; top:0;
+  width:100%;
+  height:5px;
+  background: rgba(0,51,0,.35);
 }
+
+.tp-body{
+  padding: 14px 14px 12px;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+
+/* avatar circle (icon only, per your preference) */
 .tp-avatar{
-  width:56px; height:56px; border-radius:999px;
-  display:flex; align-items:center; justify-content:center;
-  border:1px solid #e7e7e7;
-  background:#f3f4f6;
-  color:#1f2937;
-  font-size: 1.25rem;
+  width:64px;
+  height:64px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: #f6f7f6;
+  border: 2px solid rgba(0,51,0,.18);
+  color: rgba(0,51,0,.75);
+  flex: 0 0 64px;
+  font-size: 1.35rem;
 }
+
+.tp-info{
+  flex:1;
+  min-width: 0;
+}
+
 .tp-name{
-  margin:10px 0 2px;
+  margin:2px 0 4px;
   font-weight:900;
   color:#0f172a;
-  font-size: 1.05rem;
+  font-size:1.08rem;
+  line-height:1.2;
 }
+
 .tp-meta{
   margin:0;
   color:#374151;
-  font-size:.9rem;
+  font-size:.92rem;
   line-height:1.35;
 }
-.tp-score{
-  margin-top:12px;
-  display:flex; align-items:baseline; gap:10px;
-  border-top:1px dashed #e5e7eb;
-  padding-top:10px;
+
+.tp-meta strong{
+  font-weight:800;
 }
-.tp-score .label{ font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:#6b7280; }
-.tp-score .val{ font-weight:900; font-size: 1.35rem; color: var(--g); }
+
+/* footer like admin: left label + big value + right rank */
+.tp-foot{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid #eef2ee;
+  background: linear-gradient(180deg,#fff,#fbfbfb);
+}
+
+.tp-foot .left{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.tp-foot .label{
+  font-size:.78rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#6b7280;
+}
+
+.tp-foot .val{
+  font-weight:900;
+  font-size: 1.55rem;
+  color: var(--g);
+  line-height:1;
+}
+
+/* Rank badge top-right (small) */
+.tp-rank-badge{
+  position:absolute;
+  top:10px;
+  right:10px;
+  min-width:34px;
+  height:28px;
+  padding:0 10px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:.85rem;
+  border:1px solid #e8e8e8;
+  background:#f5f5f5;
+  color:#111827;
+}
+
+/* Color accents per rank (subtle) */
+.tp-card.rank-1{ border-color: rgba(236,163,5,.55); }
+.tp-card.rank-1::before{ background: rgba(236,163,5,.85); }
+.tp-card.rank-1 .tp-rank-badge{
+  background: rgba(236,163,5,.12);
+  border-color: rgba(236,163,5,.45);
+}
+
+.tp-card.rank-2{ border-color: rgba(17,24,39,.18); }
+.tp-card.rank-2::before{ background: rgba(17,24,39,.35); }
+
+.tp-card.rank-3{ border-color: rgba(239,108,0,.35); }
+.tp-card.rank-3::before{ background: rgba(239,108,0,.75); }
+.tp-card.rank-3 .tp-rank-badge{
+  background: rgba(239,108,0,.10);
+  border-color: rgba(239,108,0,.35);
+}
+
 .tp-empty{
   margin-top:10px;
   color:#6b7280;
@@ -1065,22 +1180,27 @@ body, .main-content { border: 0 !important; }
   </section>
 
   <!-- Analytics section (Pie + Bar charts) -->
-
-  <!-- Top Overall Performers (STRICT: SLT+PB+RB required) -->
+<!-- Top Overall Performers (STRICT: SLT+PB+RB required) -->
 <section class="top-performers">
-  <h3 class="tp-title">🏆 Top Overall Performers (Overall %)</h3>
+  <div class="tp-head">
+    <h3 class="tp-title">
+      <span class="tp-icon"><i class="fa-solid fa-trophy"></i></span>
+      Top Overall Performers (Overall %)
+    </h3>
+  </div>
 
   <?php if (!$topSy): ?>
     <p class="tp-sub">School year is not set for your account.</p>
 
   <?php else: ?>
     <p class="tp-sub">
-      Top 3 students by <strong>overall average percentage</strong> (best SLT + best PB + best RB) — filtered by <strong>SY <?= htmlspecialchars($topSy) ?></strong>.
+      STRICT mode: overall score is computed only for students with <strong>completed SLT, PB, and RB</strong>
+      (best attempt per test). — filtered by <strong>SY <?= htmlspecialchars($topSy) ?></strong>.
     </p>
 
     <?php if (empty($top3)): ?>
       <div class="tp-empty">
-        No qualified students yet. (STRICT: requires completed SLT, PB, and RB results.)
+        No qualified students yet. (STRICT requires completed SLT, PB, and RB results.)
       </div>
     <?php else: ?>
       <div class="tp-grid">
@@ -1092,30 +1212,45 @@ body, .main-content { border: 0 !important; }
             $yr   = (int)($r['year_level'] ?? 0);
             $sec  = trim((string)($r['section'] ?? '—'));
             $pct  = number_format((float)($r['overall_pct'] ?? 0), 2);
+            $rankClass = 'rank-' . $rank;
           ?>
-          <div class="tp-card">
-            <div class="tp-rank"><?= $rank ?></div>
 
-            <div class="tp-avatar" aria-hidden="true">
-              <i class="fa-solid fa-user"></i>
+          <div class="tp-card <?= htmlspecialchars($rankClass) ?>">
+            <div class="tp-rank-badge"><?= str_pad((string)$rank, 2, '0', STR_PAD_LEFT) ?></div>
+
+            <div class="tp-body">
+              <div class="tp-avatar" aria-hidden="true">
+                <i class="fa-solid fa-user"></i>
+              </div>
+
+              <div class="tp-info">
+                <div class="tp-name"><?= htmlspecialchars($nm) ?></div>
+                <p class="tp-meta">
+                  <strong>Course:</strong> <?= htmlspecialchars($crs) ?><br>
+                  <strong>Year/Section:</strong>
+                  <?= $yr ? htmlspecialchars((string)$yr) : '—' ?> - <?= htmlspecialchars($sec) ?>
+                </p>
+              </div>
             </div>
 
-            <div class="tp-name"><?= htmlspecialchars($nm) ?></div>
-            <p class="tp-meta">
-              <strong>Course:</strong> <?= htmlspecialchars($crs) ?><br>
-              <strong>Year/Section:</strong> <?= $yr ? htmlspecialchars((string)$yr) : '—' ?> - <?= htmlspecialchars($sec) ?>
-            </p>
-
-            <div class="tp-score">
-              <div class="label">Overall Percentage</div>
-              <div class="val"><?= $pct ?>%</div>
+            <div class="tp-foot">
+              <div class="left">
+                <div class="label">Overall Percentage</div>
+                <div class="val"><?= $pct ?>%</div>
+              </div>
+              <div style="text-align:right;">
+                <div class="label">Rank</div>
+                <div style="font-weight:900;color:#111827;font-size:1.05rem;"><?= (int)$rank ?></div>
+              </div>
             </div>
           </div>
+
         <?php endforeach; ?>
       </div>
     <?php endif; ?>
   <?php endif; ?>
 </section>
+
 
   <section class="analytics-section">
     <h2 class="analytics-title">
