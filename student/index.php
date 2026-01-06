@@ -791,173 +791,85 @@ body, .main-content { border: 0 !important; }
   cursor: not-allowed;
   filter: none !important;
 }
- /* ====== TOP 3 (Clean Podium) ====== */
-  .top3-grid{
-    display:grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1rem;
-    align-items: stretch;
-  }
+/* ---------- Top Performers (Student dashboard) ---------- */
+.top-performers{
+  margin: 0 clamp(12px, 2vw, 20px) clamp(12px, 2vw, 16px);
+  background:#fff;
+  border:1px solid #eaeaea;
+  border-radius:12px;
+  box-shadow: var(--card-shadow);
+  padding: clamp(14px, 2vw, 18px);
+}
+.top-performers .tp-title{
+  display:flex; align-items:center; gap:10px;
+  font-weight:900; color:var(--g);
+  font-size: clamp(1.05rem, 1rem + .25vw, 1.25rem);
+  margin:0;
+}
+.top-performers .tp-sub{
+  margin:.35rem 0 0;
+  color:#555;
+  font-size:.92rem;
+}
+.tp-grid{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+@media (max-width: 1100px){ .tp-grid{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px){ .tp-grid{ grid-template-columns: 1fr; } }
 
-  .topcard{
-    border-radius: 16px;
-    border: 1px solid #e6ebe6;
-    background: #ffffff;
-    box-shadow: 0 10px 24px rgba(0,0,0,.06);
-    overflow:hidden;
-    position: relative;
-  }
-
-  .topcard::before{
-    content:"";
-    position:absolute;
-    left:0; right:0; top:0;
-    height: 5px;
-    background: #0b6a00;
-    opacity: .85;
-  }
-
-  .topcard.rank1{
-    transform: translateY(-8px);
-    border-color: rgba(212,175,55,.35);
-  }
-  .topcard.rank1::before{ background: #d4af37; }
-
-  .topcard.rank2{ border-color: rgba(158,158,158,.30); }
-  .topcard.rank2::before{ background: #9e9e9e; }
-
-  .topcard.rank3{ border-color: rgba(205,127,50,.32); }
-  .topcard.rank3::before{ background: #cd7f32; }
-
-  .topcard-body{
-    padding: 1rem 1rem .9rem;
-    display:flex;
-    gap:.85rem;
-    align-items:flex-start;
-  }
-
-  .avatar-wrap{
-    width: 64px;
-    height: 64px;
-    border-radius: 999px;
-    border: 2px solid rgba(6,77,0,.18);
-    background: #f3f6f3;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    overflow:hidden;
-    flex: 0 0 auto;
-  }
-  .avatar-wrap img{
-    width:100%;
-    height:100%;
-    object-fit: cover;
-    display:block;
-  }
-  .avatar-wrap .fa-user{
-    font-size: 1.4rem;
-    color: rgba(6,77,0,.55);
-  }
-
-  .top-meta{
-    min-width:0;
-    flex: 1 1 auto;
-  }
-
-  .top-name{
-    font-weight: 900;
-    color: #0f2f10;
-    margin: 0;
-    font-size: 1.02rem;
-    line-height: 1.15;
-    overflow:hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .top-sub{
-    margin-top:.25rem;
-    font-size:.84rem;
-    color:#4b5a4b;
-    line-height: 1.25;
-  }
-  .top-sub b{ color:#1d2d1d; }
-
-  .rank-pill{
-    position:absolute;
-    right: .9rem;
-    top: .8rem;
-    font-weight: 900;
-    font-size: .9rem;
-    color: #0f2f10;
-    background: rgba(0,0,0,.04);
-    border: 1px solid rgba(0,0,0,.06);
-    border-radius: 999px;
-    padding: .2rem .55rem;
-  }
-
-  .topcard.rank1 .rank-pill{ background: rgba(212,175,55,.18); border-color: rgba(212,175,55,.25); }
-  .topcard.rank2 .rank-pill{ background: rgba(158,158,158,.15); border-color: rgba(158,158,158,.22); }
-  .topcard.rank3 .rank-pill{ background: rgba(205,127,50,.16); border-color: rgba(205,127,50,.23); }
-
-  .topcard-footer{
-    border-top: 1px solid #edf2ed;
-    padding: .85rem 1rem 1rem;
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
-    gap: .75rem;
-    background: #fbfcfb;
-  }
-
-  .stat-title{
-    font-size:.72rem;
-    letter-spacing:.4px;
-    text-transform: uppercase;
-    font-weight: 800;
-    color:#567156;
-  }
-
-  .stat-value{
-    font-size: 1.65rem;
-    font-weight: 1000;
-    color:#064d00;
-    line-height: 1;
-  }
-
-  .stat-value small{
-    font-size: .95rem;
-    font-weight: 900;
-  }
-
-  /* arrange podium order visually: 2 - 1 - 3 */
-  .topcard.pos2{ order: 1; }
-  .topcard.pos1{ order: 2; }
-  .topcard.pos3{ order: 3; }
-
-  /* ====== Badge Chart ====== */
-  .chart-wrapper{
-    position: relative;
-    width: 100%;
-    height: 340px;
-  }
-
-  @media (max-width: 992px){
-    .top3-grid{
-      grid-template-columns: 1fr;
-    }
-    .topcard.rank1{ transform:none; }
-    .top-name{ white-space: normal; }
-  }
-
-  @media (max-width: 576px){
-    .chart-card{
-      padding: 1rem 1.1rem;
-    }
-    .chart-wrapper{
-      height: 280px;
-    }
-  }
+.tp-card{
+  border:1px solid #ededed;
+  border-radius:14px;
+  padding: 14px;
+  background: linear-gradient(180deg,#ffffff, #fafafa);
+  position:relative;
+  overflow:hidden;
+}
+.tp-rank{
+  position:absolute; top:10px; right:10px;
+  width:32px; height:32px; border-radius:999px;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:900;
+  background:#0b3d0b; color:#fff;
+  font-size:.9rem;
+  opacity:.9;
+}
+.tp-avatar{
+  width:56px; height:56px; border-radius:999px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid #e7e7e7;
+  background:#f3f4f6;
+  color:#1f2937;
+  font-size: 1.25rem;
+}
+.tp-name{
+  margin:10px 0 2px;
+  font-weight:900;
+  color:#0f172a;
+  font-size: 1.05rem;
+}
+.tp-meta{
+  margin:0;
+  color:#374151;
+  font-size:.9rem;
+  line-height:1.35;
+}
+.tp-score{
+  margin-top:12px;
+  display:flex; align-items:baseline; gap:10px;
+  border-top:1px dashed #e5e7eb;
+  padding-top:10px;
+}
+.tp-score .label{ font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:#6b7280; }
+.tp-score .val{ font-weight:900; font-size: 1.35rem; color: var(--g); }
+.tp-empty{
+  margin-top:10px;
+  color:#6b7280;
+  font-size:.95rem;
+}
 
 </style>
 
