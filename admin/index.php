@@ -27,13 +27,26 @@ function full_name(array $u): string {
     $name = trim($fn . ' ' . ($mn !== '' ? ($mn . ' ') : '') . $ln);
     return $name !== '' ? $name : 'Unknown Student';
 }
+function initials_from_name(string $name): string {
+    $name = trim(preg_replace('/\s+/', ' ', $name));
+    if ($name === '') return '?';
+    $parts = explode(' ', $name);
+    $first = mb_substr($parts[0], 0, 1, 'UTF-8');
+    $last  = (count($parts) > 1) ? mb_substr($parts[count($parts)-1], 0, 1, 'UTF-8') : '';
+    $ini = mb_strtoupper($first . $last, 'UTF-8');
+    return $ini !== '' ? $ini : '?';
+}
 function safe_text($v, $fallback='—'): string {
     $v = trim((string)$v);
     return $v !== '' ? $v : $fallback;
 }
+function is_http_url($v): bool {
+    $v = trim((string)$v);
+    return (bool)preg_match('~^https?://~i', $v);
+}
 
 /* ---------------------------------------------------------
-   1) Filters: School Year & Program (existing)
+   1) Filters: School Year & Program
 --------------------------------------------------------- */
 $selectedSy      = isset($_GET['sy']) ? trim($_GET['sy']) : '';
 $selectedProgram = isset($_GET['program_id']) ? (int)$_GET['program_id'] : 0;
@@ -53,7 +66,7 @@ while ($row = $syRes->fetch_assoc()) {
 }
 $syRes->free();
 
-/* ---- Load Program options (existing) ---- */
+/* ---- Load Program options ---- */
 $programs = [];
 $progRes = $conn->query("
     SELECT program_id, program_code, program_name
@@ -67,16 +80,16 @@ while ($row = $progRes->fetch_assoc()) {
 $progRes->free();
 
 /* ---------------------------------------------------------
-   2) NEW: Top 3 Overall Performers (Overall %)
-   - Overall % is weighted: SUM(score) / SUM(max) * 100
-   - Use BEST attempt per set_type (SLT/PB/RB) per student
+   1.5) TOP 3 Overall Performers (Overall %)
+   - Weighted Overall % = SUM(best.total_score) / SUM(best.total_max) * 100
+   - Best attempt per set_type (SLT/PB/RB) per student
    - Filter: School Year only
-   - MySQL 8+ required (ROW_NUMBER window function)
+   NOTE: Requires MySQL 8+ (ROW_NUMBER window function)
 --------------------------------------------------------- */
-$top3Rows   = [];
-$topLabels  = [];
-$topPercents= [];
-$topColors  = ['#d4af37', '#9e9e9e', '#cd7f32']; // gold, silver, bronze (simple)
+$top3Rows    = [];
+$topLabels   = [];
+$topPercents = [];
+$topColors   = ['#d4af37', '#9e9e9e', '#cd7f32']; // gold, silver, bronze
 
 $topParams = [];
 $topTypes  = '';
@@ -108,6 +121,7 @@ SELECT
   U.year_level,
   U.section,
   U.school_year,
+  U.profile_photo,
   SUM(best.total_score) AS sum_score,
   SUM(best.total_max)   AS sum_max,
   ROUND(
@@ -129,7 +143,7 @@ if ($selectedSy !== '') {
 }
 
 $topSql .= "
-GROUP BY U.user_id, U.first_name, U.middle_name, U.last_name, U.course, U.year_level, U.section, U.school_year
+GROUP BY U.user_id, U.first_name, U.middle_name, U.last_name, U.course, U.year_level, U.section, U.school_year, U.profile_photo
 HAVING SUM(best.total_max) > 0
 ORDER BY overall_percent DESC, sum_score DESC, U.user_id ASC
 LIMIT 3
@@ -147,22 +161,21 @@ while ($r = $topRes->fetch_assoc()) {
 $topRes->free();
 $topStmt->close();
 
-// Build chart arrays
 foreach ($top3Rows as $i => $r) {
     $nm = full_name($r);
     $topLabels[]   = $nm;
     $topPercents[] = (float)$r['overall_percent'];
-    // ensure color exists even if fewer than 3
     if (!isset($topColors[$i])) $topColors[$i] = '#064d00';
 }
 
 /* ---------------------------------------------------------
-   3) Existing: Student count per current level (Badge Chart)
+   2) Build data for chart: Student count per current level
 --------------------------------------------------------- */
 $badgeLabels = [];
 $badgeCounts = [];
 $badgeColors = [];
 
+// Build dynamic JOIN para sa users (with filters)
 $joinUser = "
     LEFT JOIN users U
            ON U.user_id = SL.student_id
@@ -206,6 +219,7 @@ if ($params) {
 $stmt->execute();
 $res = $stmt->get_result();
 
+// mapping by level name kung walang color_hex sa DB
 $nameColorMap = [
     'green'  => '#4caf50',
     'blue'   => '#2196f3',
@@ -235,6 +249,7 @@ while ($row = $res->fetch_assoc()) {
 $res->free();
 $stmt->close();
 
+// fallback kung walang color_hex: simple color palette
 $defaultPalette = ['#00bcd4', '#2196f3', '#e91e63', '#9c27b0', '#673ab7', '#ff9800', '#f44336'];
 if (!array_filter($badgeColors)) {
     $badgeColors = [];
@@ -254,7 +269,7 @@ require_once __DIR__ . '/includes/sidebar.php';
 ?>
 
 <style>
-  /* ====== Shared Card Style ====== */
+  /* ====== Shared Chart Card ====== */
   .chart-card{
     border-radius: 16px;
     border: 1px solid #e3e7e3;
@@ -263,6 +278,7 @@ require_once __DIR__ . '/includes/sidebar.php';
     padding: 1.25rem 1.5rem;
     margin-top: 1.25rem;
   }
+
   .chart-card h3{
     font-size: 1.2rem;
     font-weight: 700;
@@ -272,6 +288,7 @@ require_once __DIR__ . '/includes/sidebar.php';
     align-items: center;
     gap: .4rem;
   }
+
   .chart-card h3 .icon-badge{
     display: inline-flex;
     align-items: center;
@@ -283,6 +300,7 @@ require_once __DIR__ . '/includes/sidebar.php';
     color: #fff;
     font-size: .9rem;
   }
+
   .chart-header-line{
     height: 2px;
     width: 100%;
@@ -291,7 +309,6 @@ require_once __DIR__ . '/includes/sidebar.php';
     opacity: .7;
   }
 
-  /* ====== Filters (reused) ====== */
   .chart-filters{
     display:flex;
     flex-wrap:wrap;
@@ -299,33 +316,182 @@ require_once __DIR__ . '/includes/sidebar.php';
     align-items:center;
     margin-bottom:.25rem;
   }
+
   .chart-filters .filter-inline{
     display:flex;
     align-items:center;
     gap:.4rem;
   }
+
   .chart-filters .filter-label{
     font-size:.85rem;
     font-weight:700;
     color:#1c3c1f;
     white-space:nowrap;
   }
+
   .chart-filters .form-select{
     font-size:.85rem;
     padding-block:.25rem;
   }
+
   .chart-filters .btn{
     font-size:.85rem;
     font-weight:600;
     padding:.3rem .9rem;
   }
+
   .chart-help-text{
     font-size:.8rem;
     color:#555;
     margin-top:.2rem;
     margin-bottom:.75rem;
   }
-  .chart-help-text em{ font-style:italic; }
+  .chart-help-text em{
+    font-style:italic;
+  }
+
+  /* ====== NEW: Podium Player Cards (Top 3) ====== */
+  .podium-wrap{
+    display:flex;
+    justify-content:center;
+    gap: 1rem;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    margin-top: .25rem;
+  }
+
+  .player-card{
+    position: relative;
+    width: 280px;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(6,77,0,.15);
+    box-shadow: 0 14px 28px rgba(0,0,0,.08);
+    background: #0e3a10; /* base green */
+    color: #fff;
+  }
+
+  .player-card .pc-bg{
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(255,255,255,.10), transparent 35%),
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,.08), transparent 42%),
+      linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.12));
+    pointer-events:none;
+  }
+
+  .player-card .pc-top{
+    position: relative;
+    padding: 1rem 1rem .75rem;
+    display:flex;
+    align-items:center;
+    gap:.85rem;
+  }
+
+  .rank-chip{
+    position:absolute;
+    top: .75rem;
+    right: .75rem;
+    font-weight: 900;
+    font-size: .95rem;
+    letter-spacing: .5px;
+    padding: .25rem .55rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.18);
+    backdrop-filter: blur(6px);
+  }
+
+  .avatar{
+    width: 66px;
+    height: 66px;
+    border-radius: 999px;
+    overflow:hidden;
+    border: 3px solid rgba(255,255,255,.25);
+    box-shadow: 0 10px 20px rgba(0,0,0,.20);
+    background: rgba(255,255,255,.10);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex: 0 0 auto;
+  }
+  .avatar img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display:block;
+  }
+  .avatar .ini{
+    font-weight: 900;
+    font-size: 1.15rem;
+    letter-spacing: .5px;
+  }
+
+  .pc-name{
+    font-weight: 900;
+    font-size: 1.02rem;
+    line-height: 1.15;
+    margin: 0;
+    max-width: 170px;
+    overflow:hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pc-meta{
+    font-size: .82rem;
+    opacity: .92;
+    line-height: 1.2;
+    margin-top: .15rem;
+  }
+
+  .pc-bottom{
+    position: relative;
+    padding: .75rem 1rem 1rem;
+    background: rgba(255,255,255,.06);
+    border-top: 1px solid rgba(255,255,255,.12);
+    display:flex;
+    justify-content:space-between;
+    gap: .75rem;
+    align-items:flex-end;
+  }
+
+  .stat-label{
+    font-size: .72rem;
+    opacity: .90;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+  }
+
+  .stat-value{
+    font-size: 1.65rem;
+    font-weight: 1000;
+    line-height: 1;
+  }
+
+  .stat-value small{
+    font-size: .95rem;
+    font-weight: 900;
+  }
+
+  /* highlight by rank */
+  .player-card.rank1{ transform: translateY(-10px); }
+  .player-card.rank1 .rank-chip{ background: rgba(212,175,55,.22); border-color: rgba(212,175,55,.35); }
+  .player-card.rank2 .rank-chip{ background: rgba(158,158,158,.18); border-color: rgba(158,158,158,.30); }
+  .player-card.rank3 .rank-chip{ background: rgba(205,127,50,.20); border-color: rgba(205,127,50,.34); }
+
+  .player-card.rank1{ border-color: rgba(212,175,55,.35); }
+  .player-card.rank2{ border-color: rgba(158,158,158,.30); }
+  .player-card.rank3{ border-color: rgba(205,127,50,.34); }
+
+  .pc-divider{
+    height: 1px;
+    width: 100%;
+    background: rgba(255,255,255,.14);
+    margin-top: .2rem;
+  }
 
   /* ====== Existing Badge Chart Wrapper ====== */
   .chart-wrapper{
@@ -334,101 +500,30 @@ require_once __DIR__ . '/includes/sidebar.php';
     height: 340px;
   }
 
-  /* ====== NEW: Top 3 Layout ====== */
-  .top3-layout{
-    display: grid;
-    grid-template-columns: 1.1fr .9fr;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  .top3-podium{
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0,1fr));
-    gap: .75rem;
-  }
-  .podium-card{
-    border: 1px solid #e7eee7;
-    border-radius: 14px;
-    padding: .9rem .9rem;
-    background: #fff;
-    box-shadow: 0 10px 22px rgba(0,0,0,.05);
-    min-height: 140px;
-    display: flex;
-    flex-direction: column;
-    gap: .35rem;
-  }
-  .podium-rank{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:.5rem;
-  }
-  .rank-badge{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    width: 30px;
-    height: 30px;
-    border-radius: 999px;
-    color: #fff;
-    font-weight: 800;
-    font-size: .9rem;
-  }
-  .rank-1{ background:#d4af37; }
-  .rank-2{ background:#9e9e9e; }
-  .rank-3{ background:#cd7f32; }
-
-  .podium-name{
-    font-weight: 800;
-    color: #0f2f10;
-    font-size: .95rem;
-    line-height: 1.15;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .podium-meta{
-    font-size: .82rem;
-    color: #4b5a4b;
-    line-height: 1.2;
-  }
-  .podium-score{
-    margin-top: auto;
-    font-weight: 900;
-    color: #064d00;
-    font-size: 1.55rem;
-    letter-spacing: .2px;
-  }
-  .podium-score small{
-    font-size: .9rem;
-    font-weight: 800;
-  }
-
-  .top3-chart-wrap{
-    position: relative;
-    width: 100%;
-    height: 260px;
-  }
-
-  /* Responsive adjustments */
   @media (max-width: 992px){
-    .top3-layout{
-      grid-template-columns: 1fr;
-    }
-    .top3-chart-wrap{
-      height: 240px;
-    }
+    .player-card{ width: 260px; }
+    .pc-name{ max-width: 150px; }
   }
+
   @media (max-width: 576px){
-    .chart-card{ padding: 1rem 1.1rem; }
-    .chart-wrapper{ height: 280px; }
-    .top3-podium{
-      grid-template-columns: 1fr;
+    .chart-card{
+      padding: 1rem 1.1rem;
     }
-    .podium-card{ min-height: 125px; }
-    .top3-chart-wrap{ height: 220px; }
-    .podium-name{ white-space: normal; }
+    .chart-wrapper{
+      height: 280px;
+    }
+    .podium-wrap{
+      gap: .85rem;
+    }
+    .player-card{
+      width: 100%;
+      max-width: 420px;
+    }
+    .pc-name{
+      white-space: normal;
+      max-width: none;
+    }
+    .player-card.rank1{ transform: none; }
   }
 </style>
 
@@ -442,7 +537,7 @@ require_once __DIR__ . '/includes/sidebar.php';
     </div>
   </div>
 
-  <!-- ================== NEW: TOP 3 OVERALL PERFORMERS CARD ================== -->
+  <!-- ================== TOP 3 OVERALL PERFORMERS (PODIUM) ================== -->
   <div class="chart-card">
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
@@ -454,12 +549,12 @@ require_once __DIR__ . '/includes/sidebar.php';
 
     <div class="chart-header-line"></div>
 
-    <!-- Filters: School Year only (preserve program_id to avoid resetting badge chart filter) -->
+    <!-- Filter: School Year only. Preserve program_id so badge filter won't reset -->
     <form method="get" class="chart-filters mb-2">
       <input type="hidden" name="program_id" value="<?= (int)$selectedProgram ?>">
       <div class="filter-inline">
         <span class="filter-label">School Year</span>
-        <select name="sy" id="sy_top" class="form-select form-select-sm">
+        <select name="sy" class="form-select form-select-sm">
           <option value="">All School Years</option>
           <?php foreach ($syOptions as $sy): ?>
             <option value="<?= h($sy) ?>" <?= $sy === $selectedSy ? 'selected' : '' ?>>
@@ -475,7 +570,7 @@ require_once __DIR__ . '/includes/sidebar.php';
 
     <p class="chart-help-text">
       Top 3 students by <strong>weighted overall percentage</strong>
-      across <em>best SLT + best PB + best RB</em> attempts
+      based on <em>best SLT + best PB + best RB</em> attempts
       <?= $selectedSy ? '— filtered by <strong>SY ' . h($selectedSy) . '</strong>.' : '— for <strong>all school years</strong>.' ?>
     </p>
 
@@ -484,55 +579,90 @@ require_once __DIR__ . '/includes/sidebar.php';
         No top performers found<?= $selectedSy ? ' for SY ' . h($selectedSy) : '' ?>.
       </div>
     <?php else: ?>
-      <div class="top3-layout">
-        <!-- Podium -->
-        <div class="top3-podium">
-          <?php foreach ($top3Rows as $i => $r): 
-            $rank = $i + 1;
-            $nm   = full_name($r);
-            $course = safe_text($r['course'] ?? '');
-            $yl   = safe_text($r['year_level'] ?? '');
-            $sec  = safe_text($r['section'] ?? '');
-            $pct  = number_format((float)$r['overall_percent'], 2);
-          ?>
-            <div class="podium-card">
-              <div class="podium-rank">
-                <span class="rank-badge rank-<?= $rank ?>"><?= $rank ?></span>
-                <span class="podium-meta"><?= $rank === 1 ? 'Champion' : ($rank === 2 ? '2nd Place' : '3rd Place') ?></span>
+      <?php
+        // Arrange like podium: [2nd, 1st, 3rd]
+        $podium = [];
+        if (isset($top3Rows[1])) $podium[] = ['rank' => 2, 'row' => $top3Rows[1]];
+        if (isset($top3Rows[0])) $podium[] = ['rank' => 1, 'row' => $top3Rows[0]];
+        if (isset($top3Rows[2])) $podium[] = ['rank' => 3, 'row' => $top3Rows[2]];
+      ?>
+
+      <div class="podium-wrap">
+        <?php foreach ($podium as $p): 
+          $rank = (int)$p['rank'];
+          $r    = $p['row'];
+          $nm   = full_name($r);
+          $ini  = initials_from_name($nm);
+
+          $course = safe_text($r['course'] ?? '');
+          $yl     = safe_text($r['year_level'] ?? '');
+          $sec    = safe_text($r['section'] ?? '');
+          $pct    = number_format((float)$r['overall_percent'], 2);
+
+          $photo  = trim((string)($r['profile_photo'] ?? ''));
+          $hasImg = ($photo !== '' && is_http_url($photo));
+        ?>
+          <div class="player-card rank<?= $rank ?>" data-rank="<?= $rank ?>">
+            <div class="pc-bg"></div>
+
+            <div class="pc-top">
+              <div class="rank-chip"><?= str_pad((string)$rank, 2, '0', STR_PAD_LEFT) ?></div>
+
+              <div class="avatar" data-initials="<?= h($ini) ?>">
+                <?php if ($hasImg): ?>
+                  <img
+                    src="<?= h($photo) ?>"
+                    alt="<?= h($nm) ?>"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    onerror="this.closest('.avatar').innerHTML='<span class=&quot;ini&quot;><?= h($ini) ?></span>';"
+                  >
+                <?php else: ?>
+                  <span class="ini"><?= h($ini) ?></span>
+                <?php endif; ?>
               </div>
 
-              <div class="podium-name" title="<?= h($nm) ?>"><?= h($nm) ?></div>
-              <div class="podium-meta"><strong>Course:</strong> <?= h($course) ?></div>
-              <div class="podium-meta"><strong>Year/Section:</strong> <?= h($yl) ?><?= $yl !== '—' && $sec !== '—' ? ' - ' : '' ?><?= h($sec) ?></div>
-
-              <div class="podium-score"><?= $pct ?><small>%</small></div>
+              <div style="min-width:0;">
+                <p class="pc-name" title="<?= h($nm) ?>"><?= h($nm) ?></p>
+                <div class="pc-meta"><strong>Course:</strong> <?= h($course) ?></div>
+                <div class="pc-meta"><strong>Year/Section:</strong> <?= h($yl) ?><?= ($yl !== '—' && $sec !== '—') ? ' - ' : '' ?><?= h($sec) ?></div>
+                <div class="pc-divider"></div>
+              </div>
             </div>
-          <?php endforeach; ?>
-        </div>
 
-        <!-- Chart -->
-        <div>
-          <div class="top3-chart-wrap">
-            <canvas id="top3Chart"></canvas>
+            <div class="pc-bottom">
+              <div>
+                <div class="stat-label">Overall Percentage</div>
+                <div class="stat-value"><?= $pct ?><small>%</small></div>
+              </div>
+              <div style="text-align:right;">
+                <div class="stat-label">Rank</div>
+                <div class="stat-value"><?= $rank ?></div>
+              </div>
+            </div>
           </div>
-        </div>
+        <?php endforeach; ?>
       </div>
     <?php endif; ?>
 
   </div>
 
-  <!-- ================== STUDENT BADGE CHART CARD (existing) ================== -->
+  <!-- ================== STUDENT BADGE CHART CARD ================== -->
   <div class="chart-card">
 
+    <!-- Title row -->
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
       <h3>
-        <span class="icon-badge"><i class="fa-solid fa-award"></i></span>
+        <span class="icon-badge">
+          <i class="fa-solid fa-award"></i>
+        </span>
         Student Badge Chart
       </h3>
     </div>
 
     <div class="chart-header-line"></div>
 
+    <!-- Filters -->
     <form method="get" class="chart-filters mb-2">
 
       <div class="filter-inline">
@@ -540,7 +670,8 @@ require_once __DIR__ . '/includes/sidebar.php';
         <select name="sy" id="sy" class="form-select form-select-sm">
           <option value="">All School Years</option>
           <?php foreach ($syOptions as $sy): ?>
-            <option value="<?= h($sy) ?>" <?= $sy === $selectedSy ? 'selected' : '' ?>>
+            <option value="<?= h($sy) ?>"
+              <?= $sy === $selectedSy ? 'selected' : '' ?>>
               <?= h($sy) ?>
             </option>
           <?php endforeach; ?>
@@ -561,12 +692,16 @@ require_once __DIR__ . '/includes/sidebar.php';
       </div>
 
       <div class="filter-inline">
-        <button type="submit" class="btn btn-sm btn-success">Apply</button>
+        <button type="submit" class="btn btn-sm btn-success">
+          Apply
+        </button>
       </div>
     </form>
 
+    <!-- Small description text -->
     <p class="chart-help-text">
-      Showing students with a <strong>current level/badge</strong> (based on SLT / assigned level)
+      Showing students with a <strong>current level/badge</strong>
+      (based on SLT / assigned level)
       <?php if ($selectedSy || $selectedProgram): ?>
         — filtered by
         <?= $selectedSy ? '<strong>SY ' . h($selectedSy) . '</strong>' : '' ?>
@@ -577,6 +712,7 @@ require_once __DIR__ . '/includes/sidebar.php';
       <?php endif; ?>
     </p>
 
+    <!-- Chart canvas -->
     <div class="chart-wrapper">
       <canvas id="badgeChart"></canvas>
     </div>
@@ -587,57 +723,6 @@ require_once __DIR__ . '/includes/sidebar.php';
 
 <script>
 (() => {
-  // ===== Top 3 chart (horizontal bar) =====
-  const topEl = document.getElementById('top3Chart');
-  if (topEl) {
-    const topLabels   = <?= json_encode($topLabels) ?>;
-    const topPercents = <?= json_encode($topPercents) ?>;
-    const topColors   = <?= json_encode($topColors) ?>;
-
-    if (topLabels.length) {
-      new Chart(topEl.getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: topLabels,
-          datasets: [{
-            label: 'Overall %',
-            data: topPercents,
-            backgroundColor: topColors,
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          indexAxis: 'y',
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => {
-                  const v = ctx.parsed.x ?? 0;
-                  return `Overall: ${Number(v).toFixed(2)}%`;
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              beginAtZero: true,
-              max: 100,
-              title: { display: true, text: 'Overall Percentage (%)' },
-              ticks: { callback: (v) => v + '%' }
-            },
-            y: {
-              title: { display: true, text: 'Student' }
-            }
-          }
-        }
-      });
-    }
-  }
-
-  // ===== Existing badge chart =====
   const el = document.getElementById('badgeChart');
   if (!el) return;
 
@@ -645,7 +730,9 @@ require_once __DIR__ . '/includes/sidebar.php';
   const counts  = <?= json_encode($badgeCounts) ?>;
   const colors  = <?= json_encode($badgeColors) ?>;
 
-  if (!labels.length) return;
+  if (!labels.length) {
+    return;
+  }
 
   new Chart(el.getContext('2d'), {
     type: 'bar',
@@ -674,15 +761,26 @@ require_once __DIR__ . '/includes/sidebar.php';
         }
       },
       scales: {
-        x: { title: { display: true, text: 'Level / Badge Color' } },
+        x: {
+          title: {
+            display: true,
+            text: 'Level / Badge Color'
+          }
+        },
         y: {
           beginAtZero: true,
-          title: { display: true, text: 'Number of Students' },
-          ticks: { precision: 0 }
+          title: {
+            display: true,
+            text: 'Number of Students'
+          },
+          ticks: {
+            precision: 0
+          }
         }
       }
     }
   });
+
 })();
 </script>
 
