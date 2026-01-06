@@ -387,31 +387,57 @@ if ($studentId > 0) {
   if ($topSy) {
     // Best % per set_type, then average of (best SLT + best PB + best RB) / 3
     $sqlTop = "
-      SELECT
-        U.user_id,
-        CONCAT_WS(' ', U.first_name, U.middle_name, U.last_name) AS full_name,
-        U.course,
-        U.year_level,
-        U.section,
-        ROUND((MAX(CASE WHEN A.set_type='SLT' THEN A.percent END)
-            + MAX(CASE WHEN A.set_type='PB'  THEN A.percent END)
-            + MAX(CASE WHEN A.set_type='RB'  THEN A.percent END)) / 3, 2) AS overall_pct
-      FROM users U
-      JOIN assessment_attempts A
-        ON A.student_id = U.user_id
-       AND A.status IN ('submitted','scored')
-       AND A.percent IS NOT NULL
-       AND A.set_type IN ('SLT','PB','RB')
-      WHERE U.role='student'
-        AND U.school_year = ?
-      GROUP BY U.user_id, U.first_name, U.middle_name, U.last_name, U.course, U.year_level, U.section
-      HAVING
-        MAX(CASE WHEN A.set_type='SLT' THEN 1 ELSE 0 END) = 1
-        AND MAX(CASE WHEN A.set_type='PB'  THEN 1 ELSE 0 END) = 1
-        AND MAX(CASE WHEN A.set_type='RB'  THEN 1 ELSE 0 END) = 1
-      ORDER BY overall_pct DESC, full_name ASC
-      LIMIT 3
-    ";
+WITH ranked AS (
+  SELECT
+    A.attempt_id,
+    A.student_id,
+    A.set_type,
+    A.total_score,
+    A.total_max,
+    A.percent,
+    A.submitted_at,
+    ROW_NUMBER() OVER (
+      PARTITION BY A.student_id, A.set_type
+      ORDER BY A.percent DESC, A.submitted_at DESC, A.attempt_id DESC
+    ) AS rn
+  FROM assessment_attempts A
+  WHERE A.status IN ('submitted','scored')
+),
+best AS (
+  SELECT * FROM ranked WHERE rn = 1
+),
+best3 AS (
+  SELECT
+    student_id,
+    SUM(total_score) AS sum_score,
+    SUM(total_max)   AS sum_max,
+    COUNT(DISTINCT set_type) AS types_count
+  FROM best
+  WHERE set_type IN ('SLT','PB','RB')
+  GROUP BY student_id
+)
+SELECT
+  U.user_id,
+  CONCAT_WS(' ', U.first_name, U.middle_name, U.last_name) AS full_name,
+  U.course,
+  U.year_level,
+  U.section,
+  ROUND(
+    CASE WHEN b3.sum_max > 0
+         THEN (b3.sum_score / b3.sum_max) * 100
+         ELSE 0
+    END
+  , 2) AS overall_pct
+FROM best3 b3
+JOIN users U
+  ON U.user_id = b3.student_id
+ AND U.role = 'student'
+WHERE b3.types_count = 3
+  AND U.school_year = ?
+ORDER BY overall_pct DESC, b3.sum_score DESC, U.user_id ASC
+LIMIT 3
+";
+
 
     if ($stmt = $conn->prepare($sqlTop)) {
       $stmt->bind_param('s', $topSy);
