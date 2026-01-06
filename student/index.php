@@ -371,6 +371,59 @@ try {
     error_log('Announcements load error: ' . $e->getMessage());
     $announcements = [];
 }
+/* ---------- Top Overall Performers (STRICT: must have SLT+PB+RB) ---------- */
+$topSy = null;
+$top3 = [];
+
+if ($studentId > 0) {
+  // Use the student's own school_year as filter
+  if ($stmt = $conn->prepare("SELECT school_year FROM users WHERE user_id=? AND role='student' LIMIT 1")) {
+    $stmt->bind_param('i', $studentId);
+    $stmt->execute();
+    $topSy = ($stmt->get_result()->fetch_row()[0] ?? null);
+    $stmt->close();
+  }
+
+  if ($topSy) {
+    // Best % per set_type, then average of (best SLT + best PB + best RB) / 3
+    $sqlTop = "
+      SELECT
+        U.user_id,
+        CONCAT_WS(' ', U.first_name, U.middle_name, U.last_name) AS full_name,
+        U.course,
+        U.year_level,
+        U.section,
+        ROUND((MAX(CASE WHEN A.set_type='SLT' THEN A.percent END)
+            + MAX(CASE WHEN A.set_type='PB'  THEN A.percent END)
+            + MAX(CASE WHEN A.set_type='RB'  THEN A.percent END)) / 3, 2) AS overall_pct
+      FROM users U
+      JOIN assessment_attempts A
+        ON A.student_id = U.user_id
+       AND A.status IN ('submitted','scored')
+       AND A.percent IS NOT NULL
+       AND A.set_type IN ('SLT','PB','RB')
+      WHERE U.role='student'
+        AND U.school_year = ?
+      GROUP BY U.user_id, U.first_name, U.middle_name, U.last_name, U.course, U.year_level, U.section
+      HAVING
+        MAX(CASE WHEN A.set_type='SLT' THEN 1 ELSE 0 END) = 1
+        AND MAX(CASE WHEN A.set_type='PB'  THEN 1 ELSE 0 END) = 1
+        AND MAX(CASE WHEN A.set_type='RB'  THEN 1 ELSE 0 END) = 1
+      ORDER BY overall_pct DESC, full_name ASC
+      LIMIT 3
+    ";
+
+    if ($stmt = $conn->prepare($sqlTop)) {
+      $stmt->bind_param('s', $topSy);
+      $stmt->execute();
+      $res = $stmt->get_result();
+      while ($r = $res->fetch_assoc()) {
+        $top3[] = $r;
+      }
+      $stmt->close();
+    }
+  }
+}
 
 ?>
 
@@ -738,6 +791,86 @@ body, .main-content { border: 0 !important; }
   cursor: not-allowed;
   filter: none !important;
 }
+/* ---------- Top Performers (Student dashboard) ---------- */
+.top-performers{
+  margin: 0 clamp(12px, 2vw, 20px) clamp(12px, 2vw, 16px);
+  background:#fff;
+  border:1px solid #eaeaea;
+  border-radius:12px;
+  box-shadow: var(--card-shadow);
+  padding: clamp(14px, 2vw, 18px);
+}
+.top-performers .tp-title{
+  display:flex; align-items:center; gap:10px;
+  font-weight:900; color:var(--g);
+  font-size: clamp(1.05rem, 1rem + .25vw, 1.25rem);
+  margin:0;
+}
+.top-performers .tp-sub{
+  margin:.35rem 0 0;
+  color:#555;
+  font-size:.92rem;
+}
+.tp-grid{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+@media (max-width: 1100px){ .tp-grid{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px){ .tp-grid{ grid-template-columns: 1fr; } }
+
+.tp-card{
+  border:1px solid #ededed;
+  border-radius:14px;
+  padding: 14px;
+  background: linear-gradient(180deg,#ffffff, #fafafa);
+  position:relative;
+  overflow:hidden;
+}
+.tp-rank{
+  position:absolute; top:10px; right:10px;
+  width:32px; height:32px; border-radius:999px;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:900;
+  background:#0b3d0b; color:#fff;
+  font-size:.9rem;
+  opacity:.9;
+}
+.tp-avatar{
+  width:56px; height:56px; border-radius:999px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid #e7e7e7;
+  background:#f3f4f6;
+  color:#1f2937;
+  font-size: 1.25rem;
+}
+.tp-name{
+  margin:10px 0 2px;
+  font-weight:900;
+  color:#0f172a;
+  font-size: 1.05rem;
+}
+.tp-meta{
+  margin:0;
+  color:#374151;
+  font-size:.9rem;
+  line-height:1.35;
+}
+.tp-score{
+  margin-top:12px;
+  display:flex; align-items:baseline; gap:10px;
+  border-top:1px dashed #e5e7eb;
+  padding-top:10px;
+}
+.tp-score .label{ font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:#6b7280; }
+.tp-score .val{ font-weight:900; font-size: 1.35rem; color: var(--g); }
+.tp-empty{
+  margin-top:10px;
+  color:#6b7280;
+  font-size:.95rem;
+}
+
 </style>
 
 <div class="main-content">
@@ -932,6 +1065,58 @@ body, .main-content { border: 0 !important; }
   </section>
 
   <!-- Analytics section (Pie + Bar charts) -->
+
+  <!-- Top Overall Performers (STRICT: SLT+PB+RB required) -->
+<section class="top-performers">
+  <h3 class="tp-title">🏆 Top Overall Performers (Overall %)</h3>
+
+  <?php if (!$topSy): ?>
+    <p class="tp-sub">School year is not set for your account.</p>
+
+  <?php else: ?>
+    <p class="tp-sub">
+      Top 3 students by <strong>overall average percentage</strong> (best SLT + best PB + best RB) — filtered by <strong>SY <?= htmlspecialchars($topSy) ?></strong>.
+    </p>
+
+    <?php if (empty($top3)): ?>
+      <div class="tp-empty">
+        No qualified students yet. (STRICT: requires completed SLT, PB, and RB results.)
+      </div>
+    <?php else: ?>
+      <div class="tp-grid">
+        <?php foreach ($top3 as $idx => $r): ?>
+          <?php
+            $rank = $idx + 1;
+            $nm   = trim((string)($r['full_name'] ?? 'Student'));
+            $crs  = trim((string)($r['course'] ?? '—'));
+            $yr   = (int)($r['year_level'] ?? 0);
+            $sec  = trim((string)($r['section'] ?? '—'));
+            $pct  = number_format((float)($r['overall_pct'] ?? 0), 2);
+          ?>
+          <div class="tp-card">
+            <div class="tp-rank"><?= $rank ?></div>
+
+            <div class="tp-avatar" aria-hidden="true">
+              <i class="fa-solid fa-user"></i>
+            </div>
+
+            <div class="tp-name"><?= htmlspecialchars($nm) ?></div>
+            <p class="tp-meta">
+              <strong>Course:</strong> <?= htmlspecialchars($crs) ?><br>
+              <strong>Year/Section:</strong> <?= $yr ? htmlspecialchars((string)$yr) : '—' ?> - <?= htmlspecialchars($sec) ?>
+            </p>
+
+            <div class="tp-score">
+              <div class="label">Overall Percentage</div>
+              <div class="val"><?= $pct ?>%</div>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
+  <?php endif; ?>
+</section>
+
   <section class="analytics-section">
     <h2 class="analytics-title">
       <span class="icon">📊</span>
