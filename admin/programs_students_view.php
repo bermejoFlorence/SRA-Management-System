@@ -250,10 +250,13 @@ require_once __DIR__ . '/includes/sidebar.php';
 .course-header-filters input[type="text"] {
   border-radius: 999px;
   border: 1px solid #d1d5db;
-  padding: 6px 12px;
+  padding: 6px 14px;
   font-size: 13px;
-  min-width: 120px;
+  height: 36px;          /* pare-pareho ang taas */
+  min-width: 170px;      /* pare-pareho ang lapad */
+  box-sizing: border-box;
 }
+
 
 .course-header-filters button,
 .course-header-filters .btn-export {
