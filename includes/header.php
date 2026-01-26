@@ -41,7 +41,7 @@ $ASSET_PREFIX = $ASSET_PREFIX ?? '';
     <nav id="primary-nav" class="nav">
       <a href="<?= $ASSET_PREFIX ?>#home">Home</a>
       <a href="<?= $ASSET_PREFIX ?>#about">About</a>
-      <a href="<?= $ASSET_PREFIX ?>#services">Services</a>
+      <!-- <a href="<?= $ASSET_PREFIX ?>#services">Services</a> -->
       <a href="<?= $ASSET_PREFIX ?>#stories">Stories</a>
       <a href="<?= $ASSET_PREFIX ?>#resources">Resources</a>
       <a href="<?= $ASSET_PREFIX ?>#contact">Contact</a>
