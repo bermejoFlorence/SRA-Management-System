@@ -4,6 +4,8 @@
 $ASSET_PREFIX = $ASSET_PREFIX ?? '';
 ?>
 
+<style>
+  
 /* 🔹 CBSUA institutional strip sa pinakataas */
 .site-header {
   /* kung may existing kang header{} rule, ok lang.
@@ -104,7 +106,7 @@ $ASSET_PREFIX = $ASSET_PREFIX ?? '';
     white-space: normal;
   }
 }
-
+</style>
 <header class="site-header">
 
   <!-- 🔹 INSTITUTIONAL STRIP (CBSUA) -->
