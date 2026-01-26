@@ -11,7 +11,7 @@ $ASSET_PREFIX = $ASSET_PREFIX ?? '';
     <div class="logo-container">
       <!-- Logos sa kaliwa -->
       <div class="logo-row">
-        <img src="<?= $ASSET_PREFIX ?>cbsua-logo.png" alt="CBSUA Logo" class="logo-cbsua">
+        <img src="<?= $ASSET_PREFIX ?>cbsua.png" alt="CBSUA Logo" class="logo-cbsua">
         <img src="<?= $ASSET_PREFIX ?>logo.png" alt="SRA Logo" class="logo-sra">
       </div>
 
