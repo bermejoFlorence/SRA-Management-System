@@ -41,15 +41,16 @@
     </div>
 
     <div class="slideshow-container" aria-label="Reading Center Slideshow">
-      <div class="slides fade">
-        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800" alt="Students reading together">
-      </div>
-      <div class="slides fade">
-        <img src="https://images.unsplash.com/photo-1588776814546-5d1b3d06d95d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800" alt="Books on a table in a reading room">
-      </div>
-      <div class="slides fade">
-        <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800" alt="Student reading in a library">
-      </div>
+  <div class="slides fade">
+    <img src="1.jpg" alt="SRA Reading Center Activity 1">
+  </div>
+  <div class="slides fade">
+    <img src="2.jpg" alt="SRA Reading Center Activity 2">
+  </div>
+  <div class="slides fade">
+    <img src="3.jpg" alt="SRA Reading Center Activity 3">
+  </div>
+
 
       <button class="prev" aria-label="Previous slide">&#10094;</button>
       <button class="next" aria-label="Next slide">&#10095;</button>
