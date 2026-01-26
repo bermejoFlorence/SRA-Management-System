@@ -433,6 +433,12 @@ require_once __DIR__ . '/includes/sidebar.php';
     font-size: 12px;
   }
 }
+.course-header-filters select option {
+  font-size: 13px;
+  line-height: 1.3;   /* 🔑 ito ang susi */
+  padding: 4px 8px;
+}
+
 </style>
 
 <div class="main-content">
