@@ -3,117 +3,13 @@
 // $ASSET_PREFIX = '../';  // halimbawa sa pages/nested/index.php
 $ASSET_PREFIX = $ASSET_PREFIX ?? '';
 ?>
-
-<style>
-  
-/* 🔹 CBSUA institutional strip sa pinakataas */
-.site-header {
-  /* kung may existing kang header{} rule, ok lang.
-     Ito lang ang gagamitin para sa mas specific na styling kung kailangan. */
-}
-
-.institution-bar {
-  background-color: #022808; /* darker green than main header */
-  color: #f8f8f8;
-  font-size: 13px;
-  line-height: 1.3;
-}
-
-.institution-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 6px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.institution-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.institution-logo {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  border-radius: 4px;
-  background: #ffffff;
-  padding: 2px;
-}
-
-.institution-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.institution-name {
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.institution-campus {
-  font-size: 11px;
-  opacity: 0.9;
-}
-
-.institution-right {
-  font-size: 11px;
-  opacity: 0.9;
-  text-align: right;
-}
-
-.institution-unit-label {
-  white-space: nowrap;
-}
-
-/* Wrapper ng existing header content mo para linis layout */
-.main-header {
-  /* kung dati naka-flex ang header mo, ilipat mo yung flex styles dito kung kinakailangan.
-     Halimbawa:
-     display: flex;
-     align-items: center;
-     justify-content: space-between;
-     padding: 10px 16px;
-     background-color: #054a0b;  // same as old
-  */
-}
-
-/* 🔹 Responsiveness para sa maliit na screen */
-@media (max-width: 768px) {
-  .institution-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .institution-right {
-    text-align: left;
-  }
-
-  .institution-name {
-    font-size: 12px;
-  }
-
-  .institution-campus {
-    font-size: 10px;
-  }
-
-  .institution-unit-label {
-    white-space: normal;
-  }
-}
-</style>
 <header class="site-header">
 
   <!-- 🔹 INSTITUTIONAL STRIP (CBSUA) -->
   <div class="institution-bar">
     <div class="institution-inner">
       <div class="institution-left">
-        <!-- Palitan ang filename kung iba ang pangalan ng CBSUA logo mo -->
+        <!-- Palitan ang filename/path kung iba ang pangalan ng CBSUA logo mo -->
         <img
           src="<?= $ASSET_PREFIX ?>cbsua-logo.png"
           alt="Central Bicol State University of Agriculture logo"
