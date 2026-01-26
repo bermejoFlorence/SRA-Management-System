@@ -15,15 +15,18 @@ $ASSET_PREFIX = $ASSET_PREFIX ?? '';
         <img src="<?= $ASSET_PREFIX ?>logo.png" alt="SRA Logo" class="logo-sra">
       </div>
 
-      <!-- Text sa kanan ng logos -->
       <div class="logo-text-block">
-        <div class="logo-line logo-line-parent">
-          Central Bicol State University of Agriculture
-        </div>
-        <div class="logo-line logo-line-unit">
-          SRA Reading Center
-        </div>
-      </div>
+  <!-- Line 1: parent institution -->
+  <div class="logo-line logo-line-parent">
+    Central Bicol State University of Agriculture
+  </div>
+
+  <!-- Line 2: SRA name with highlighted initials -->
+  <div class="logo-line logo-line-unit">
+    <span>S</span>CIENCE <span>R</span>ESEARCH <span>A</span>SSOCIATES
+  </div>
+</div>
+
     </div>
 
     <!-- Hamburger (mobile) -->
