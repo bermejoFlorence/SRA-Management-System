@@ -114,12 +114,19 @@ a{
   color:#ffffff;
 }
 
-/* Line 2: SRA Reading Center */
 .logo-line-unit{
-  font-size:.85rem;
-  font-weight:500;
+  font-size:.9rem;
+  font-weight:600;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+  color:#ffffff;
+}
+
+/* highlight S, R, A inside the unit line */
+.logo-line-unit span{
   color:var(--accent);
 }
+
 
 /* Generic line – para hindi mag-wrap nang pangit sa desktop */
 .logo-line{
