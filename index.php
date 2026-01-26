@@ -88,7 +88,7 @@
     </div>
 
     <div class="card">
-      <img src="2.jpg" alt="Student Confidence in Reading">
+      <img src="picture2.jpg" alt="Student Confidence in Reading">
       <h3>Increased Confidence in Learning</h3>
       <p>
         Through self-paced reading activities, students gained confidence in
@@ -98,7 +98,7 @@
     </div>
 
     <div class="card">
-      <img src="3.jpg" alt="Academic Support and Guidance">
+      <img src="picture.png" alt="Academic Support and Guidance">
       <h3>Strengthened Academic Support</h3>
       <p>
         The SRA Reading Center supports faculty and students by identifying reading
