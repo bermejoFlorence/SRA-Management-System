@@ -73,27 +73,43 @@
   </div>
 </section>
 
-<!-- Stories -->
 <section id="stories">
   <h2>Success Stories</h2>
   <div class="stories">
+
     <div class="card">
-      <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080" alt="Happy students collaborating">
-      <h3>Student A</h3>
-      <p>Improved reading comprehension by 50% in just 3 months using SRA programs.</p>
+      <img src="1.jpg" alt="Reading Assessment Improvement">
+      <h3>Improved Reading Proficiency</h3>
+      <p>
+        Students who completed the SRA Reading Program demonstrated measurable
+        improvements in reading comprehension, vocabulary, and reading speed
+        through structured and level-appropriate assessments.
+      </p>
     </div>
+
     <div class="card">
-      <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080" alt="Student reading a book">
-      <h3>Student B</h3>
-      <p>Developed a love for reading through engaging stories and interactive exercises.</p>
+      <img src="2.jpg" alt="Student Confidence in Reading">
+      <h3>Increased Confidence in Learning</h3>
+      <p>
+        Through self-paced reading activities, students gained confidence in
+        understanding academic texts, enabling them to participate more actively
+        in class discussions and written tasks.
+      </p>
     </div>
+
     <div class="card">
-      <img src="https://images.unsplash.com/photo-1588776814546-5d1b3d06d95d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080" alt="Books and notes">
-      <h3>Student C</h3>
-      <p>Enhanced vocabulary and writing skills with SRA’s structured reading approach.</p>
+      <img src="3.jpg" alt="Academic Support and Guidance">
+      <h3>Strengthened Academic Support</h3>
+      <p>
+        The SRA Reading Center supports faculty and students by identifying reading
+        needs early and providing guided interventions aligned with CBSUA’s
+        commitment to quality education.
+      </p>
     </div>
+
   </div>
 </section>
+
 
 <!-- Resources -->
 <section id="resources">
