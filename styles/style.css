@@ -68,111 +68,62 @@ a{
   box-shadow:0 4px 14px rgba(0,0,0,.25);
 }
 
-/* 🔹 CBSUA institutional strip sa pinakataas */
-.institution-bar{
-  background-color:#022808;       /* mas dark na green kaysa main header */
-  color:#f8f8f8;
-  font-size:13px;
-  line-height:1.3;
-}
-
-.institution-inner{
-  max-width:1200px;
-  margin:0 auto;
-  padding:6px 16px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-}
-
-.institution-left{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.institution-logo{
-  width:28px;
-  height:28px;
-  object-fit:contain;
-  border-radius:4px;
-  background:#ffffff;
-  padding:2px;
-}
-
-.institution-text{
-  display:flex;
-  flex-direction:column;
-}
-
-.institution-name{
-  font-weight:600;
-  letter-spacing:0.03em;
-  text-transform:uppercase;
-}
-
-.institution-campus{
-  font-size:11px;
-  opacity:0.9;
-}
-
-.institution-right{
-  font-size:11px;
-  opacity:0.9;
-  text-align:right;
-}
-
-.institution-unit-label{
-  white-space:nowrap;
-}
-
-/* Responsiveness for small screens */
-@media (max-width:768px){
-  .institution-inner{
-    flex-direction:column;
-    align-items:flex-start;
-    gap:4px;
-  }
-
-  .institution-right{
-    text-align:left;
-  }
-
-  .institution-name{
-    font-size:12px;
-  }
-
-  .institution-campus{
-    font-size:10px;
-  }
-
-  .institution-unit-label{
-    white-space:normal;
-  }
-}
-
-/* Logo + title */
+/* Logo group: CBSUA logo + SRA logo + text block */
 .logo-container{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:14px;              /* pagitan ng logos at text block */
   flex:1 1 auto;
 }
-.logo-container img{
-  height:44px;
+
+/* Row para sa dalawang logo */
+.logo-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+/* Individual logos */
+.logo-cbsua{
+  height:40px;
+  width:auto;
+  border-radius:6px;
+  background:#fff;
+  padding:2px;
+}
+
+.logo-sra{
+  height:36px;
   width:auto;
   border-radius:6px;
 }
-.site-title{
-  font-size:1.05rem;
-  font-weight:600;
-  letter-spacing:.6px;
+
+/* Text block sa kanan ng logos */
+.logo-text-block{
+  display:flex;
+  flex-direction:column;
   line-height:1.2;
-  white-space:nowrap;
 }
-.site-title span{
+
+/* Line 1: CBSUA name */
+.logo-line-parent{
+  font-size:.9rem;
+  font-weight:600;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+  color:#ffffff;
+}
+
+/* Line 2: SRA Reading Center */
+.logo-line-unit{
+  font-size:.85rem;
+  font-weight:500;
   color:var(--accent);
+}
+
+/* Generic line – para hindi mag-wrap nang pangit sa desktop */
+.logo-line{
+  white-space:nowrap;
 }
 
 /* Desktop nav */
